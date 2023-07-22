@@ -1,0 +1,13 @@
+{
+  "appId": "com.example.app",
+  "appName": "ElectriCityMap",
+  "webDir": "public",
+  "android": {
+    "permissions": ["ACCESS_FINE_LOCATION"]
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+  
+  
+}

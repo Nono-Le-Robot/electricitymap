@@ -128,7 +128,7 @@
     width: 100vw;
   }
   .map {
-    width: 100%;
-    height: 100vw;
+    width: 100vw;
+    height: 100vh;
   }
 </style>

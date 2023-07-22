@@ -8,15 +8,18 @@
 
 <style>
   .fa-plus {
+    position: fixed;
+    bottom: 25px;
+    left: 50vw;
     z-index: 999;
-    position: absolute;
+    transform: translateX(-50%);
+    /* z-index: 999;
     top: 100vh;
     left: 50vw;
-    transform: translate(-50%, -150%);
+    color: white; */
     font-size: 2rem;
     padding: 15px;
     border-radius: 100%;
     background-color: var(--main-color);
-    color: white;
   }
 </style>
