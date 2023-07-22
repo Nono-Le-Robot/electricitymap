@@ -103,7 +103,7 @@
 <svelte:window on:resize={resizeMap} />
 
 {#if isLogged}
-<AddMarker />
+  <AddMarker />
   <section id="map-section-logged">
     <div class="map" style="height:100%;width:100%" use:mapAction />
   </section>
@@ -119,7 +119,7 @@
     width: 100vw;
   }
   #map-section {
-    height: 60vh;
+    height: 100vh;
     width: 100vw;
   }
   .map {

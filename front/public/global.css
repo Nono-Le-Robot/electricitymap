@@ -1,6 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Wallpoet&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap");
+
 /* Colors variables */
 :root {
-  --main-color: #8587ff;
+  --main-color: #4ad64b;
   --popup-color: #181a29;
   --green-validate: #80ff80;
   --red-error: #ff6e6e;
@@ -9,4 +12,8 @@
 html {
   /* width: 100vw;
   height: 100vh; */
+}
+
+* {
+  font-family: "Tilt Neon", cursive;
 }

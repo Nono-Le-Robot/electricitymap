@@ -1,7 +1,9 @@
 <script>
   import axios from "axios";
   import { toasts, ToastContainer, FlatToast } from "svelte-toasts";
-  export let isLogged;
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
+
   let register = false;
   let userData = {
     email: "",
@@ -27,7 +29,7 @@
           if (register) {
             register = false;
           } else {
-            isLogged = true;
+            dispatch("Connected", { logged: true });
           }
         }
       },
@@ -38,7 +40,7 @@
     e.preventDefault();
     if (register) {
       if (userData.password !== userData.repeatPassword) {
-        alert("Les mots de passe ne correspondent pas");
+        showToast("Oups...", "Les mots de passe ne correspondent pas", "error");
         return;
       } else {
         const res = await axios
@@ -96,38 +98,44 @@
 {#if register}
   <section id="auth-section">
     <form id="register-form" class="auth-form">
-      <label for="email">Email</label>
-      <input
-        type="email"
-        name="email"
-        id="email"
-        bind:value={userData.email}
-        required
-      />
-      <label for="pseudo">Pseudo</label>
-      <input
-        type="text"
-        name="pseudo"
-        id="pseudo"
-        bind:value={userData.username}
-        required
-      />
-      <label for="password">Mot de passe</label>
-      <input
-        type="password"
-        name="password"
-        id="password"
-        bind:value={userData.password}
-        required
-      />
-      <label for="repeat-password">Répeter mot de passe</label>
-      <input
-        type="password"
-        name="repeat-password"
-        id="repeat-password"
-        bind:value={userData.repeatPassword}
-        required
-      />
+      <div class="inputs-form">
+        <label for="email" />
+        <input
+          placeholder="Email"
+          type="email"
+          name="email"
+          id="email"
+          bind:value={userData.email}
+          required
+        />
+        <label for="pseudo" />
+        <input
+          placeholder="Pseudo"
+          type="text"
+          name="pseudo"
+          id="pseudo"
+          bind:value={userData.username}
+          required
+        />
+        <label for="password" />
+        <input
+          placeholder="Mot de passe"
+          type="password"
+          name="password"
+          id="password"
+          bind:value={userData.password}
+          required
+        />
+        <label for="repeat-password" />
+        <input
+          placeholder="Répéter le mot de passe"
+          type="password"
+          name="repeat-password"
+          id="repeat-password"
+          bind:value={userData.repeatPassword}
+          required
+        />
+      </div>
       <button type="submit" on:click={submitData}>Inscription</button>
       <p>
         <a
@@ -143,22 +151,26 @@
 {:else}
   <section id="auth-section">
     <form id="login-form" class="auth-form">
-      <label for="email">Email</label>
-      <input
-        type="email"
-        name="email"
-        id="email"
-        bind:value={userData.email}
-        required
-      />
-      <label for="password">Mot de passe</label>
-      <input
-        type="password"
-        name="password"
-        id="password"
-        bind:value={userData.password}
-        required
-      />
+      <div class="inputs-form">
+        <label for="email" />
+        <input
+          placeholder="Email"
+          type="email"
+          name="email"
+          id="email"
+          bind:value={userData.email}
+          required
+        />
+        <label for="password" />
+        <input
+          placeholder="Mot de passe"
+          type="password"
+          name="password"
+          id="password"
+          bind:value={userData.password}
+          required
+        />
+      </div>
       <button type="submit" on:click={submitData}>Connexion</button>
       <p>
         <a
@@ -179,26 +191,70 @@
 </ToastContainer>
 
 <style>
-  #login-form {
+  .inputs-form {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100vw;
-    height: 40vh;
-    background-color: var(--main-color);
-    border-top-left-radius: 1rem;
-    border-top-right-radius: 1rem;
   }
+
   #register-form {
+    gap: 1rem;
+    width: 350px;
+    height: 500px;
+  }
+
+  #login-form {
+    gap: 1rem;
+    width: 350px;
+    height: 350px;
+  }
+
+  #register-form,
+  #login-form {
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100vw;
-    height: 40vh;
+
     background-color: var(--main-color);
-    border-top-left-radius: 1rem;
-    border-top-right-radius: 1rem;
+    border-radius: 1rem;
+  }
+  #login-form button,
+  #register-form button {
+    font-size: 20px;
+    width: 150px;
+    border: none;
+    border-radius: 1rem;
+    background-color: white;
+    color: black;
+    padding: 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #login-form input,
+  #register-form input {
+    font-weight: bold;
+    font-size: 17px;
+    width: 225px;
+    border: none;
+    border-radius: 1rem;
+    background-color: white;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  #switch-to-login,
+  #switch-to-register {
+    color: rgb(0, 0, 0);
+    font-size: 15px;
+
+    margin-top: 1rem;
   }
 </style>

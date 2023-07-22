@@ -4,25 +4,28 @@
   import Auth from "./components/Auth.svelte";
   import Popup from "./components/Popup.svelte";
 
-  const logged = false;
+  let logged = false;
   const popupIsVisible = true;
 
   let data;
   onMount(async () => {
     //récupérer les points avec axios.
   });
+  function hideAuthMenu() {
+    logged = true;
+  }
 </script>
 
 <section id="main">
   {#if popupIsVisible}
-    <Popup />
+    <!-- <Popup /> -->
   {/if}
 
   {#if logged}
     <Map isLogged={logged} />
   {:else}
     <Map />
-    <Auth isLogged={logged} />
+    <Auth on:Connected={hideAuthMenu} isLogged={logged} />
   {/if}
 </section>
 

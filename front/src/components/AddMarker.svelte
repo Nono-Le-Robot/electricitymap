@@ -13,6 +13,7 @@
     left: 50vw;
     z-index: 999;
     transform: translateX(-50%);
+    color: white;
     /* z-index: 999;
     top: 100vh;
     left: 50vw;
