@@ -4,8 +4,13 @@
   import Auth from "./components/Auth.svelte";
   import Popup from "./components/Popup.svelte";
 
-  const logged = true;
+  const logged = false;
   const popupIsVisible = true;
+
+  let data;
+  onMount(async () => {
+    //récupérer les points avec axios.
+  });
 </script>
 
 <section id="main">
@@ -17,7 +22,7 @@
     <Map isLogged={logged} />
   {:else}
     <Map />
-    <Auth />
+    <Auth isLogged={logged} />
   {/if}
 </section>
 
