@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-require("dotenv").config({ path: "./config/.env" });
+require("dotenv").config({ path: "./config/.envDev" });
 mongoose
   .connect(
     `mongodb+srv://${process.env.IDMDB}@cluster0.ep4znvs.mongodb.net/ElectriCityMap`,

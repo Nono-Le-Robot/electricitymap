@@ -3,17 +3,19 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 module.exports.register = async (req, res) => {
-  const { username, password } = req.body;
-  const checkUser = await userModel.findOne({ username });
+  console.log(req)
+  const { email, username, password } = req.body;
+  const checkUser = await userModel.findOne({ email });
 
   if (checkUser) {
     return res
       .status(409)
-      .json({ msg: "Username already used", status: false });
+      .json({ msg: "Email already used", status: false });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = await new userModel({
+    email: email,
     username: username,
     password: hashedPassword,
   });
@@ -21,7 +23,7 @@ module.exports.register = async (req, res) => {
   newUser
     .save()
     .then(() => {
-      res.status(200).json({ msg: "user created", username: username });
+      res.status(200).json({ msg: "user created", email: email , username: username, status: true });
     })
     .catch((err) => {
       res.status(400).json({ error: err.message });
@@ -30,7 +32,7 @@ module.exports.register = async (req, res) => {
 
 module.exports.login = async (req, res) => {
   userModel
-    .findOne({ username: req.body.username })
+    .findOne({ email: req.body.email })
     .then((user) => {
       if (!user) {
         return res.status(404).json({ msg: "User not found", status: false });
@@ -40,7 +42,7 @@ module.exports.login = async (req, res) => {
         .then((valid) => {
           if (!valid) {
             return res.status(400).json({
-              msg: "Username or password invalid",
+              msg: "email or password invalid",
               status: false,
             });
           }
@@ -52,7 +54,7 @@ module.exports.login = async (req, res) => {
           const acessToken = generateAcessToken(user);
           res.status(200).json({
             userId: user._id,
-            username: req.body.username,
+            email: req.body.email,
             iat: acessToken,
             password: undefined,
           });
