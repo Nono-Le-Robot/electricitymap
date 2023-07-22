@@ -1,6 +1,9 @@
 /* Colors variables */
 :root {
   --main-color: #8587ff;
+  --popup-color: #181a29;
+  --green-validate: #80ff80;
+  --red-error: #ff6e6e;
 }
 
 html {

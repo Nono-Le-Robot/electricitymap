@@ -1,6 +1,7 @@
 <script>
   import L from "leaflet";
   import AddMarker from "./AddMarker.svelte";
+
   export let isLogged;
 
   let map;
@@ -48,6 +49,7 @@
   ];
 
   const initialView = [39.8283, -98.5795];
+
   function createMap(container) {
     let m = L.map(container, { preferCanvas: true }).setView(initialView, 5);
     L.tileLayer(
@@ -68,9 +70,9 @@
         }),
         draggable: true,
       }).addTo(m);
+
       marker.on("dragend", (event) => {
-        const { lat, lng } = event.target.getLatLng();
-        console.log("New marker position:", lat, lng);
+        alert("Marker dragged to: " + event.target.getLatLng());
       });
     }
 
@@ -85,7 +87,6 @@
     map = createMap(container);
     return {
       destroy: () => {
-        toolbar.remove();
         map.remove();
         map = null;
       },
@@ -101,13 +102,7 @@
 
 <svelte:window on:resize={resizeMap} />
 
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-  crossorigin=""
-/>
-<AddMarker userConnected={isLogged} />
+<AddMarker />
 {#if isLogged}
   <section id="map-section-logged">
     <div class="map" style="height:100%;width:100%" use:mapAction />

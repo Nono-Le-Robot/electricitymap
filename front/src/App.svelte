@@ -1,10 +1,18 @@
 <script>
-  import Map from "./Map.svelte";
-  import Auth from "./Auth.svelte";
+  import { onMount } from "svelte";
+  import Map from "./components/Map.svelte";
+  import Auth from "./components/Auth.svelte";
+  import Popup from "./components/Popup.svelte";
+
   const logged = true;
+  const popupIsVisible = true;
 </script>
 
 <section id="main">
+  {#if popupIsVisible}
+    <Popup />
+  {/if}
+
   {#if logged}
     <Map isLogged={logged} />
   {:else}
@@ -14,9 +22,6 @@
 </section>
 
 <style>
-  * {
-    user-select: none;
-  }
   #main {
     display: flex;
     flex-direction: column;
