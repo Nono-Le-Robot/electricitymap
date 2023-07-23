@@ -1,6 +1,44 @@
 <script>
-  function addNewMarker() {
-    alert("add new marker");
+  import axios from "axios";
+  async function addNewMarker() {
+    const email = localStorage.getItem("email");
+    const userId = localStorage.getItem("userId");
+    const pointName = "point xxx";
+    const pointDescription = "point description";
+    const coords = {
+      lat: 0,
+      lng: 0,
+    };
+    if (email && userId) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          coords.lat = position.coords.latitude;
+          coords.lng = position.coords.longitude;
+          const res = axios
+            .post("http://localhost:5000/api/data/add-point", {
+              email: email,
+              pointName: pointName,
+              pointDescription: pointDescription,
+              coords: {
+                lat: coords.lat,
+                lng: coords.lng,
+              },
+              addedBy: userId,
+              addedDate: new Date(),
+            })
+            .then((res) => {
+              alert("Point ajouté");
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        });
+      } else {
+        alert("Impossible de récupérer la position actuelle");
+      }
+    } else {
+      alert("Probleme de login. Reconnectez vous");
+    }
   }
 </script>
 

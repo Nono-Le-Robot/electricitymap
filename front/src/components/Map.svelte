@@ -1,115 +1,152 @@
+<!-- Votre Svelte component -->
+
 <script>
   import L from "leaflet";
+  import axios from "axios";
+  import { onMount } from "svelte";
   import AddMarker from "./AddMarker.svelte";
 
   export let isLogged;
 
-  let map;
-  let userMarker;
-
-  var myLocationIcon = L.icon({
-    iconUrl: `./assets/myPosition.png`,
-    iconSize: [50, 50],
-    iconAnchor: [25, 50],
-  });
-
-  let userPosition = {
-    lat: 0,
-    lng: 0,
-  };
-
-  function updateUserLocation(lat, lng) {
-    if (userMarker) {
-      userPosition.lat = lat;
-      userPosition.lng = lng;
-      userMarker.setLatLng([lat, lng]);
-    } else {
-      userMarker = L.marker([lat, lng], { icon: myLocationIcon }).addTo(map);
+  onMount(async () => {
+    let AllPoints;
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/data/get-all-points"
+      ); // Replace "your_data_endpoint" with the actual API URL
+      AllPoints = response.data; // Assuming the response contains an array of data for markers
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      updateUserLocation(lat, lng);
-      map.setView([lat, lng], 13);
-    },
-    (error) => {
-      map.setView([48.8416379, 2.4098527], 13);
-      console.error("Error getting user location:", error);
-    },
-    { enableHighAccuracy: true }
-  );
-
-  var customIconUrl = "./assets/elecSpot2.png";
-
-  const markerLocations = [
-    { lat: 47.2243364, lng: -1.557701, icon: customIconUrl },
-  ];
-
-  const initialView = [39.8283, -98.5795];
-
-  function createMap(container) {
-    let m = L.map(container, { preferCanvas: true }).setView(initialView, 5);
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      {
-        attribution: `&copy;<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>,
-                &copy;<a href="https://carto.com/attributions" target="_blank">CARTO</a>`,
-        subdomains: "abcd",
-      }
-    ).addTo(m);
-
-    function addMarker(location) {
-      const marker = L.marker([location.lat, location.lng], {
-        icon: L.icon({
-          iconUrl: location.icon,
-          iconSize: [50, 50],
-          iconAnchor: [25, 50],
-        }),
-        draggable: true,
-      }).addTo(m);
-
-      marker.on("dragend", (event) => {
-        alert("Marker dragged to: " + event.target.getLatLng());
-      });
-    }
-
-    markerLocations.forEach((location) => {
-      addMarker(location);
+    var customIcon = L.icon({
+      iconUrl: "./assets/elecSpot2.png",
+      iconSize: [50, 50],
+      iconAnchor: [25, 50],
+      shadowSize: [50, 64], // size of the shadow
+      shadowAnchor: [4, 62], // the same for the shadow
+      popupAnchor: [0, -40], // point from which the popup should open relative to the iconAnchor
     });
 
-    return m;
-  }
+    var myLocationIcon = L.icon({
+      iconUrl: `./assets/myPosition.png`,
+      iconSize: [50, 50],
+      iconAnchor: [25, 50],
+      shadowSize: [50, 64], // size of the shadow
+      shadowAnchor: [4, 62], // the same for the shadow
+      popupAnchor: [0, -45], // point from which the popup should open relative to the iconAnchor
+    });
 
-  function mapAction(container) {
-    map = createMap(container);
-    return {
-      destroy: () => {
-        map.remove();
-        map = null;
-      },
-    };
-  }
+    var map = L.map("map").setView([51.505, -0.09], 13);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
 
-  function resizeMap() {
-    if (map) {
-      map.invalidateSize();
+    map.locate({ setView: true }); //maxZoom: 16
+
+    function onLocationFound(e) {
+      var radius = e.accuracy;
+
+      L.marker(e.latlng, { icon: myLocationIcon })
+        .addTo(map)
+        .bindPopup("Votre position actuelle");
+
+      L.circle(e.latlng, radius).addTo(map);
     }
-  }
-</script>
 
-<svelte:window on:resize={resizeMap} />
+    map.on("locationfound", onLocationFound);
+
+    function onLocationError(e) {
+      alert(e.message);
+    }
+
+    map.on("locationerror", onLocationError);
+
+    AllPoints.forEach((point) => {
+      let pointLat = point.coords.lat;
+      let pointLng = point.coords.lng;
+      console.log(pointLat, pointLng);
+      var marker = L.marker([pointLat, pointLng], { icon: customIcon }).addTo(
+        map
+      );
+      marker.bindPopup(
+        `<b>${point.pointName}</b><br>${point.pointDescription}`
+      );
+
+      function onMapClick(e) {
+        var popup = L.popup();
+        var container = document.createElement("div");
+
+        var yesButton = document.createElement("button");
+        yesButton.textContent = "oui";
+        yesButton.addEventListener("click", handleYesButtonClick);
+
+        var noButton = document.createElement("button");
+        noButton.textContent = "non";
+        noButton.addEventListener("click", handleNoButtonClick);
+
+        container.appendChild(
+          document.createTextNode("Voulez vous placer un point ici ?")
+        );
+        container.appendChild(yesButton);
+        container.appendChild(noButton);
+
+        popup.setLatLng(e.latlng).setContent(container).openOn(map);
+
+        async function handleYesButtonClick() {
+          await axios
+            .post("http://localhost:5000/api/data/add-point", {
+              email: localStorage.getItem("email"),
+              pointName: "point xxx",
+              pointDescription: "point description",
+              coords: {
+                lat: e.latlng.lat,
+                lng: e.latlng.lng,
+              },
+              addedBy: localStorage.getItem("userId"),
+              addedDate: new Date(),
+            })
+            .then((res) => {
+              console.log(res);
+
+              const point = res.data.point;
+              console.log(point);
+
+              var marker = L.marker([point.coords.lat, point.coords.lng], {
+                icon: customIcon,
+              }).addTo(map);
+              marker.bindPopup(
+                `<b>${point.pointName}</b><br>${point.pointDescription}`
+              );
+              //ajouter un custom icon pour le point ajouté
+              //ajouter un popup pour le point ajouté
+
+              map.closePopup();
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        }
+
+        function handleNoButtonClick() {
+          map.closePopup();
+        }
+      }
+
+      map.on("contextmenu", onMapClick);
+    });
+  });
+</script>
 
 {#if isLogged}
   <AddMarker />
   <section id="map-section-logged">
-    <div class="map" style="height:100%;width:100%" use:mapAction />
+    <div id="map" />
   </section>
 {:else}
   <section id="map-section">
-    <div class="map" style="height:100%;width:100%" use:mapAction />
+    <div id="map" />
   </section>
 {/if}
 
@@ -122,7 +159,7 @@
     height: 100vh;
     width: 100vw;
   }
-  .map {
+  #map {
     width: 100vw;
     height: 100vh;
   }

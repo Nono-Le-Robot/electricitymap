@@ -4,7 +4,7 @@
   import Auth from "./components/Auth.svelte";
   import Popup from "./components/Popup.svelte";
 
-  let logged = false;
+  let logged = true;
   const popupIsVisible = true;
 
   let data;

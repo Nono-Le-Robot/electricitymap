@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const pointSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   pointName: {
     type: String,
     required: true,
@@ -25,9 +30,8 @@ const pointSchema = new mongoose.Schema({
       type: String,
     },
   ],
-  addBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+  addedBy: {
+    type: String,
     required: true,
   },
   spotState: {
@@ -49,7 +53,6 @@ const pointSchema = new mongoose.Schema({
   ],
   addedDate: {
     type: String,
-    required: true,
   },
 });
 

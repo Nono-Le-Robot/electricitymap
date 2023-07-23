@@ -1,3 +1,4 @@
+const e = require("express");
 const userModel = require("../models/auth.model.js");
 const pointsModel = require("../models/points.model.js");
 
@@ -51,4 +52,52 @@ module.exports.getAllPoints = async (req, res) => {
       res.status(200).send(points);
     }
   });
+};
+
+module.exports.addPoint = async (req, res) => {
+  userModel
+    .findOne({ email: req.body.email })
+    .select("-password")
+    .then(async (user) => {
+      if (!user) {
+        return res.json({ msg: "User not found", status: false });
+      } else {
+        const {
+          email,
+          idUser,
+          pointName,
+          pointDescription,
+          coords,
+          addedBy,
+          spotState,
+        } = req.body;
+        const checkUser = await userModel.findOne({ email });
+
+        if (!checkUser) {
+          return res.status(404).json({ message: "Utilisateur non trouvé" });
+        } else {
+          const newPoint = new pointsModel({
+            email,
+            idUser,
+            pointName,
+            pointDescription,
+            coords,
+            addedBy,
+            spotState,
+          });
+          await newPoint.save();
+          res.json({
+            message: "Point ajouté avec succès",
+            point: {
+              pointName: newPoint.pointName,
+              pointDescription: newPoint.pointDescription,
+              coords: newPoint.coords,
+              addedBy: newPoint.addBy,
+              spotState: newPoint.spotState,
+            },
+          });
+        }
+      }
+    })
+    .catch((error) => res.status(401).send(error.message));
 };

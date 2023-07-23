@@ -18,10 +18,10 @@
       title: title,
       description: msg,
       duration: 2000,
-      placement: "bottom-center",
+      placement: "top-center",
       type: type,
       theme: "dark",
-      placement: "bottom-center",
+      placement: "top-center",
       showProgress: true,
       onClick: () => {},
       onRemove: () => {
@@ -181,6 +181,13 @@
             console.log(register);
           }}>Tu n'as pas encore de compte ?</a
         >
+      </p>
+      <p
+        on:click={() => {
+          dispatch("Connected", { logged: true });
+        }}
+      >
+        Dev mode
       </p>
     </form>
   </section>
