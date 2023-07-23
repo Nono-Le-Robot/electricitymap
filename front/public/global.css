@@ -9,11 +9,22 @@
   --red-error: #ff6e6e;
 }
 
-html {
-  /* width: 100vw;
-  height: 100vh; */
-}
-
 * {
   font-family: "Tilt Neon", cursive;
+}
+
+/* a trier */
+.leaflet-popup,
+.leaflet-popup-pane,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content,
+.leaflet-popup-tip-container {
+  text-align: center;
+  border-radius: 1rem;
+  color: white;
+  background-color: rgb(21, 32, 66);
+}
+
+.leaflet-popup-tip-container {
+  display: none;
 }
