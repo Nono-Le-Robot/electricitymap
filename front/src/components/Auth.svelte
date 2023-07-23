@@ -44,7 +44,7 @@
         return;
       } else {
         const res = await axios
-          .post("http://localhost:5000/api/auth/register", {
+          .post(`${apiUrl}/api/auth/register`, {
             email: userData.email,
             username: userData.username,
             password: userData.password,
@@ -68,7 +68,7 @@
 
     if (!register) {
       const res = await axios
-        .post("http://localhost:5000/api/auth/login", {
+        .post(`${apiUrl}/api/auth/login`, {
           email: userData.email,
           password: userData.password,
         })
@@ -181,13 +181,6 @@
             console.log(register);
           }}>Tu n'as pas encore de compte ?</a
         >
-      </p>
-      <p
-        on:click={() => {
-          dispatch("Connected", { logged: true });
-        }}
-      >
-        Dev mode
       </p>
     </form>
   </section>

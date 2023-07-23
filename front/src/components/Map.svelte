@@ -12,9 +12,7 @@
     const securityRadius = 2;
     let AllPoints;
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/data/get-all-points"
-      );
+      const response = await axios.get(`${apiUrl}/api/data/get-all-points`);
       AllPoints = response.data;
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -117,20 +115,17 @@
         }
 
         try {
-          const res = await axios.post(
-            "http://localhost:5000/api/data/add-point",
-            {
-              email: localStorage.getItem("email"),
-              pointName: "point xxx",
-              pointDescription: "point description",
-              coords: {
-                lat: e.latlng.lat,
-                lng: e.latlng.lng,
-              },
-              addedBy: localStorage.getItem("userId"),
-              addedDate: new Date(),
-            }
-          );
+          const res = await axios.post(`${apiUrl}/api/data/add-point`, {
+            email: localStorage.getItem("email"),
+            pointName: "point xxx",
+            pointDescription: "point description",
+            coords: {
+              lat: e.latlng.lat,
+              lng: e.latlng.lng,
+            },
+            addedBy: localStorage.getItem("userId"),
+            addedDate: new Date(),
+          });
 
           const point = res.data.point;
 

@@ -15,7 +15,7 @@
           coords.lat = position.coords.latitude;
           coords.lng = position.coords.longitude;
           const res = axios
-            .post("http://localhost:5000/api/data/add-point", {
+            .post(`${apiUrl}/api/data/add-point`, {
               email: email,
               pointName: pointName,
               pointDescription: pointDescription,
