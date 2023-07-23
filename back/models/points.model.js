@@ -54,6 +54,10 @@ const pointSchema = new mongoose.Schema({
   addedDate: {
     type: String,
   },
+  needValidate: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 module.exports = mongoose.model("Point", pointSchema);

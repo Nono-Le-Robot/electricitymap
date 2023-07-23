@@ -28,7 +28,7 @@
     top: 50vh;
     left: 50vw;
     transform: translate(-50%, -50%);
-    background-color: var(--popup-color);
+    background-color: var(--dark-blue-color);
     border-radius: 1rem;
     display: flex;
     flex-direction: column;

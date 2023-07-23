@@ -5,5 +5,6 @@ const dataController = require("../controllers/data.controller");
 router.get("/get-all-points", dataController.getAllPoints);
 router.get("/get-my-data", dataController.getMyData);
 router.post("/add-point", dataController.addPoint);
+router.post("/delete-point", dataController.deletePoint);
 
 module.exports = router;

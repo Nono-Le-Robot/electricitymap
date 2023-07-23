@@ -3,6 +3,7 @@
   import Map from "./components/Map.svelte";
   import Auth from "./components/Auth.svelte";
   import Popup from "./components/Popup.svelte";
+  import Actions from "./components/Actions.svelte";
 
   const userId = localStorage.getItem("userId");
   const username = localStorage.getItem("username");
@@ -33,6 +34,7 @@
 
   {#if logged}
     <Map isLogged={logged} />
+    <Actions />
   {:else}
     <div id="background" />
     <div id="flex-logo-form-auth">

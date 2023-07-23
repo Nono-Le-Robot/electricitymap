@@ -28,7 +28,7 @@ module.exports.updateData = async (req, res) => {
     }
 
     await user.save();
-    console.log(user.speeds);
+
     res.json({
       message: "Données utilisateur mises à jour avec succès",
       user: {
@@ -45,11 +45,22 @@ module.exports.updateData = async (req, res) => {
 
 module.exports.getAllPoints = async (req, res) => {
   pointsModel.find().exec(function (err, points) {
-    console.log(points);
     if (err) {
       res.status(500).send(err.message);
     } else {
       res.status(200).send(points);
+    }
+  });
+};
+
+module.exports.deletePoint = async (req, res) => {
+  pointsModel.deleteOne({ _id: req.body.pointId }).exec(function (err, point) {
+    if (err) {
+      res.status(500).send(err.message);
+    } else {
+      console.clear();
+      console.log(point);
+      res.status(200).send(point);
     }
   });
 };
@@ -70,6 +81,7 @@ module.exports.addPoint = async (req, res) => {
           coords,
           addedBy,
           spotState,
+          needValidate,
         } = req.body;
         const checkUser = await userModel.findOne({ email });
 
@@ -84,6 +96,7 @@ module.exports.addPoint = async (req, res) => {
             coords,
             addedBy,
             spotState,
+            needValidate,
           });
           await newPoint.save();
           res.json({
@@ -94,6 +107,7 @@ module.exports.addPoint = async (req, res) => {
               coords: newPoint.coords,
               addedBy: newPoint.addBy,
               spotState: newPoint.spotState,
+              needValidate: newPoint.needValidate,
             },
           });
         }
