@@ -101,6 +101,7 @@
       <div class="inputs-form">
         <label for="email" />
         <input
+          autocomplete="off"
           placeholder="Email"
           type="email"
           name="email"
@@ -110,6 +111,7 @@
         />
         <label for="pseudo" />
         <input
+          autocomplete="off"
           placeholder="Pseudo"
           type="text"
           name="pseudo"
@@ -119,6 +121,7 @@
         />
         <label for="password" />
         <input
+          autocomplete="off"
           placeholder="Mot de passe"
           type="password"
           name="password"
@@ -128,6 +131,7 @@
         />
         <label for="repeat-password" />
         <input
+          autocomplete="off"
           placeholder="Répéter le mot de passe"
           type="password"
           name="repeat-password"
@@ -154,6 +158,7 @@
       <div class="inputs-form">
         <label for="email" />
         <input
+          autocomplete="off"
           placeholder="Email"
           type="email"
           name="email"
@@ -163,6 +168,7 @@
         />
         <label for="password" />
         <input
+          autocomplete="off"
           placeholder="Mot de passe"
           type="password"
           name="password"

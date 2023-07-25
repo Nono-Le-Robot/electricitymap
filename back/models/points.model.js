@@ -34,6 +34,10 @@ const pointSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  priseType: {
+    type: String,
+    required: true,
+  },
   spotState: {
     type: Boolean,
     default: true,

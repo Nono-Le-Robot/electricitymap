@@ -43,6 +43,81 @@ module.exports.updateData = async (req, res) => {
   }
 };
 
+// ... (autres imports)
+
+module.exports.modifyPoint = async (req, res) => {
+  const { pointId, pointName, pointDescription, priseType } = req.body;
+  try {
+    const existingPoint = await pointsModel.findById(pointId);
+    if (!existingPoint) {
+      return res.status(404).json({ message: "Point not found" });
+    }
+
+    // Update the point properties
+    existingPoint.pointName = pointName;
+    existingPoint.pointDescription = pointDescription;
+    existingPoint.priseType = priseType;
+
+    // Save the updated point
+    await existingPoint.save();
+
+    res.json({
+      message: "Point updated successfully",
+      point: {
+        pointId: existingPoint._id,
+        pointName: existingPoint.pointName,
+        pointDescription: existingPoint.pointDescription,
+        coords: existingPoint.coords,
+        addedBy: existingPoint.addedBy,
+        priseType: existingPoint.priseType,
+        spotState: existingPoint.spotState,
+        needValidate: existingPoint.needValidate,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error while updating the point",
+      error: error.message,
+    });
+  }
+};
+
+// ... (autres fonctions)
+module.exports.updatePointCoordinates = async (req, res) => {
+  const { pointId, lat, lng } = req.body;
+  try {
+    const existingPoint = await pointsModel.findById(pointId);
+    if (!existingPoint) {
+      return res.status(404).json({ message: "Point not found" });
+    }
+
+    // Update the point coordinates
+    existingPoint.coords.lat = lat;
+    existingPoint.coords.lng = lng;
+
+    // Save the updated point
+    await existingPoint.save();
+
+    res.json({
+      message: "Point coordinates updated successfully",
+      point: {
+        pointId: existingPoint._id,
+        pointName: existingPoint.pointName,
+        pointDescription: existingPoint.pointDescription,
+        coords: existingPoint.coords,
+        addedBy: existingPoint.addedBy,
+        priseType: existingPoint.priseType,
+        spotState: existingPoint.spotState,
+        needValidate: existingPoint.needValidate,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error while updating the point coordinates",
+      error: error.message,
+    });
+  }
+};
 module.exports.getAllPoints = async (req, res) => {
   pointsModel.find().exec(function (err, points) {
     if (err) {
@@ -80,6 +155,7 @@ module.exports.addPoint = async (req, res) => {
           pointDescription,
           coords,
           addedBy,
+          priseType,
           spotState,
           needValidate,
         } = req.body;
@@ -95,6 +171,7 @@ module.exports.addPoint = async (req, res) => {
             pointDescription,
             coords,
             addedBy,
+            priseType,
             spotState,
             needValidate,
           });
@@ -106,6 +183,7 @@ module.exports.addPoint = async (req, res) => {
               pointDescription: newPoint.pointDescription,
               coords: newPoint.coords,
               addedBy: newPoint.addBy,
+              priseType: newPoint.priseType,
               spotState: newPoint.spotState,
               needValidate: newPoint.needValidate,
             },

@@ -11,8 +11,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.raw({ type: "application/octet-stream", limit: "1000mb" }));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/data", dataRoutes);
+app.use("/backend/api/auth", authRoutes);
+app.use("/backend/api/data", dataRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`listening on port ${process.env.PORT}`);
