@@ -17,6 +17,9 @@
   let showModalModifyInfo = false;
   let showConfirmDelete = false;
   let oldType = "";
+  let previousPosition;
+  let previousTimestamp;
+  let speedInKmPerHour = 0;
 
   let typesPrises = ["Européenne", "Américaine", "Prise camping-car"];
 
@@ -153,28 +156,32 @@
           namePointInput = point.pointName;
           descriptionPointInput = point.pointDescription;
           oldType = point.priseType;
+          map.closePopup();
           showModalModifyInfo = true;
-          await axios
-            .post(`${apiUrl}/api/data/modify-point`, {
-              pointId: point._id,
-              pointName: namePointInput,
-              pointDescription: descriptionPointInput,
-              priseType: oldType,
-            })
-            .then(async (res) => {
-              markersLayer.eachLayer(function (marker) {
-                if (marker.options.id === selectedMarker) {
-                  // markersLayer.removeLayer(marker);
-                  refreshPoints();
-                  //marker.removeFrom(map)
-                }
+
+          const modifyPointBtn = document.querySelector("#add-point-btn");
+          modifyPointBtn.addEventListener("click", async () => {
+            await axios
+              .post(`${apiUrl}/api/data/modify-point`, {
+                pointId: point._id,
+                pointName: namePointInput,
+                pointDescription: descriptionPointInput,
+                priseType: oldType,
+              })
+              .then(async (res) => {
+                markersLayer.eachLayer(function (marker) {
+                  if (marker.options.id === selectedMarker) {
+                    // markersLayer.removeLayer(marker);
+                    refreshPoints();
+                    //marker.removeFrom(map)
+                  }
+                });
+                showModalModifyInfo = false;
+              })
+              .catch((err) => {
+                console.log(err);
               });
-              map.closePopup();
-              showModalModifyInfo = false;
-            })
-            .catch((err) => {
-              console.log(err);
-            });
+          });
         });
         trashIcon.addEventListener("click", async () => {
           const userMail = localStorage.getItem("email");
@@ -230,12 +237,37 @@
     }
   };
 
+  function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in km
+    return distance;
+  }
+
+  function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+  }
+
+  function calculateSpeedInKmPerHour(distanceInKm, timeInSeconds) {
+    // Convert speed from km/s to km/h
+    return (distanceInKm / timeInSeconds) * 3600;
+  }
+
   function onLocationFound(e) {
     const userPosition = e.latlng;
     const goToPosition = document.querySelector(".fa-location-crosshairs");
     goToPosition.addEventListener("click", () => {
       map.setView(userPosition, 20);
     });
+
     const radius = e.accuracy;
 
     L.marker(e.latlng, { icon: myLocationIcon })
@@ -243,10 +275,34 @@
       .bindPopup("Votre position actuelle");
 
     L.circle(e.latlng, radius).addTo(map);
+
+    const currentTimestamp = new Date().getTime();
+
+    if (previousPosition && previousTimestamp) {
+      const distanceInKm = getDistanceFromLatLonInKm(
+        previousPosition.lat,
+        previousPosition.lng,
+        userPosition.lat,
+        userPosition.lng
+      );
+
+      const timeInSeconds = (currentTimestamp - previousTimestamp) / 1000;
+      speedInKmPerHour = calculateSpeedInKmPerHour(distanceInKm, timeInSeconds);
+
+      // Display the speed on the map or do whatever you want with it
+      console.log("Vitesse : ", speedInKmPerHour.toFixed(0), " km/h");
+    } else {
+      // If this is the first position update, display a message in the console
+      console.log("Vitesse : ", speedInKmPerHour.toFixed(0), " km/h");
+    }
+
+    // Update the previous position and timestamp
+    previousPosition = userPosition;
+    previousTimestamp = currentTimestamp;
   }
 
   function onLocationError(e) {
-    alert(e.message);
+    console.error("Error getting location:", e.message);
   }
 
   function onMapClick(e) {
@@ -314,6 +370,10 @@
     await refreshPoints();
   });
 </script>
+
+<div id="driving-interface">
+  <p style=" font-size:30px;">{speedInKmPerHour} Km/h</p>
+</div>
 
 {#if showConfirmDelete}
   <div id="container-remove-point">
@@ -460,6 +520,19 @@
 {/if}
 
 <style>
+  #driving-interface {
+    position: absolute;
+    top: 0;
+    left: 50vw;
+    transform: translateX(-50%);
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+
+    z-index: 999;
+    background-color: var(--dark-blue-color);
+    color: white;
+    width: 200px;
+  }
   #action-delete {
     display: flex;
     align-items: center;
