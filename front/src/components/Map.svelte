@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import L, { popup } from "leaflet";
+  import L from "leaflet";
   import axios from "axios";
   export let isLogged;
 
@@ -83,7 +83,6 @@
         lat: lat,
         lng: lng,
       });
-      // Refresh the points to reflect the updated coordinates on the map
       await refreshPoints();
     } catch (err) {
       console.log(err);
@@ -102,7 +101,6 @@
       marker.on("dragend", (event) => {
         const newCoords = event.target.getLatLng();
         const pointId = allPoints[event.target.options.id]._id;
-        // Send a request to update the coordinates of the point in the backend
         updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
       });
       marker.on("click", (event) => {
@@ -130,20 +128,11 @@
 
       marker.on("popupopen", (event) => {
         console.log(selectedMarker);
-        // const photo = document.querySelector(".photo");
 
         const eyeIcon = document.querySelector(".fa-eye");
         const penIcon = document.querySelector(".fa-pen");
         const trashIcon = document.querySelector(".fa-trash-can");
-        // photo.addEventListener("click", (e) => {
-        //   e.preventDefault();
-        //   //ouvrir une modal avec les infos du point
-        // });
-        eyeIcon.addEventListener("click", async () => {
-          //ouvrir une modal avec les infos du point
-          alert("eye clicked, id: " + point._id + "");
-          map.closePopup();
-        });
+        eyeIcon.addEventListener("click", async () => {});
         penIcon.addEventListener("click", async () => {
           const userMail = localStorage.getItem("email");
           if (userMail !== point.email) {
@@ -158,7 +147,6 @@
           oldType = point.priseType;
           map.closePopup();
           showModalModifyInfo = true;
-
           const modifyPointBtn = document.querySelector("#add-point-btn");
           modifyPointBtn.addEventListener("click", async () => {
             await axios
@@ -171,9 +159,7 @@
               .then(async (res) => {
                 markersLayer.eachLayer(function (marker) {
                   if (marker.options.id === selectedMarker) {
-                    // markersLayer.removeLayer(marker);
                     refreshPoints();
-                    //marker.removeFrom(map)
                   }
                 });
                 showModalModifyInfo = false;
@@ -192,9 +178,7 @@
             map.closePopup();
             return;
           }
-
           showConfirmDelete = true;
-          //CHAT GPT ::::: ajouter ici si l'utilisateur confirm la suppression lancer la requette delete
         });
       });
     });
@@ -238,7 +222,7 @@
   };
 
   function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radius of the earth in km
+    const R = 6371;
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
     const a =
@@ -248,7 +232,7 @@
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in km
+    const distance = R * c;
     return distance;
   }
 
@@ -257,7 +241,6 @@
   }
 
   function calculateSpeedInKmPerHour(distanceInKm, timeInSeconds) {
-    // Convert speed from km/s to km/h
     return (distanceInKm / timeInSeconds) * 3600;
   }
 
@@ -265,19 +248,15 @@
     const userPosition = e.latlng;
     const goToPosition = document.querySelector(".fa-location-crosshairs");
     goToPosition.addEventListener("click", () => {
-      map.setView(userPosition, 20);
+      map.setView(userPosition, 17);
     });
-
     const radius = e.accuracy;
-
     L.marker(e.latlng, { icon: myLocationIcon })
       .addTo(map)
       .bindPopup("Votre position actuelle");
 
     L.circle(e.latlng, radius).addTo(map);
-
     const currentTimestamp = new Date().getTime();
-
     if (previousPosition && previousTimestamp) {
       const distanceInKm = getDistanceFromLatLonInKm(
         previousPosition.lat,
@@ -285,18 +264,12 @@
         userPosition.lat,
         userPosition.lng
       );
-
       const timeInSeconds = (currentTimestamp - previousTimestamp) / 1000;
       speedInKmPerHour = calculateSpeedInKmPerHour(distanceInKm, timeInSeconds);
-
-      // Display the speed on the map or do whatever you want with it
       console.log("Vitesse : ", speedInKmPerHour.toFixed(0), " km/h");
     } else {
-      // If this is the first position update, display a message in the console
       console.log("Vitesse : ", speedInKmPerHour.toFixed(0), " km/h");
     }
-
-    // Update the previous position and timestamp
     previousPosition = userPosition;
     previousTimestamp = currentTimestamp;
   }
@@ -341,9 +314,7 @@
       });
       markersLayer.eachLayer(function (marker) {
         if (marker.options.id === selectedMarker) {
-          // markersLayer.removeLayer(marker);
           refreshPoints();
-          //marker.removeFrom(map)
         }
       });
       map.closePopup();
@@ -352,27 +323,27 @@
       console.log(err);
     }
   };
+
   onMount(async () => {
     map = L.map("map").setView([51.505, -0.09], 13);
-
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
-
     map.locate({ setView: true });
     map.on("locationfound", onLocationFound);
     map.on("locationerror", onLocationError);
     map.on("contextmenu", onMapClick);
-
     markersLayer = L.layerGroup().addTo(map);
     await refreshPoints();
   });
 </script>
 
 <div id="driving-interface">
-  <p style=" font-size:30px;">{speedInKmPerHour} Km/h</p>
+  <p style=" font-size:30px;  transform: translateY(-10px);">
+    {speedInKmPerHour} Km/h
+  </p>
 </div>
 
 {#if showConfirmDelete}
@@ -522,16 +493,19 @@
 <style>
   #driving-interface {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 50vw;
     transform: translateX(-50%);
-    border-bottom-right-radius: 1rem;
-    border-bottom-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    border-top-left-radius: 1rem;
 
     z-index: 999;
     background-color: var(--dark-blue-color);
     color: white;
-    width: 200px;
+    width: 170px;
+    padding: 0;
+    margin: 0;
+    height: 70px;
   }
   #action-delete {
     display: flex;
@@ -633,13 +607,12 @@
     width: 100%;
   }
   .fa-location-crosshairs {
-    color: #fff;
-    font-size: 2rem;
+    color: #ffffff;
     position: absolute;
-    bottom: 30px;
-    left: 30px;
+    bottom: 20px;
+    left: 20px;
     z-index: 999;
-    font-size: 1rem;
+    font-size: 30px;
     border-radius: 100%;
     background-color: var(--dark-blue-color);
     padding: 1rem;

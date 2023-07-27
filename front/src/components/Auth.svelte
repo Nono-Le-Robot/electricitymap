@@ -197,10 +197,6 @@
 </ToastContainer>
 
 <style>
-  .h2-form-auth {
-    position: relative;
-    top: -12px;
-  }
   .inputs-form {
     display: flex;
     flex-direction: column;
@@ -211,25 +207,15 @@
   #register-form {
     gap: 1rem;
     padding: 3rem;
-
-    /* width: 350px;
-    height: 500px; */
   }
 
   #login-form {
     padding: 3rem;
     gap: 1rem;
-    /* width: 350px;
-    height: 350px; */
   }
 
   #register-form,
   #login-form {
-    /* position: fixed;
-    z-index: 1000;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -270,12 +256,4 @@
 
     margin-top: 1rem;
   }
-
-  /* @media (max-width: 768px) {
-    #register-form,
-    #login-form {
-      width: 80vw;
-      height: auto;
-    }
-  } */
 </style>
