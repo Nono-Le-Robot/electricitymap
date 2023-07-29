@@ -24,6 +24,10 @@
   let showModalAddPoint = false;
   let showModalModifyInfo = false;
   let showConfirmDelete = false;
+  let showModalFilter = false;
+  let showEU = true;
+  let showUS = true;
+  let showCC = true;
   let oldType = "";
   let speedInKmPerHour = 0;
   let userLocationMarker;
@@ -229,6 +233,7 @@
     showModalAskAddPoint = false;
     showModalModifyInfo = false;
     showConfirmDelete = false;
+    showModalFilter = false;
   };
 
   const addPoint = () => {
@@ -241,10 +246,6 @@
   const onMapRightClick = (e) => {
     closePopup();
     map.closePopup();
-    showModalAskAddPoint = false;
-    showModalAddPoint = false;
-    showModalModifyInfo = false;
-    showConfirmDelete = false;
     latPointToAdd = e.latlng.lat;
     lngPointToAdd = e.latlng.lng;
     showModalAskAddPoint = true;
@@ -297,7 +298,54 @@
     showConfirmDelete = false;
   };
 
+  const showFilter = () => {
+    showModalFilter = true;
+  };
+
+  const toggleEU = () => {
+    showEU = !showEU;
+    if (showEU) {
+      markersLayerEuropeene.addTo(map);
+    } else {
+      markersLayerEuropeene.removeFrom(map);
+    }
+    localStorage.setItem("showEU", showEU);
+  };
+
+  const toggleUS = () => {
+    showUS = !showUS;
+    if (showUS) {
+      markersLayerAmericaine.addTo(map);
+    } else {
+      markersLayerAmericaine.removeFrom(map);
+    }
+    localStorage.setItem("showUS", showUS);
+  };
+
+  const toggleCC = () => {
+    showCC = !showCC;
+    if (showCC) {
+      markersLayerCampingCar.addTo(map);
+    } else {
+      markersLayerCampingCar.removeFrom(map);
+    }
+    localStorage.setItem("showCC", showCC);
+  };
+
   onMount(async () => {
+    let showEuLocalStorage = localStorage.getItem("showEU");
+    let showUsLocalStorage = localStorage.getItem("showUS");
+    let showCcLocalStorage = localStorage.getItem("showCC");
+    if (showEuLocalStorage) {
+      showEU = showEuLocalStorage === "true" ? true : false;
+    }
+    if (showUsLocalStorage) {
+      showUS = showUsLocalStorage === "true" ? true : false;
+    }
+    if (showCcLocalStorage) {
+      showCC = showCcLocalStorage === "true" ? true : false;
+    }
+
     map = L.map("map");
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -327,9 +375,53 @@
       console.error("Geolocation is not available in this browser.");
       map.setView([42, 6], 17);
     }
+    map.on("click", (e) => {
+      closePopup();
+      map.closePopup();
+    });
     map.on("contextmenu", (e) => onMapRightClick(e));
   });
 </script>
+
+<div id="filter">
+  <i class="fa-solid fa-eye-low-vision" on:click={showFilter} />
+</div>
+
+{#if showModalFilter}
+  <div id="container-remove-point">
+    <div id="EU-filter">
+      <p>
+        Prises Européene ({groupMarkersEuropeene.length})
+      </p>
+      {#if showEU}
+        <i class="fa-solid fa-eye" on:click={toggleEU} />
+      {:else}
+        <i class="fa-solid fa-eye-slash" on:click={toggleEU} />
+      {/if}
+    </div>
+    <div id="US-filter">
+      <p>
+        Prises Américaine ({groupMarkersAmericaine.length})
+      </p>
+      {#if showUS}
+        <i class="fa-solid fa-eye" on:click={toggleUS} />
+      {:else}
+        <i class="fa-solid fa-eye-slash" on:click={toggleUS} />
+      {/if}
+    </div>
+    <div id="CC-filter">
+      <p>
+        Prises camping-car ({groupMarkersCampingCar.length})
+      </p>
+      {#if showCC}
+        <i class="fa-solid fa-eye" on:click={toggleCC} />
+      {:else}
+        <i class="fa-solid fa-eye-slash" on:click={toggleCC} />
+      {/if}
+    </div>
+    <div />
+  </div>
+{/if}
 
 {#if showConfirmDelete}
   <div id="container-remove-point">
@@ -480,6 +572,33 @@
 {/if}
 
 <style>
+  #EU-filter,
+  #US-filter,
+  #CC-filter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  #EU-filter i,
+  #US-filter i,
+  #CC-filter i {
+    cursor: pointer;
+  }
+
+  .fa-eye-low-vision {
+    color: #ffffff;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+    font-size: 20px;
+    border-radius: 100%;
+    background-color: var(--dark-blue-color);
+    padding: 1.25rem 1rem;
+    cursor: pointer;
+  }
   #driving-interface {
     position: absolute;
     bottom: 0;
