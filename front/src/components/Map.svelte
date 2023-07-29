@@ -336,15 +336,6 @@
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showUsLocalStorage = localStorage.getItem("showUS");
     let showCcLocalStorage = localStorage.getItem("showCC");
-    if (showEuLocalStorage) {
-      showEU = showEuLocalStorage === "true" ? true : false;
-    }
-    if (showUsLocalStorage) {
-      showUS = showUsLocalStorage === "true" ? true : false;
-    }
-    if (showCcLocalStorage) {
-      showCC = showCcLocalStorage === "true" ? true : false;
-    }
 
     map = L.map("map");
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -380,6 +371,24 @@
       map.closePopup();
     });
     map.on("contextmenu", (e) => onMapRightClick(e));
+    if (showEuLocalStorage) {
+      showEU = showEuLocalStorage === "true" ? true : false;
+      showEuLocalStorage === "true"
+        ? markersLayerEuropeene.addTo(map)
+        : markersLayerEuropeene.removeFrom(map);
+    }
+    if (showUsLocalStorage) {
+      showUS = showUsLocalStorage === "true" ? true : false;
+      showUsLocalStorage === "true"
+        ? markersLayerAmericaine.addTo(map)
+        : markersLayerAmericaine.removeFrom(map);
+    }
+    if (showCcLocalStorage) {
+      showCC = showCcLocalStorage === "true" ? true : false;
+      showCcLocalStorage === "true"
+        ? markersLayerCampingCar.addTo(map)
+        : markersLayerCampingCar.removeFrom(map);
+    }
   });
 </script>
 
