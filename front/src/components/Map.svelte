@@ -5,22 +5,29 @@
   export let isLogged;
 
   let map;
+  let markersLayerEuropeene;
+  let markersLayerAmericaine;
+  let markersLayerCampingCar;
   let markersLayer;
+  let marker;
   let allPoints = [];
+  let circles = [];
+  let groupMarkersEuropeene = [];
+  let groupMarkersAmericaine = [];
+  let groupMarkersCampingCar = [];
   let selectedMarker;
   let namePointInput = "";
   let descriptionPointInput = "";
   let latPointToAdd;
   let lngPointToAdd;
+  let showModalAskAddPoint = false;
   let showModalAddPoint = false;
-  let showModalAddInfo = false;
   let showModalModifyInfo = false;
   let showConfirmDelete = false;
   let oldType = "";
-  let previousPosition;
-  let previousTimestamp;
   let speedInKmPerHour = 0;
-
+  let userLocationMarker;
+  let circleMinSpaceBetweenPoint;
   let typesPrises = ["Européenne", "Américaine", "Prise camping-car"];
 
   function createCustomIcon(
@@ -68,7 +75,15 @@
     [0, -45]
   );
 
+  const createMarker = (coords, icon, draggable, id) => {
+    marker = L.marker(coords, {
+      icon: icon,
+      draggable: draggable,
+    });
+  };
+
   const getAllPoints = async () => {
+    allPoints = [];
     try {
       const res = await axios.get(`${apiUrl}/api/data/get-all-points`);
       allPoints = res.data;
@@ -76,6 +91,7 @@
       console.log(err);
     }
   };
+
   const updatePointCoordinates = async (pointId, lat, lng) => {
     try {
       await axios.post(`${apiUrl}/api/data/update-point-coordinates`, {
@@ -88,26 +104,48 @@
       console.log(err);
     }
   };
+
   const refreshPoints = async () => {
     await getAllPoints();
-    markersLayer.clearLayers();
+    circles.forEach((circle) => circle.removeFrom(map));
+    circles = [];
+    markersLayerEuropeene.clearLayers();
+    markersLayerAmericaine.clearLayers();
+    markersLayerCampingCar.clearLayers();
+    groupMarkersEuropeene = [];
+    groupMarkersAmericaine = [];
+    groupMarkersCampingCar = [];
     allPoints.forEach((point, index) => {
-      const icon = point.needValidate ? customIconBlue : customIcon;
-      const marker = L.marker([point.coords.lat, point.coords.lng], {
-        id: index,
-        icon,
-        draggable: point.needValidate,
-      }).addTo(markersLayer);
-      marker.on("dragend", (event) => {
-        const newCoords = event.target.getLatLng();
-        const pointId = allPoints[event.target.options.id]._id;
-        updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
-      });
-      marker.on("click", (event) => {
-        selectedMarker = event.target.options.id;
-      });
-
-      marker.bindPopup(`
+      if (point.priseType === "Européene") {
+        groupMarkersEuropeene.push(point);
+      }
+      if (point.priseType === "Américaine") {
+        groupMarkersAmericaine.push(point);
+      }
+      if (point.priseType === "Prise camping-car") {
+        groupMarkersCampingCar.push(point);
+      }
+    });
+    function createMarkerAndBindEvents(markerGroup, markersLayer) {
+      markerGroup.forEach((point) => {
+        selectedMarker = point._id;
+        let pointCoords = [point.coords.lat, point.coords.lng];
+        let pointId = point._id;
+        let customIconToUse = point.needValidate ? customIconBlue : customIcon;
+        circleMinSpaceBetweenPoint = L.circle(pointCoords, {
+          color: "grey",
+          fillColor: "grey",
+          fillOpacity: 0.5,
+          radius: minRadiusToAddPoint,
+        }).addTo(map);
+        circleMinSpaceBetweenPoint.on("contextmenu", () => {
+          showModalAskAddPoint = false;
+          alert("Un point existe déjà ici.");
+        });
+        circles.push(circleMinSpaceBetweenPoint);
+        createMarker(pointCoords, customIconToUse, point.needValidate, pointId);
+        markersLayer.addLayer(marker);
+        marker.bindPopup(`
         <b>${point.pointName}</b>
         <p>${point.pointDescription}</p>
         <p>Type : ${point.priseType}</p>
@@ -125,78 +163,91 @@
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
         </div>
       `);
-
-      marker.on("popupopen", (event) => {
-        console.log(selectedMarker);
-
-        const eyeIcon = document.querySelector(".fa-eye");
-        const penIcon = document.querySelector(".fa-pen");
-        const trashIcon = document.querySelector(".fa-trash-can");
-        eyeIcon.addEventListener("click", async () => {});
-        penIcon.addEventListener("click", async () => {
-          const userMail = localStorage.getItem("email");
-          if (userMail !== point.email) {
-            alert(
-              "Vous n'etes pas le createur de ce point, vous ne pouvez pas le modifier"
-            );
+        marker.on("click", () => {
+          selectedMarker = point;
+        });
+        marker.on("move", (event) => {
+          selectedMarker = point;
+          circles.forEach((circle) => circle.removeFrom(map));
+          circles = [];
+          const newCoords = event.target.getLatLng();
+          circleMinSpaceBetweenPoint.setLatLng(newCoords);
+        });
+        marker.on("contextmenu", () => {
+          selectedMarker = point;
+          showModalAskAddPoint = false;
+          alert("Un point existe déjà ici.");
+        });
+        marker.on("dragend", (event) => {
+          selectedMarker = point;
+          const newCoords = event.target.getLatLng();
+          updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
+        });
+        marker.on("popupopen", (event) => {
+          const eyeIcon = document.querySelector(".fa-eye");
+          const penIcon = document.querySelector(".fa-pen");
+          const trashIcon = document.querySelector(".fa-trash-can");
+          eyeIcon.addEventListener("click", async () => {});
+          penIcon.addEventListener("click", async () => {
+            const userMail = localStorage.getItem("email");
+            const userPseudo = localStorage.getItem("username");
+            if (userMail !== point.email && userPseudo !== point.addedBy) {
+              alert(
+                "Vous n'etes pas le createur de ce point, vous ne pouvez pas le modifier"
+              );
+              map.closePopup();
+              return;
+            }
+            namePointInput = point.pointName;
+            descriptionPointInput = point.pointDescription;
+            oldType = point.priseType;
             map.closePopup();
-            return;
-          }
-          namePointInput = point.pointName;
-          descriptionPointInput = point.pointDescription;
-          oldType = point.priseType;
-          map.closePopup();
-          showModalModifyInfo = true;
-          const modifyPointBtn = document.querySelector("#add-point-btn");
-          modifyPointBtn.addEventListener("click", async () => {
-            await axios
-              .post(`${apiUrl}/api/data/modify-point`, {
-                pointId: point._id,
-                pointName: namePointInput,
-                pointDescription: descriptionPointInput,
-                priseType: oldType,
-              })
-              .then(async (res) => {
-                markersLayer.eachLayer(function (marker) {
-                  if (marker.options.id === selectedMarker) {
-                    refreshPoints();
-                  }
-                });
-                showModalModifyInfo = false;
-              })
-              .catch((err) => {
-                console.log(err);
-              });
+            showModalModifyInfo = true;
+          });
+          trashIcon.addEventListener("click", async () => {
+            const userMail = localStorage.getItem("email");
+            if (userMail !== point.email) {
+              alert(
+                "Vous n'etes pas le createur de ce point, vous ne pouvez pas le supprimer"
+              );
+              map.closePopup();
+              return;
+            }
+            map.closePopup();
+            showConfirmDelete = true;
           });
         });
-        trashIcon.addEventListener("click", async () => {
-          const userMail = localStorage.getItem("email");
-          if (userMail !== point.email) {
-            alert(
-              "Vous n'etes pas le createur de ce point, vous ne pouvez pas le supprimer"
-            );
-            map.closePopup();
-            return;
-          }
-          showConfirmDelete = true;
-        });
       });
-    });
+    }
+    createMarkerAndBindEvents(groupMarkersEuropeene, markersLayerEuropeene);
+    createMarkerAndBindEvents(groupMarkersAmericaine, markersLayerAmericaine);
+    createMarkerAndBindEvents(groupMarkersCampingCar, markersLayerCampingCar);
   };
 
   const closePopup = () => {
-    showModalAddInfo = false;
     showModalAddPoint = false;
+    showModalAskAddPoint = false;
     showModalModifyInfo = false;
+    showConfirmDelete = false;
   };
 
   const addPoint = () => {
-    showModalAddPoint = false;
-    showModalAddInfo = true;
+    namePointInput = "";
+    descriptionPointInput = "";
+    showModalAskAddPoint = false;
+    showModalAddPoint = true;
   };
 
-  const cancelAddPoint = () => {
+  const onMapRightClick = (e) => {
+    closePopup();
+    map.closePopup();
+    showModalAskAddPoint = false;
     showModalAddPoint = false;
+    showModalModifyInfo = false;
+    showConfirmDelete = false;
+    latPointToAdd = e.latlng.lat;
+    lngPointToAdd = e.latlng.lng;
+    showModalAskAddPoint = true;
   };
 
   const submitInfoPoint = async () => {
@@ -212,139 +263,73 @@
         addedDate: new Date(),
         needValiate: true,
       });
-      await refreshPoints();
-      showModalAddInfo = false;
       namePointInput = "";
       descriptionPointInput = "";
+      await refreshPoints();
+      showModalAddPoint = false;
     } catch (err) {
       console.log(err);
     }
   };
 
-  function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) *
-        Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    return distance;
-  }
-
-  function deg2rad(deg) {
-    return deg * (Math.PI / 180);
-  }
-
-  function calculateSpeedInKmPerHour(distanceInKm, timeInSeconds) {
-    return (distanceInKm / timeInSeconds) * 3600;
-  }
-
-  function onLocationFound(e) {
-    const userPosition = e.latlng;
-    const goToPosition = document.querySelector(".fa-location-crosshairs");
-    goToPosition.addEventListener("click", () => {
-      map.setView(userPosition, 17);
-    });
-    const radius = e.accuracy;
-    L.marker(e.latlng, { icon: myLocationIcon })
-      .addTo(map)
-      .bindPopup("Votre position actuelle");
-
-    L.circle(e.latlng, radius).addTo(map);
-    const currentTimestamp = new Date().getTime();
-    if (previousPosition && previousTimestamp) {
-      const distanceInKm = getDistanceFromLatLonInKm(
-        previousPosition.lat,
-        previousPosition.lng,
-        userPosition.lat,
-        userPosition.lng
-      );
-      const timeInSeconds = (currentTimestamp - previousTimestamp) / 1000;
-      speedInKmPerHour = calculateSpeedInKmPerHour(distanceInKm, timeInSeconds);
-      console.log("Vitesse : ", speedInKmPerHour.toFixed(0), " km/h");
-    } else {
-      console.log("Vitesse : ", speedInKmPerHour.toFixed(0), " km/h");
-    }
-    previousPosition = userPosition;
-    previousTimestamp = currentTimestamp;
-  }
-
-  function onLocationError(e) {
-    console.error("Error getting location:", e.message);
-  }
-
-  function onMapClick(e) {
-    latPointToAdd = e.latlng.lat;
-    lngPointToAdd = e.latlng.lng;
-    showModalAddPoint = true;
-  }
-
-  const cancelDelete = () => {
-    showConfirmDelete = false;
-  };
-
-  const confirmDelete = async () => {
-    try {
-      const pointToDelete = allPoints[selectedMarker];
-      await axios.post(`${apiUrl}/api/data/delete-point`, {
-        pointId: pointToDelete._id,
-      });
-      markersLayer.eachLayer(function (marker) {
-        if (marker.options.id === selectedMarker) {
-          marker.removeFrom(map);
-        }
-      });
-      showConfirmDelete = false;
-    } catch (err) {
-      console.log(err);
-    }
-  };
-  const modifyPoint = async () => {
-    try {
-      const res = await axios.post(`${apiUrl}/api/data/modify-point`, {
-        pointId: allPoints[selectedMarker]._id,
+  const confirmModify = async () => {
+    await axios
+      .post(`${apiUrl}/api/data/modify-point`, {
+        pointId: selectedMarker._id,
         pointName: namePointInput,
         pointDescription: descriptionPointInput,
         priseType: oldType,
+      })
+      .then(async (res) => {
+        await refreshPoints();
+        showModalModifyInfo = false;
+      })
+      .catch((err) => {
+        console.log(err);
       });
-      markersLayer.eachLayer(function (marker) {
-        if (marker.options.id === selectedMarker) {
-          refreshPoints();
-        }
-      });
-      map.closePopup();
-      showModalModifyInfo = false;
-    } catch (err) {
-      console.log(err);
-    }
+  };
+
+  const confirmDelete = async () => {
+    await axios.post(`${apiUrl}/api/data/delete-point`, {
+      pointId: selectedMarker._id,
+    });
+    await refreshPoints();
+    showConfirmDelete = false;
   };
 
   onMount(async () => {
-    map = L.map("map").setView([51.505, -0.09], 13);
+    map = L.map("map");
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
-    map.locate({ setView: true });
-    map.on("locationfound", onLocationFound);
-    map.on("locationerror", onLocationError);
-    map.on("contextmenu", onMapClick);
-    markersLayer = L.layerGroup().addTo(map);
+    markersLayerEuropeene = L.layerGroup().addTo(map);
+    markersLayerAmericaine = L.layerGroup().addTo(map);
+    markersLayerCampingCar = L.layerGroup().addTo(map);
+    await getAllPoints();
     await refreshPoints();
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        let userCoords = [position.coords.latitude, position.coords.longitude];
+        map.setView(userCoords, 17);
+        userLocationMarker = L.marker(userCoords, {
+          icon: myLocationIcon,
+        }).addTo(map);
+        const goToUserLocation = document.querySelector(
+          ".fa-location-crosshairs"
+        );
+        goToUserLocation.addEventListener("click", () => {
+          map.setView(userCoords, 17);
+        });
+      });
+    } else {
+      console.error("Geolocation is not available in this browser.");
+      map.setView([42, 6], 17);
+    }
+    map.on("contextmenu", (e) => onMapRightClick(e));
   });
 </script>
-
-<div id="driving-interface">
-  <p style=" font-size:30px;  transform: translateY(-10px);">
-    {speedInKmPerHour} Km/h
-  </p>
-</div>
 
 {#if showConfirmDelete}
   <div id="container-remove-point">
@@ -355,15 +340,17 @@
       <button type="submit" id="confirm-delete" on:click={confirmDelete}
         >Oui</button
       >
-      <button type="submit" id="cancel-delete" on:click={cancelDelete}
-        >Non</button
+      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
       >
     </div>
     <div />
   </div>
 {/if}
+
 {#if showModalModifyInfo}
   <div id="container-add-info-point">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
     <div id="champ-text-add-point">
       <input
         autocomplete="off"
@@ -403,7 +390,7 @@
         type="submit"
         id="add-point-btn"
         style="color:black"
-        on:click={modifyPoint}>Modifier</button
+        on:click={confirmModify}>Modifier</button
       >
       <button
         type="submit"
@@ -415,7 +402,7 @@
   </div>
 {/if}
 
-{#if showModalAddInfo}
+{#if showModalAddPoint}
   <div id="container-add-info-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
     <div id="champ-text-add-point">
@@ -458,8 +445,10 @@
   </div>
 {/if}
 
-{#if showModalAddPoint}
+{#if showModalAskAddPoint}
   <div id="container-add-info-point">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
     <p>Voulez vous placer un point ici ?</p>
     <p>(vous pourrez le deplacer avant validation)</p>
     <div id="form'action">
@@ -467,13 +456,13 @@
         type="submit"
         id="add-point-btn"
         style="color:black"
-        on:click={addPoint}>Ajouter</button
+        on:click={addPoint}>Oui</button
       >
       <button
         type="submit"
         id="cancel-add-point-btn"
         style="background-color: var(--red-error); width: 100%; "
-        on:click={cancelAddPoint}>Annuler</button
+        on:click={closePopup}>Non</button
       >
     </div>
   </div>
@@ -516,9 +505,9 @@
   }
   .fa-xmark {
     position: absolute;
-    font-size: 2rem;
-    left: 90%;
-    top: 2%;
+    font-size: 1rem;
+    right: 5%;
+    top: 5%;
     color: var(--red-error);
     cursor: pointer;
   }
