@@ -1,6 +1,9 @@
 <script>
   import { onMount } from "svelte";
   import L from "leaflet";
+  import "leaflet-routing-machine";
+  import "leaflet-control-geocoder";
+  import "lrm-graphhopper";
   import axios from "axios";
   export let isLogged;
 
@@ -12,6 +15,7 @@
   let marker;
   let allPoints = [];
   let circles = [];
+  let userCoords = [];
   let groupMarkersEuropeene = [];
   let groupMarkersAmericaine = [];
   let groupMarkersCampingCar = [];
@@ -28,8 +32,10 @@
   let showEU = true;
   let showUS = true;
   let showCC = true;
+  var mapboxAccessToken = "VOTRE_CLÉ_API_MAPBOX";
   let oldType = "";
   let speedInKmPerHour = 0;
+  const toleranceDistance = 100; // Seuil de tolérance en mètres
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
   let typesPrises = ["Européenne", "Américaine", "Prise camping-car"];
@@ -79,6 +85,33 @@
     [0, -45]
   );
 
+  const EUFlagIcon = createCustomIcon(
+    "./assets/eu-flag.png",
+    [25, 25], // Taille de l'icône
+    [0, 60], // Point d'ancrage de l'icône
+    [0, 0], // Taille de l'ombre (peut être [0, 0] si vous n'en avez pas besoin)
+    [0, 0], // Point d'ancrage de l'ombre (peut être [0, 0] si vous n'en avez pas besoin)
+    [15, 0] // Point d'ancrage du popup par rapport au marqueur
+  );
+
+  const USFlagIcon = createCustomIcon(
+    "./assets/us-flag.png",
+    [25, 25], // Taille de l'icône
+    [0, 60], // Point d'ancrage de l'icône
+    [0, 0],
+    [0, 0],
+    [15, 0]
+  );
+
+  const CCFlagIcon = createCustomIcon(
+    "./assets/cc-flag.png",
+    [25, 25], // Taille de l'icône
+    [0, 60], // Point d'ancrage de l'icône
+    [0, 0],
+    [0, 0],
+    [15, 0]
+  );
+
   const createMarker = (coords, icon, draggable, id) => {
     marker = L.marker(coords, {
       icon: icon,
@@ -120,7 +153,7 @@
     groupMarkersAmericaine = [];
     groupMarkersCampingCar = [];
     allPoints.forEach((point, index) => {
-      if (point.priseType === "Européene") {
+      if (point.priseType === "Européenne") {
         groupMarkersEuropeene.push(point);
       }
       if (point.priseType === "Américaine") {
@@ -132,10 +165,17 @@
     });
     function createMarkerAndBindEvents(markerGroup, markersLayer) {
       markerGroup.forEach((point) => {
+        console.log(point.priseType);
+        let customIconToUse;
+        if (point.needValidate) {
+          customIconToUse = customIconBlue;
+        } else {
+          customIconToUse = customIcon;
+        }
+
         selectedMarker = point._id;
         let pointCoords = [point.coords.lat, point.coords.lng];
         let pointId = point._id;
-        let customIconToUse = point.needValidate ? customIconBlue : customIcon;
         circleMinSpaceBetweenPoint = L.circle(pointCoords, {
           color: "grey",
           fillColor: "grey",
@@ -149,7 +189,33 @@
         circles.push(circleMinSpaceBetweenPoint);
         createMarker(pointCoords, customIconToUse, point.needValidate, pointId);
         markersLayer.addLayer(marker);
+        console.log(point.priseType);
+        if (point.priseType === "Européenne") {
+          const flagMarker = L.marker(pointCoords, {
+            icon: EUFlagIcon,
+            draggable: false, // Assurez-vous que le drapeau n'est pas déplaçable
+          });
+          markersLayer.addLayer(flagMarker);
+        }
+        if (point.priseType === "Américaine") {
+          const flagMarker = L.marker(pointCoords, {
+            icon: USFlagIcon,
+            draggable: false, // Assurez-vous que le drapeau n'est pas déplaçable
+          });
+          markersLayer.addLayer(flagMarker);
+        }
+        if (point.priseType === "Prise camping-car") {
+          const flagMarker = L.marker(pointCoords, {
+            icon: CCFlagIcon,
+            draggable: false, // Assurez-vous que le drapeau n'est pas déplaçable
+          });
+          markersLayer.addLayer(flagMarker);
+        }
         marker.bindPopup(`
+        <img style="width:50px; height:50px; padding-bottom:10px;" class="flag" src="assets/${getImageSource(
+          point.priseType
+        )}" alt="logo" />
+        <br>
         <b>${point.pointName}</b>
         <p>${point.pointDescription}</p>
         <p>Type : ${point.priseType}</p>
@@ -165,8 +231,24 @@
         <i class="fa-solid fa-eye" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
+        <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
+    
         </div>
       `);
+
+        function getImageSource(priseType) {
+          switch (priseType) {
+            case "Européenne":
+              return "eu-flag.png";
+            case "Américaine":
+              return "us-flag.png";
+            case "Prise camping-car":
+              return "cc-flag.png";
+            // Add more cases for other types, if needed
+            default:
+              return ""; // Fallback image if priseType doesn't match any case
+          }
+        }
         marker.on("click", () => {
           selectedMarker = point;
         });
@@ -191,6 +273,7 @@
           const eyeIcon = document.querySelector(".fa-eye");
           const penIcon = document.querySelector(".fa-pen");
           const trashIcon = document.querySelector(".fa-trash-can");
+          const routeIcon = document.querySelector(".fa-route");
           eyeIcon.addEventListener("click", async () => {});
           penIcon.addEventListener("click", async () => {
             const userMail = localStorage.getItem("email");
@@ -220,6 +303,36 @@
             map.closePopup();
             showConfirmDelete = true;
           });
+          routeIcon.addEventListener("click", async () => {
+            console.log(selectedMarker);
+            const destinationCoords = [
+              selectedMarker.coords.lat,
+              selectedMarker.coords.lng,
+            ];
+
+            const route = L.Routing.control({
+              language: "fr",
+              waypoints: [L.latLng(userCoords), L.latLng(destinationCoords)],
+              router: L.Routing.graphHopper(
+                "c9c11441-d987-4b2e-af75-ddfc52c7168e",
+                {
+                  urlParameters: {
+                    vehicle: "bike",
+                  },
+                }
+              ),
+              routeWhileDragging: true,
+              geocoder: L.Control.Geocoder.nominatim(),
+              createMarker: function (i, waypoint, n) {
+                return L.marker(waypoint.latLng, {
+                  opacity: 0, // Rendre le marqueur invisible
+                  draggable: true, // Activer le glisser-déposer si vous en avez besoin
+                });
+              },
+            });
+            route.addTo(map);
+            closePopup();
+          });
         });
       });
     }
@@ -229,6 +342,7 @@
   };
 
   const closePopup = () => {
+    map.closePopup();
     showModalAddPoint = false;
     showModalAskAddPoint = false;
     showModalModifyInfo = false;
@@ -299,7 +413,7 @@
   };
 
   const showFilter = () => {
-    showModalFilter = true;
+    showModalFilter = !showModalFilter;
   };
 
   const toggleEU = () => {
@@ -332,7 +446,50 @@
     localStorage.setItem("showCC", showCC);
   };
 
+  const updateUserCoords = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      userCoords = [position.coords.latitude, position.coords.longitude];
+    });
+    if (userLocationMarker) {
+      userLocationMarker.setLatLng(userCoords);
+    }
+    console.log("userCoords", userCoords);
+  };
+  function areCoordinatesClose(coord1, coord2, toleranceDistance) {
+    const lat1 = coord1[0];
+    const lng1 = coord1[1];
+    const lat2 = coord2.lat;
+    const lng2 = coord2.lng;
+
+    const distance = L.latLng(lat1, lng1).distanceTo(L.latLng(lat2, lng2));
+
+    return distance <= toleranceDistance;
+  }
   onMount(async () => {
+    function handleDeviceOrientation(event) {
+      var alpha = event.alpha; // Orientation en degrés autour de l'axe Z (direction nord)
+      if (typeof alpha === "number") {
+        map.setBearing(alpha);
+      }
+    }
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener(
+        "deviceorientation",
+        handleDeviceOrientation,
+        false
+      );
+    } else {
+      console.log(
+        "La fonctionnalité DeviceOrientationEvent n'est pas supportée sur ce navigateur."
+      );
+    }
+
+    if ("geolocation" in navigator) {
+      setInterval(() => {
+        updateUserCoords();
+      }, 1000);
+    }
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showUsLocalStorage = localStorage.getItem("showUS");
     let showCcLocalStorage = localStorage.getItem("showCC");
@@ -362,6 +519,7 @@
           map.setView(userCoords, 17);
         });
       });
+      // Add the route to the map
     } else {
       console.error("Geolocation is not available in this browser.");
       map.setView([42, 6], 17);
@@ -400,7 +558,7 @@
   <div id="container-remove-point">
     <div id="EU-filter">
       <p>
-        Prises Européene ({groupMarkersEuropeene.length})
+        Prises Européenne ({groupMarkersEuropeene.length})
       </p>
       {#if showEU}
         <i class="fa-solid fa-eye" on:click={toggleEU} />
@@ -479,7 +637,7 @@
           selected
           hidden>{oldType}</option
         >
-        <option style="color : black" value="Européene">Européene</option>
+        <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Américaine">Américaine</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -502,7 +660,6 @@
     </div>
   </div>
 {/if}
-
 {#if showModalAddPoint}
   <div id="container-add-info-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
@@ -528,7 +685,7 @@
         <option value="" style="color:grey" disabled selected hidden
           >Type de prise</option
         >
-        <option style="color : black" value="Européene">Européene</option>
+        <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Américaine">Américaine</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -581,6 +738,13 @@
 {/if}
 
 <style>
+  .flag {
+    width: 50px;
+    height: 50px;
+  }
+  .leaflet-routing-geocoders {
+    display: none !important;
+  }
   #EU-filter,
   #US-filter,
   #CC-filter {

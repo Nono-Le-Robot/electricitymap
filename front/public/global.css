@@ -2,6 +2,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap");
 
 /* Colors variables */
+body {
+  user-select: none;
+}
 :root {
   --main-color: #43be43;
   --dark-blue-color: #181a29;
@@ -28,3 +31,22 @@
 .leaflet-popup-tip-container {
   display: none;
 }
+
+/* .leaflet-routing-geocoders {
+  background-color: var(--dark-blue-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+
+} */
+
+/* .leaflet-routing-container {
+  display: none;
+} */
+
+/* .leaflet-marker-icon,
+.leaflet-zoom-animated,
+.leaflet-interactive,
+.leaflet-marker-draggable {
+  display: none;
+} */
