@@ -13,6 +13,7 @@
   let markersLayerCampingCar;
   let markersLayer;
   let marker;
+
   let allPoints = [];
   let circles = [];
   let userCoords = [];
@@ -32,6 +33,7 @@
   let showEU = true;
   let showUS = true;
   let showCC = true;
+  let route = null;
   var mapboxAccessToken = "VOTRE_CLÉ_API_MAPBOX";
   let oldType = "";
   let speedInKmPerHour = 0;
@@ -304,20 +306,35 @@
             showConfirmDelete = true;
           });
           routeIcon.addEventListener("click", async () => {
-            console.log(selectedMarker);
             const destinationCoords = [
               selectedMarker.coords.lat,
               selectedMarker.coords.lng,
             ];
 
-            const route = L.Routing.control({
-              language: "fr",
+            // ici verifier si il y a une route et si c'est le cas la supprimer
+
+            const newWaypoints = [
+              L.latLng(userCoords),
+              L.latLng(destinationCoords),
+            ];
+
+            if (
+              route &&
+              route.getPlan() &&
+              route.getPlan().getWaypoints().length > 0
+            ) {
+              // Si une route existe déjà, on la supprime avant d'en créer une nouvelle
+              map.removeControl(route);
+            }
+
+            route = L.Routing.control({
               waypoints: [L.latLng(userCoords), L.latLng(destinationCoords)],
               router: L.Routing.graphHopper(
                 "c9c11441-d987-4b2e-af75-ddfc52c7168e",
                 {
                   urlParameters: {
                     vehicle: "bike",
+                    locale: "fr",
                   },
                 }
               ),
@@ -766,28 +783,13 @@
     top: 20px;
     right: 20px;
     z-index: 999;
-    font-size: 20px;
+    font-size: 30px;
     border-radius: 100%;
     background-color: var(--dark-blue-color);
-    padding: 1.25rem 1rem;
+    padding: 1.1rem 0.9rem;
     cursor: pointer;
   }
-  #driving-interface {
-    position: absolute;
-    bottom: 0;
-    left: 50vw;
-    transform: translateX(-50%);
-    border-top-right-radius: 1rem;
-    border-top-left-radius: 1rem;
 
-    z-index: 999;
-    background-color: var(--dark-blue-color);
-    color: white;
-    width: 170px;
-    padding: 0;
-    margin: 0;
-    height: 70px;
-  }
   #action-delete {
     display: flex;
     align-items: center;
@@ -890,8 +892,8 @@
   .fa-location-crosshairs {
     color: #ffffff;
     position: absolute;
-    bottom: 20px;
-    left: 20px;
+    top: 100px;
+    right: 20px;
     z-index: 999;
     font-size: 30px;
     border-radius: 100%;
