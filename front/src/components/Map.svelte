@@ -13,7 +13,8 @@
   let markersLayerCampingCar;
   let markersLayer;
   let marker;
-
+  const userMail = localStorage.getItem("email");
+  const userPseudo = localStorage.getItem("username");
   let allPoints = [];
   let circles = [];
   let userCoords = [];
@@ -213,6 +214,19 @@
           });
           markersLayer.addLayer(flagMarker);
         }
+
+        function isPointCreator(email, username) {
+          if (email === point.addedBy || username === point.addedBy) {
+            return `
+        <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
+        <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
+            `;
+          } else {
+            return `
+        
+            `;
+          }
+        }
         marker.bindPopup(`
         <img style="width:50px; height:50px; padding-bottom:10px;" class="flag" src="assets/${getImageSource(
           point.priseType
@@ -230,14 +244,12 @@
         margin-top:1rem;
         margin-bottom:1.5rem;
         ">
-        <i class="fa-solid fa-eye" style="cursor:pointer; font-size:20px"></i>
-        <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
-        <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
+       ${isPointCreator(userMail, userPseudo)}
     
         </div>
       `);
-
+        // <i class="fa-solid fa-eye" style="cursor:pointer; font-size:20px"></i>
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
@@ -251,6 +263,7 @@
               return ""; // Fallback image if priseType doesn't match any case
           }
         }
+
         marker.on("click", () => {
           selectedMarker = point;
         });
@@ -272,39 +285,41 @@
           updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
         });
         marker.on("popupopen", (event) => {
-          const eyeIcon = document.querySelector(".fa-eye");
-          const penIcon = document.querySelector(".fa-pen");
-          const trashIcon = document.querySelector(".fa-trash-can");
+          // const eyeIcon = document.querySelector(".fa-eye");
+          if (point.email === userMail && point.addedBy === userPseudo) {
+            const penIcon = document.querySelector(".fa-pen");
+            const trashIcon = document.querySelector(".fa-trash-can");
+            penIcon.addEventListener("click", async () => {
+              if (userMail !== point.email && userPseudo !== point.addedBy) {
+                alert(
+                  "Vous n'etes pas le createur de ce point, vous ne pouvez pas le modifier"
+                );
+                map.closePopup();
+                return;
+              }
+              namePointInput = point.pointName;
+              descriptionPointInput = point.pointDescription;
+              oldType = point.priseType;
+              map.closePopup();
+              showModalModifyInfo = true;
+            });
+            trashIcon.addEventListener("click", async () => {
+              const userMail = localStorage.getItem("email");
+              if (userMail !== point.email) {
+                alert(
+                  "Vous n'etes pas le createur de ce point, vous ne pouvez pas le supprimer"
+                );
+                map.closePopup();
+                return;
+              }
+              map.closePopup();
+              showConfirmDelete = true;
+            });
+          }
           const routeIcon = document.querySelector(".fa-route");
-          eyeIcon.addEventListener("click", async () => {});
-          penIcon.addEventListener("click", async () => {
-            const userMail = localStorage.getItem("email");
-            const userPseudo = localStorage.getItem("username");
-            if (userMail !== point.email && userPseudo !== point.addedBy) {
-              alert(
-                "Vous n'etes pas le createur de ce point, vous ne pouvez pas le modifier"
-              );
-              map.closePopup();
-              return;
-            }
-            namePointInput = point.pointName;
-            descriptionPointInput = point.pointDescription;
-            oldType = point.priseType;
-            map.closePopup();
-            showModalModifyInfo = true;
-          });
-          trashIcon.addEventListener("click", async () => {
-            const userMail = localStorage.getItem("email");
-            if (userMail !== point.email) {
-              alert(
-                "Vous n'etes pas le createur de ce point, vous ne pouvez pas le supprimer"
-              );
-              map.closePopup();
-              return;
-            }
-            map.closePopup();
-            showConfirmDelete = true;
-          });
+          console.log(routeIcon);
+          // eyeIcon.addEventListener("click", async () => {});
+
           routeIcon.addEventListener("click", async () => {
             const destinationCoords = [
               selectedMarker.coords.lat,
@@ -463,49 +478,23 @@
     localStorage.setItem("showCC", showCC);
   };
 
-  const updateUserCoords = () => {
-    navigator.geolocation.getCurrentPosition((position) => {
-      userCoords = [position.coords.latitude, position.coords.longitude];
-    });
-    if (userLocationMarker) {
-      userLocationMarker.setLatLng(userCoords);
-    }
-    console.log("userCoords", userCoords);
-  };
-  function areCoordinatesClose(coord1, coord2, toleranceDistance) {
-    const lat1 = coord1[0];
-    const lng1 = coord1[1];
-    const lat2 = coord2.lat;
-    const lng2 = coord2.lng;
+  const updateUserCoords = () => {};
 
-    const distance = L.latLng(lat1, lng1).distanceTo(L.latLng(lat2, lng2));
-
-    return distance <= toleranceDistance;
-  }
   onMount(async () => {
-    function handleDeviceOrientation(event) {
-      var alpha = event.alpha; // Orientation en degrés autour de l'axe Z (direction nord)
-      if (typeof alpha === "number") {
-        map.setBearing(alpha);
-      }
-    }
-
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener(
-        "deviceorientation",
-        handleDeviceOrientation,
-        false
-      );
-    } else {
-      console.log(
-        "La fonctionnalité DeviceOrientationEvent n'est pas supportée sur ce navigateur."
-      );
-    }
+    // if ("geolocation" in navigator) {
+    //   setInterval(() => {
+    //     updateUserCoords();
+    //   }, 1000);
+    // }
 
     if ("geolocation" in navigator) {
-      setInterval(() => {
-        updateUserCoords();
-      }, 1000);
+      navigator.geolocation.getCurrentPosition((position) => {
+        userCoords = [position.coords.latitude, position.coords.longitude];
+      });
+      if (userLocationMarker) {
+        userLocationMarker.setLatLng(userCoords);
+      }
+      console.log("userCoords", userCoords);
     }
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showUsLocalStorage = localStorage.getItem("showUS");
