@@ -190,7 +190,17 @@
           alert("Un point existe déjà ici.");
         });
         circles.push(circleMinSpaceBetweenPoint);
-        createMarker(pointCoords, customIconToUse, point.needValidate, pointId);
+        if (point.email === userMail && point.addedBy === userPseudo) {
+          createMarker(
+            pointCoords,
+            customIconToUse,
+            point.needValidate,
+            pointId
+          );
+        } else {
+          createMarker(pointCoords, customIconToUse, false, pointId);
+        }
+
         markersLayer.addLayer(marker);
         console.log(point.priseType);
         if (point.priseType === "Européenne") {
@@ -354,6 +364,9 @@
                 }
               ),
               routeWhileDragging: true,
+              lineOptions: {
+                styles: [{ color: "blue", opacity: 0.8, weight: 6 }],
+              },
               geocoder: L.Control.Geocoder.nominatim(),
               createMarker: function (i, waypoint, n) {
                 return L.marker(waypoint.latLng, {
@@ -363,6 +376,24 @@
               },
             });
             route.addTo(map);
+            route.on("routesfound", function (e) {
+              console.log("route found");
+              console.log(e);
+              //   const route = e.route;
+              //   const summary = route.summary;
+              //   const distance = summary.totalDistance;
+              //   const duration = summary.totalTime;
+              //   const start = summary.startPoint;
+              //   const end = summary.endPoint;
+              //   const point = route.waypoints[1].latLng;
+              //   const marker = L.marker(point).addTo(map);
+              //   marker.bindPopup(`<p>Distance : ${distance}</p>
+              // <p>Temps : ${duration}</p>
+              // <p>Départ : ${start}</p>
+              // <p>Arrivée : ${end}</p>`);
+              //   marker.openPopup();
+            });
+
             closePopup();
           });
         });
@@ -487,15 +518,18 @@
     //   }, 1000);
     // }
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        userCoords = [position.coords.latitude, position.coords.longitude];
-      });
-      if (userLocationMarker) {
-        userLocationMarker.setLatLng(userCoords);
-      }
-      console.log("userCoords", userCoords);
-    }
+    // if ("geolocation" in navigator) {
+    //   navigator.geolocation.getCurrentPosition((position) => {
+    //     userCoords = [position.coords.latitude, position.coords.longitude];
+    //   });
+    //   if (userLocationMarker) {
+    //     userLocationMarker.setLatLng(userCoords);
+    //   }
+    //   console.log("userCoords", userCoords);
+    // }
+    // else{
+
+    // }
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showUsLocalStorage = localStorage.getItem("showUS");
     let showCcLocalStorage = localStorage.getItem("showCC");
@@ -506,6 +540,8 @@
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
+    map.setView([48.85120324709899, 2.344], 10);
+
     markersLayerEuropeene = L.layerGroup().addTo(map);
     markersLayerAmericaine = L.layerGroup().addTo(map);
     markersLayerCampingCar = L.layerGroup().addTo(map);
@@ -527,8 +563,9 @@
       });
       // Add the route to the map
     } else {
+      a;
+      alert("gferger");
       console.error("Geolocation is not available in this browser.");
-      map.setView([42, 6], 17);
     }
     map.on("click", (e) => {
       closePopup();
