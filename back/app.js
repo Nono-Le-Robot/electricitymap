@@ -15,5 +15,5 @@ app.use("/backend/api/auth", authRoutes);
 app.use("/backend/api/data", dataRoutes);
 
 app.listen(process.env.PORT, () => {
-  console.log(`listening on port ${process.env.PORT}`);
+  console.log(`API server listening on port ${process.env.PORT}`);
 });

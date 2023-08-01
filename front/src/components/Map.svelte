@@ -11,8 +11,9 @@
   let markersLayerEuropeene;
   let markersLayerAmericaine;
   let markersLayerCampingCar;
-  let markersLayer;
   let marker;
+  let isRouteIconListenerSet = false;
+  let pressed = false;
   const userMail = localStorage.getItem("email");
   const userPseudo = localStorage.getItem("username");
   let allPoints = [];
@@ -35,10 +36,8 @@
   let showUS = true;
   let showCC = true;
   let route = null;
-  var mapboxAccessToken = "VOTRE_CLÉ_API_MAPBOX";
   let oldType = "";
-  let speedInKmPerHour = 0;
-  const toleranceDistance = 100; // Seuil de tolérance en mètres
+  let speedKmh = 0;
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
   let typesPrises = ["Européenne", "Américaine", "Prise camping-car"];
@@ -90,17 +89,17 @@
 
   const EUFlagIcon = createCustomIcon(
     "./assets/eu-flag.png",
-    [25, 25], // Taille de l'icône
-    [0, 60], // Point d'ancrage de l'icône
-    [0, 0], // Taille de l'ombre (peut être [0, 0] si vous n'en avez pas besoin)
-    [0, 0], // Point d'ancrage de l'ombre (peut être [0, 0] si vous n'en avez pas besoin)
-    [15, 0] // Point d'ancrage du popup par rapport au marqueur
+    [25, 25],
+    [0, 60],
+    [0, 0],
+    [0, 0],
+    [15, 0]
   );
 
   const USFlagIcon = createCustomIcon(
     "./assets/us-flag.png",
-    [25, 25], // Taille de l'icône
-    [0, 60], // Point d'ancrage de l'icône
+    [25, 25],
+    [0, 60],
     [0, 0],
     [0, 0],
     [15, 0]
@@ -108,8 +107,8 @@
 
   const CCFlagIcon = createCustomIcon(
     "./assets/cc-flag.png",
-    [25, 25], // Taille de l'icône
-    [0, 60], // Point d'ancrage de l'icône
+    [25, 25],
+    [0, 60],
     [0, 0],
     [0, 0],
     [15, 0]
@@ -168,14 +167,12 @@
     });
     function createMarkerAndBindEvents(markerGroup, markersLayer) {
       markerGroup.forEach((point) => {
-        console.log(point.priseType);
         let customIconToUse;
         if (point.needValidate) {
           customIconToUse = customIconBlue;
         } else {
           customIconToUse = customIcon;
         }
-
         selectedMarker = point._id;
         let pointCoords = [point.coords.lat, point.coords.lng];
         let pointId = point._id;
@@ -200,27 +197,25 @@
         } else {
           createMarker(pointCoords, customIconToUse, false, pointId);
         }
-
         markersLayer.addLayer(marker);
-        console.log(point.priseType);
         if (point.priseType === "Européenne") {
           const flagMarker = L.marker(pointCoords, {
             icon: EUFlagIcon,
-            draggable: false, // Assurez-vous que le drapeau n'est pas déplaçable
+            draggable: false,
           });
           markersLayer.addLayer(flagMarker);
         }
         if (point.priseType === "Américaine") {
           const flagMarker = L.marker(pointCoords, {
             icon: USFlagIcon,
-            draggable: false, // Assurez-vous que le drapeau n'est pas déplaçable
+            draggable: false,
           });
           markersLayer.addLayer(flagMarker);
         }
         if (point.priseType === "Prise camping-car") {
           const flagMarker = L.marker(pointCoords, {
             icon: CCFlagIcon,
-            draggable: false, // Assurez-vous que le drapeau n'est pas déplaçable
+            draggable: false,
           });
           markersLayer.addLayer(flagMarker);
         }
@@ -232,9 +227,7 @@
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
             `;
           } else {
-            return `
-        
-            `;
+            return ``;
           }
         }
         marker.bindPopup(`
@@ -259,7 +252,6 @@
     
         </div>
       `);
-        // <i class="fa-solid fa-eye" style="cursor:pointer; font-size:20px"></i>
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
@@ -268,9 +260,8 @@
               return "us-flag.png";
             case "Prise camping-car":
               return "cc-flag.png";
-            // Add more cases for other types, if needed
             default:
-              return ""; // Fallback image if priseType doesn't match any case
+              return "";
           }
         }
 
@@ -295,7 +286,6 @@
           updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
         });
         marker.on("popupopen", (event) => {
-          // const eyeIcon = document.querySelector(".fa-eye");
           if (point.email === userMail && point.addedBy === userPseudo) {
             const penIcon = document.querySelector(".fa-pen");
             const trashIcon = document.querySelector(".fa-trash-can");
@@ -327,31 +317,14 @@
             });
           }
           const routeIcon = document.querySelector(".fa-route");
-          console.log(routeIcon);
-          // eyeIcon.addEventListener("click", async () => {});
-
           routeIcon.addEventListener("click", async () => {
             const destinationCoords = [
               selectedMarker.coords.lat,
               selectedMarker.coords.lng,
             ];
-
-            // ici verifier si il y a une route et si c'est le cas la supprimer
-
-            const newWaypoints = [
-              L.latLng(userCoords),
-              L.latLng(destinationCoords),
-            ];
-
-            if (
-              route &&
-              route.getPlan() &&
-              route.getPlan().getWaypoints().length > 0
-            ) {
-              // Si une route existe déjà, on la supprime avant d'en créer une nouvelle
-              map.removeControl(route);
+            if (route) {
+              route.remove();
             }
-
             route = L.Routing.control({
               waypoints: [L.latLng(userCoords), L.latLng(destinationCoords)],
               router: L.Routing.graphHopper(
@@ -370,34 +343,80 @@
               geocoder: L.Control.Geocoder.nominatim(),
               createMarker: function (i, waypoint, n) {
                 return L.marker(waypoint.latLng, {
-                  opacity: 0, // Rendre le marqueur invisible
-                  draggable: true, // Activer le glisser-déposer si vous en avez besoin
+                  opacity: 0,
+                  draggable: true,
                 });
               },
             });
             route.addTo(map);
             route.on("routesfound", function (e) {
-              console.log("route found");
-              console.log(e);
-              //   const route = e.route;
-              //   const summary = route.summary;
-              //   const distance = summary.totalDistance;
-              //   const duration = summary.totalTime;
-              //   const start = summary.startPoint;
-              //   const end = summary.endPoint;
-              //   const point = route.waypoints[1].latLng;
-              //   const marker = L.marker(point).addTo(map);
-              //   marker.bindPopup(`<p>Distance : ${distance}</p>
-              // <p>Temps : ${duration}</p>
-              // <p>Départ : ${start}</p>
-              // <p>Arrivée : ${end}</p>`);
-              //   marker.openPopup();
+              if (!isRouteIconListenerSet) {
+                const maxDistanceThreshold = 3.5;
+                const routeWaypoints = e.routes[0].coordinates;
+                const pointsNearRoute = filterPointsNearRoute(
+                  allPoints,
+                  routeWaypoints,
+                  maxDistanceThreshold
+                );
+                const waypoints = [
+                  L.latLng(userCoords),
+                  ...pointsNearRoute.map((point) =>
+                    L.latLng(point.coords.lat, point.coords.lng)
+                  ),
+                  L.latLng(destinationCoords),
+                ];
+                route.setWaypoints(waypoints);
+                isRouteIconListenerSet = true;
+              }
             });
-
             closePopup();
+            route.route();
           });
         });
       });
+    }
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Rayon de la Terre en kilomètres
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+      return distance;
+    }
+    function filterPointsNearRoute(allPoints, routeWaypoints, maxDistance) {
+      const pointsNearRoute = [];
+      allPoints.forEach((point) => {
+        const pointLat = point.coords.lat;
+        const pointLng = point.coords.lng;
+        let isNearRoute = false;
+        routeWaypoints.forEach((waypoint) => {
+          const routeWaypointLat = waypoint.lat;
+          const routeWaypointLng = waypoint.lng;
+          const distance = calculateDistance(
+            pointLat,
+            pointLng,
+            routeWaypointLat,
+            routeWaypointLng
+          );
+
+          if (distance <= maxDistance) {
+            isNearRoute = true;
+          }
+        });
+
+        if (isNearRoute) {
+          pointsNearRoute.push(point);
+          console.log(pointsNearRoute);
+        }
+      });
+
+      return pointsNearRoute;
     }
     createMarkerAndBindEvents(groupMarkersEuropeene, markersLayerEuropeene);
     createMarkerAndBindEvents(groupMarkersAmericaine, markersLayerAmericaine);
@@ -420,14 +439,41 @@
     showModalAddPoint = true;
   };
 
-  const onMapRightClick = (e) => {
+  const onMapRightClick = (latlng) => {
     closePopup();
     map.closePopup();
-    latPointToAdd = e.latlng.lat;
-    lngPointToAdd = e.latlng.lng;
+    latPointToAdd = latlng.lat;
+    lngPointToAdd = latlng.lng;
     showModalAskAddPoint = true;
   };
+  function getViewportSize() {
+    return {
+      width:
+        window.innerWidth ||
+        document.documentElement.clientWidth ||
+        document.body.clientWidth,
+      height:
+        window.innerHeight ||
+        document.documentElement.clientHeight ||
+        document.body.clientHeight,
+    };
+  }
 
+  function getCenterOfViewport() {
+    var viewportSize = getViewportSize();
+    return map.containerPointToLatLng([
+      viewportSize.width / 2,
+      viewportSize.height / 2,
+    ]);
+  }
+  const addPointByPlus = (latlng) => {
+    var center = getCenterOfViewport();
+    closePopup();
+    map.closePopup();
+    latPointToAdd = center.lat;
+    lngPointToAdd = center.lng;
+    showModalAskAddPoint = true;
+  };
   const submitInfoPoint = async () => {
     const typePrise = document.querySelector("#type-prise");
     try {
@@ -509,27 +555,46 @@
     localStorage.setItem("showCC", showCC);
   };
 
-  const updateUserCoords = () => {};
+  userCoords = [48.8588443, 2.2943506];
+  let previousCoords = [48.8588443, 2.2943506];
+  let currentCoords = [48.8588443, 2.2943506];
+  let timeElapsed = 0;
+  const updateUserCoords = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const currentTime = new Date().getTime();
+        const deltaTime = currentTime - timeElapsed;
+        timeElapsed = currentTime;
+        previousCoords = currentCoords;
+        userCoords = [position.coords.latitude, position.coords.longitude];
+        currentCoords = userCoords;
+        userLocationMarker.setLatLng(userCoords);
+        const distance = haversineDistance(previousCoords, currentCoords);
+        speedKmh = ((distance / (deltaTime / 1000)) * 3600).toFixed(0);
+        // console.log("Vitesse (km/h) :", speedKmh);
+      });
+    } else {
+      console.error("Geolocation is not available in this browser.");
+    }
+  };
+  function haversineDistance(coords1, coords2) {
+    const [lat1, lon1] = coords1;
+    const [lat2, lon2] = coords2;
+    const earthRadiusKm = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = earthRadiusKm * c;
+    return distance;
+  }
 
   onMount(async () => {
-    // if ("geolocation" in navigator) {
-    //   setInterval(() => {
-    //     updateUserCoords();
-    //   }, 1000);
-    // }
-
-    // if ("geolocation" in navigator) {
-    //   navigator.geolocation.getCurrentPosition((position) => {
-    //     userCoords = [position.coords.latitude, position.coords.longitude];
-    //   });
-    //   if (userLocationMarker) {
-    //     userLocationMarker.setLatLng(userCoords);
-    //   }
-    //   console.log("userCoords", userCoords);
-    // }
-    // else{
-
-    // }
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showUsLocalStorage = localStorage.getItem("showUS");
     let showCcLocalStorage = localStorage.getItem("showCC");
@@ -541,7 +606,6 @@
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     map.setView([48.85120324709899, 2.344], 10);
-
     markersLayerEuropeene = L.layerGroup().addTo(map);
     markersLayerAmericaine = L.layerGroup().addTo(map);
     markersLayerCampingCar = L.layerGroup().addTo(map);
@@ -549,7 +613,7 @@
     await refreshPoints();
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
-        let userCoords = [position.coords.latitude, position.coords.longitude];
+        userCoords = [position.coords.latitude, position.coords.longitude];
         map.setView(userCoords, 17);
         userLocationMarker = L.marker(userCoords, {
           icon: myLocationIcon,
@@ -560,18 +624,37 @@
         goToUserLocation.addEventListener("click", () => {
           map.setView(userCoords, 17);
         });
+        setInterval(() => {
+          updateUserCoords();
+        }, 1000);
       });
-      // Add the route to the map
     } else {
-      a;
-      alert("gferger");
       console.error("Geolocation is not available in this browser.");
     }
     map.on("click", (e) => {
-      closePopup();
-      map.closePopup();
+      if (pressed) {
+        pressed = false;
+        return;
+      } else {
+        if (route) {
+          route.remove();
+        }
+        closePopup();
+        map.closePopup();
+      }
     });
-    map.on("contextmenu", (e) => onMapRightClick(e));
+    // const mapElement = document.querySelector("#map");
+    // var hammer = new Hammer(mapElement);
+    // hammer.on("press", function (e) {
+    //   pressed = true;
+    //   const mapBounds = map.getBounds();
+    //   const mapSize = map.getSize();
+    //   const latLng = map.containerPointToLatLng([e.center.x, e.center.y]);
+    //   if (mapBounds.contains(latLng)) {
+    //     onMapRightClick(latLng);
+    //   }
+    // });
+
     if (showEuLocalStorage) {
       showEU = showEuLocalStorage === "true" ? true : false;
       showEuLocalStorage === "true"
@@ -593,8 +676,16 @@
   });
 </script>
 
+<div id="add-point">
+  <i class="fa-solid fa-plus" on:click={addPointByPlus} />
+</div>
+
 <div id="filter">
   <i class="fa-solid fa-eye-low-vision" on:click={showFilter} />
+</div>
+
+<div id="driving-interface">
+  <p><span id="speed">{speedKmh}</span> km/h</p>
 </div>
 
 {#if showModalFilter}
@@ -750,8 +841,8 @@
   <div id="container-add-info-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
 
-    <p>Voulez vous placer un point ici ?</p>
-    <p>(vous pourrez le deplacer avant validation)</p>
+    <p>Voulez vous ajouter un point ?</p>
+    <p>Vous pouvez déplacer le point avant validation.</p>
     <div id="form'action">
       <button
         type="submit"
@@ -781,6 +872,23 @@
 {/if}
 
 <style>
+  #driving-interface {
+    background-color: var(--dark-blue-color);
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 50vw;
+    transform: translateX(-50%);
+    width: 150px;
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    z-index: 9999;
+  }
+  #speed {
+    font-size: 25px;
+    font-weight: bold;
+  }
+
   .flag {
     width: 50px;
     height: 50px;
@@ -806,10 +914,23 @@
   .fa-eye-low-vision {
     color: #ffffff;
     position: absolute;
-    top: 20px;
+    bottom: 100px;
     right: 20px;
     z-index: 999;
-    font-size: 30px;
+    font-size: 27px;
+    border-radius: 100%;
+    background-color: var(--dark-blue-color);
+    padding: 1.1rem 0.8rem;
+    cursor: pointer;
+  }
+
+  .fa-plus {
+    color: #ffffff;
+    position: absolute;
+    bottom: 180px;
+    right: 20px;
+    z-index: 999;
+    font-size: 35px;
     border-radius: 100%;
     background-color: var(--dark-blue-color);
     padding: 1.1rem 0.9rem;
@@ -918,10 +1039,10 @@
   .fa-location-crosshairs {
     color: #ffffff;
     position: absolute;
-    top: 100px;
+    bottom: 20px;
     right: 20px;
     z-index: 999;
-    font-size: 30px;
+    font-size: 28px;
     border-radius: 100%;
     background-color: var(--dark-blue-color);
     padding: 1rem;
