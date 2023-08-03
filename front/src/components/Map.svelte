@@ -25,13 +25,16 @@
   let selectedMarker;
   let namePointInput = "";
   let descriptionPointInput = "";
+  let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
+  let showIconPanel = true;
   let showModalAskAddPoint = false;
   let showModalAddPoint = false;
   let showModalModifyInfo = false;
   let showConfirmDelete = false;
   let showModalFilter = false;
+  let showStartRoute = false;
   let showEU = true;
   let showUS = true;
   let showCC = true;
@@ -40,6 +43,7 @@
   let speedKmh = 0;
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
+  let navigationInProgress = false;
   let typesPrises = ["Européenne", "Américaine", "Prise camping-car"];
 
   function createCustomIcon(
@@ -129,6 +133,43 @@
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const lockViewHandler = () => {
+    lockView = true;
+    setTimeout(() => {
+      map.setView([userCoords[0], userCoords[1]]);
+    }, 200);
+    setInterval(() => {
+      if (lockView) {
+        map.setView([userCoords[0], userCoords[1]]);
+      }
+    }, 1000);
+  };
+
+  const setNavigationView = () => {
+    navigationInProgress = true;
+    lockView = true;
+    map.setView([userCoords[0], userCoords[1]], 20);
+    showStartRoute = false;
+    setTimeout(() => {
+      map.on("drag", () => {
+        lockView = false;
+      });
+      map.on("zoom", () => {
+        lockView = false;
+      });
+    }, 1000);
+  };
+
+  const stopNavigation = () => {
+    if (route && navigationInProgress) {
+      route.remove();
+    }
+    closePopup();
+    navigationInProgress = false;
+    showStartRoute = false;
+    showIconPanel = true;
   };
 
   const updatePointCoordinates = async (pointId, lat, lng) => {
@@ -350,8 +391,10 @@
             });
             route.addTo(map);
             route.on("routesfound", function (e) {
+              showStartRoute = true;
+              showIconPanel = false;
               if (!isRouteIconListenerSet) {
-                const maxDistanceThreshold = 3.5;
+                const maxDistanceThreshold = 4;
                 const routeWaypoints = e.routes[0].coordinates;
                 const pointsNearRoute = filterPointsNearRoute(
                   allPoints,
@@ -618,9 +661,7 @@
         userLocationMarker = L.marker(userCoords, {
           icon: myLocationIcon,
         }).addTo(map);
-        const goToUserLocation = document.querySelector(
-          ".fa-location-crosshairs"
-        );
+        const goToUserLocation = document.querySelector("#location-icon");
         goToUserLocation.addEventListener("click", () => {
           map.setView(userCoords, 17);
         });
@@ -636,13 +677,11 @@
         pressed = false;
         return;
       } else {
-        if (route) {
-          route.remove();
-        }
         closePopup();
         map.closePopup();
       }
     });
+
     // const mapElement = document.querySelector("#map");
     // var hammer = new Hammer(mapElement);
     // hammer.on("press", function (e) {
@@ -676,12 +715,76 @@
   });
 </script>
 
-<div id="add-point">
-  <i class="fa-solid fa-plus" on:click={addPointByPlus} />
-</div>
+{#if !lockView && navigationInProgress}
+  <div>
+    <img
+      id="lock-view"
+      src="./assets/icons/lock-view.png"
+      alt=""
+      srcset=""
+      on:click={lockViewHandler}
+    />
+  </div>
+{/if}
+
+{#if showStartRoute}
+  <div id="resume-route">
+    <img
+      id="start-icon"
+      src="./assets/icons/play.png"
+      alt=""
+      srcset=""
+      on:click={setNavigationView}
+    />
+  </div>
+{/if}
+
+{#if navigationInProgress}
+  <div id="resume-route">
+    <img
+      id="stop-icon"
+      src="./assets/icons/stop.png"
+      alt=""
+      srcset=""
+      on:click={stopNavigation}
+    />
+  </div>
+{/if}
+
+{#if showIconPanel}
+  <div id="icons-interface">
+    <img
+      id="plus-icon"
+      src="./assets/icons/plus.png"
+      alt=""
+      srcset=""
+      on:click={addPointByPlus}
+    />
+    <img
+      id="eye-icon"
+      src="./assets/icons/eye.png"
+      alt=""
+      srcset=""
+      on:click={showFilter}
+    />
+    <img
+      id="location-icon"
+      src="./assets/icons/location.png"
+      alt=""
+      srcset=""
+    />
+    <!-- <img
+    id="leaderboard-icon"
+    src="./assets/icons/leaderboard.png"
+    alt=""
+    srcset=""
+  /> -->
+  </div>
+{/if}
 
 <div id="filter">
-  <i class="fa-solid fa-eye-low-vision" on:click={showFilter} />
+  <!-- <i class="fa-solid fa-eye-low-vision" on:click={showFilter} />
+   -->
 </div>
 
 <div id="driving-interface">
@@ -861,7 +964,9 @@
 {/if}
 
 {#if isLogged}
-  <i class="fa-solid fa-location-crosshairs" />
+  <!-- <i class="fa-solid fa-location-crosshairs" />
+   -->
+
   <section id="map-section-logged">
     <div id="map" />
   </section>
@@ -872,6 +977,84 @@
 {/if}
 
 <style>
+  #lock-view {
+    cursor: pointer;
+    width: 40px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    opacity: 0.8;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    z-index: 999;
+    transform: translateX(-50%) translateY(-50%);
+  }
+  #start-icon {
+    width: 50px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+    position: absolute;
+    bottom: 400px;
+    z-index: 999;
+    right: 180px;
+    transform: translateX(-50%);
+  }
+  #stop-icon {
+    width: 50px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+    position: absolute;
+    bottom: 400px;
+    z-index: 999;
+    right: 180px;
+    transform: translateX(-50%);
+  }
+
+  #icons-interface {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 999;
+  }
+  #plus-icon {
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+  #leaderboard-icon {
+    width: 30px;
+
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+  #eye-icon {
+    width: 30px;
+
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+  #location-icon {
+    width: 30px;
+
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
   #driving-interface {
     background-color: var(--dark-blue-color);
     color: white;
@@ -1056,5 +1239,32 @@
   #map {
     width: 100vw;
     height: 100vh;
+  }
+
+  @media screen and (max-width: 1280px) {
+    #start-icon {
+      width: 50px;
+      background-color: var(--dark-blue-color);
+      padding: 1rem;
+      border-radius: 100%;
+      cursor: pointer;
+      position: absolute;
+      bottom: 180px;
+      z-index: 999;
+      left: 50vw;
+      transform: translateX(-50%);
+    }
+    #stop-icon {
+      width: 50px;
+      background-color: var(--dark-blue-color);
+      padding: 1rem;
+      border-radius: 100%;
+      cursor: pointer;
+      position: absolute;
+      bottom: 180px;
+      z-index: 999;
+      left: 50vw;
+      transform: translateX(-50%);
+    }
   }
 </style>

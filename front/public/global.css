@@ -121,6 +121,18 @@ body {
 }
 
 @media screen and (max-width: 1280px) {
+  #start-icon {
+    width: 100px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+    position: absolute;
+    bottom: 180px;
+    z-index: 999;
+    left: 50vw;
+    transform: translateX(-50%);
+  }
   #map
     > div.leaflet-control-container
     > div.leaflet-top.leaflet-right
