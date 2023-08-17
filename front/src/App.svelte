@@ -33,6 +33,12 @@
 </section>
 
 <style>
+  #privacy-policy {
+    position: absolute;
+    bottom: 20px;
+    left: 50vw;
+    transform: translateX(-50%);
+  }
   #flex-logo-form-auth {
     display: flex;
     flex-direction: column;

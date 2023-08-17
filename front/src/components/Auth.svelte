@@ -150,6 +150,13 @@
           }}>Tu as déjà un compte ?</a
         >
       </p>
+      <p>
+        <a
+          id="privacy-policy"
+          href="https://electricitymap.fr/privacy-policy.html"
+          >Politique de Confidentialité</a
+        >
+      </p>
     </form>
   </section>
 {:else}
@@ -186,6 +193,13 @@
             register = true;
             console.log(register);
           }}>Tu n'as pas encore de compte ?</a
+        >
+      </p>
+      <p>
+        <a
+          id="privacy-policy"
+          href="https://electricitymap.fr/privacy-policy.html"
+          >Politique de Confidentialité</a
         >
       </p>
     </form>
@@ -250,7 +264,8 @@
   }
 
   #switch-to-login,
-  #switch-to-register {
+  #switch-to-register,
+  #privacy-policy {
     color: rgb(0, 0, 0);
     font-size: 15px;
 

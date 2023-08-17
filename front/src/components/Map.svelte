@@ -44,7 +44,7 @@
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
   let navigationInProgress = false;
-  let typesPrises = ["Européenne", "Américaine", "Prise camping-car"];
+  let typesPrises = ["Européenne", "Prise camping-car"];
 
   function createCustomIcon(
     iconUrl,
@@ -199,9 +199,6 @@
       if (point.priseType === "Européenne") {
         groupMarkersEuropeene.push(point);
       }
-      if (point.priseType === "Américaine") {
-        groupMarkersAmericaine.push(point);
-      }
       if (point.priseType === "Prise camping-car") {
         groupMarkersCampingCar.push(point);
       }
@@ -242,13 +239,6 @@
         if (point.priseType === "Européenne") {
           const flagMarker = L.marker(pointCoords, {
             icon: EUFlagIcon,
-            draggable: false,
-          });
-          markersLayer.addLayer(flagMarker);
-        }
-        if (point.priseType === "Américaine") {
-          const flagMarker = L.marker(pointCoords, {
-            icon: USFlagIcon,
             draggable: false,
           });
           markersLayer.addLayer(flagMarker);
@@ -297,8 +287,6 @@
           switch (priseType) {
             case "Européenne":
               return "eu-flag.png";
-            case "Américaine":
-              return "us-flag.png";
             case "Prise camping-car":
               return "cc-flag.png";
             default:
@@ -359,61 +347,45 @@
           }
           const routeIcon = document.querySelector(".fa-route");
           routeIcon.addEventListener("click", async () => {
-            const destinationCoords = [
-              selectedMarker.coords.lat,
-              selectedMarker.coords.lng,
-            ];
-            if (route) {
-              route.remove();
+            function redirectToGoogleMapsBike(lat, lng) {
+              const googleMapsURL = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=bicycling`;
+              window.open(googleMapsURL, "_blank");
             }
-            route = L.Routing.control({
-              waypoints: [L.latLng(userCoords), L.latLng(destinationCoords)],
-              router: L.Routing.graphHopper(
-                "c9c11441-d987-4b2e-af75-ddfc52c7168e",
-                {
-                  urlParameters: {
-                    vehicle: "bike",
-                    locale: "fr",
-                  },
-                }
-              ),
-              routeWhileDragging: true,
-              lineOptions: {
-                styles: [{ color: "blue", opacity: 0.8, weight: 6 }],
-              },
-              geocoder: L.Control.Geocoder.nominatim(),
-              createMarker: function (i, waypoint, n) {
-                return L.marker(waypoint.latLng, {
-                  opacity: 0,
-                  draggable: true,
-                });
-              },
-            });
-            route.addTo(map);
-            route.on("routesfound", function (e) {
-              showStartRoute = true;
-              showIconPanel = false;
-              if (!isRouteIconListenerSet) {
-                const maxDistanceThreshold = 4;
-                const routeWaypoints = e.routes[0].coordinates;
-                const pointsNearRoute = filterPointsNearRoute(
-                  allPoints,
-                  routeWaypoints,
-                  maxDistanceThreshold
-                );
-                const waypoints = [
-                  L.latLng(userCoords),
-                  ...pointsNearRoute.map((point) =>
-                    L.latLng(point.coords.lat, point.coords.lng)
-                  ),
-                  L.latLng(destinationCoords),
-                ];
-                route.setWaypoints(waypoints);
-                isRouteIconListenerSet = true;
-              }
-            });
+            redirectToGoogleMapsBike(
+              selectedMarker.coords.lat,
+              selectedMarker.coords.lng
+            );
+
+            // route = L.Routing.control({
+            //   waypoints: [L.latLng(userCoords), L.latLng(destinationCoords)],
+            //   router: L.Routing.graphHopper(
+            //     "c9c11441-d987-4b2e-af75-ddfc52c7168e",
+            //     {
+            //       urlParameters: {
+            //         vehicle: "bike",
+            //         locale: "fr",
+            //       },
+            //     }
+            //   ),
+            //   routeWhileDragging: true,
+            //   lineOptions: {
+            //     styles: [{ color: "blue", opacity: 0.8, weight: 6 }],
+            //   },
+            //   geocoder: L.Control.Geocoder.nominatim(),
+            //   createMarker: function (i, waypoint, n) {
+            //     return L.marker(waypoint.latLng, {
+            //       opacity: 0,
+            //       draggable: true,
+            //     });
+            //   },
+            // });
+            // route.addTo(map);
+            // route.on("routesfound", function (e) {
+            //   showStartRoute = true;
+            //   showIconPanel = false;
+            // });
+            // route.route();
             closePopup();
-            route.route();
           });
         });
       });
@@ -501,7 +473,13 @@
         document.body.clientHeight,
     };
   }
-
+  const logout = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("email");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    window.location.reload();
+  };
   function getCenterOfViewport() {
     var viewportSize = getViewportSize();
     return map.containerPointToLatLng([
@@ -752,6 +730,13 @@
 {/if}
 
 {#if showIconPanel}
+  <img
+    id="logout-icon"
+    src="./assets/icons/out.png"
+    alt=""
+    srcset=""
+    on:click={logout}
+  />
   <div id="icons-interface">
     <img
       id="plus-icon"
@@ -767,6 +752,7 @@
       srcset=""
       on:click={showFilter}
     />
+
     <img
       id="location-icon"
       src="./assets/icons/location.png"
@@ -787,9 +773,9 @@
    -->
 </div>
 
-<div id="driving-interface">
+<!-- <div id="driving-interface">
   <p><span id="speed">{speedKmh}</span> km/h</p>
-</div>
+</div> -->
 
 {#if showModalFilter}
   <div id="container-remove-point">
@@ -801,16 +787,6 @@
         <i class="fa-solid fa-eye" on:click={toggleEU} />
       {:else}
         <i class="fa-solid fa-eye-slash" on:click={toggleEU} />
-      {/if}
-    </div>
-    <div id="US-filter">
-      <p>
-        Prises Américaine ({groupMarkersAmericaine.length})
-      </p>
-      {#if showUS}
-        <i class="fa-solid fa-eye" on:click={toggleUS} />
-      {:else}
-        <i class="fa-solid fa-eye-slash" on:click={toggleUS} />
       {/if}
     </div>
     <div id="CC-filter">
@@ -875,7 +851,6 @@
           hidden>{oldType}</option
         >
         <option style="color : black" value="Européenne">Européenne</option>
-        <option style="color : black" value="Américaine">Américaine</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
         >
@@ -923,7 +898,6 @@
           >Type de prise</option
         >
         <option style="color : black" value="Européenne">Européenne</option>
-        <option style="color : black" value="Américaine">Américaine</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
         >
@@ -1023,6 +997,17 @@
     bottom: 10px;
     right: 10px;
     z-index: 999;
+  }
+  #logout-icon {
+    z-index: 99999;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
   }
   #plus-icon {
     width: 30px;
