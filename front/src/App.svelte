@@ -1,12 +1,35 @@
 <script>
   import Map from "./components/Map.svelte";
   import Auth from "./components/Auth.svelte";
+  import axios from "axios";
 
+  const userVersion = "v1.1";
   const userId = localStorage.getItem("userId");
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
   const token = localStorage.getItem("token");
   let logged;
+
+  const checkVersion = async () => {
+    const serverVersion = await axios.post(`${apiUrl}/api/data/app-version`, {
+      userVersion: userVersion,
+    });
+    const needUpdate = serverVersion.data.needUpdate;
+    if (needUpdate) {
+      if (!serverVersion || serverVersion !== userVersion) {
+        if (
+          confirm(
+            "Une mise à jour est disponible. Voulez-vous la faire maintenant ?"
+          )
+        ) {
+          window.location.href =
+            "https://play.google.com/store/apps/details?id=fr.electricitymap.android.abc";
+        }
+      }
+    } else return;
+  };
+
+  checkVersion();
 
   userId && username && email && token ? (logged = true) : (logged = false);
 

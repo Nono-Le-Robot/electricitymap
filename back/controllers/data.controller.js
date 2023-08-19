@@ -2,6 +2,24 @@ const e = require("express");
 const userModel = require("../models/auth.model.js");
 const pointsModel = require("../models/points.model.js");
 
+module.exports.appVersion = async (req, res) => {
+  const appVersion = "v1.1";
+  const userVersion = req.body.userVersion;
+  if (appVersion === userVersion) {
+    res.send({
+      serverVersion: appVersion,
+      userVersion: userVersion,
+      needUpdate: false,
+    });
+  } else {
+    res.send({
+      serverVersion: appVersion,
+      userVersion: userVersion,
+      needUpdate: true,
+    });
+  }
+};
+
 module.exports.getMyData = async (req, res) => {
   userModel
     .findOne({ email: req.body.email })
