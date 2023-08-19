@@ -3,7 +3,7 @@
   import Auth from "./components/Auth.svelte";
   import axios from "axios";
 
-  const userVersion = "v1.1";
+  const userVersion = "v1.2";
   const userId = localStorage.getItem("userId");
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
