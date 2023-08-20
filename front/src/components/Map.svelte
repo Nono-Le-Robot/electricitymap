@@ -1061,7 +1061,7 @@
   <div id="container-place-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
 
-    <p>Selectionnez l'emplacement du rassemblement.</p>
+    <p>Selectionnez l'emplacement du point.</p>
     <button on:click={placeEvent}>+</button>
   </div>
 {/if}
@@ -1498,13 +1498,6 @@
     margin-right: auto;
   }
 
-  #close-settings {
-    position: absolute;
-    right: 3rem;
-    top: 3rem;
-    font-size: 3rem;
-  }
-
   #container-settings {
     background-color: var(--dark-blue-color);
     display: flex;
@@ -1686,14 +1679,6 @@
     z-index: 999;
   }
 
-  #logout-icon {
-    height: 80%;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
   #events-icon {
     z-index: 99999;
     position: absolute;
@@ -1726,15 +1711,6 @@
     cursor: pointer;
   }
 
-  #leaderboard-icon {
-    width: 30px;
-
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
   #eye-icon {
     width: 30px;
 
@@ -1751,33 +1727,6 @@
     padding: 1rem;
     border-radius: 100%;
     cursor: pointer;
-  }
-
-  #driving-interface {
-    background-color: var(--dark-blue-color);
-    color: white;
-    position: fixed;
-    top: 0;
-    left: 50vw;
-    transform: translateX(-50%);
-    width: 150px;
-    border-bottom-left-radius: 1rem;
-    border-bottom-right-radius: 1rem;
-    z-index: 9999;
-  }
-
-  #speed {
-    font-size: 25px;
-    font-weight: bold;
-  }
-
-  .flag {
-    width: 50px;
-    height: 50px;
-  }
-
-  .leaflet-routing-geocoders {
-    display: none !important;
   }
 
   #container-filter {
@@ -1809,32 +1758,6 @@
     align-items: center;
     gap: 2rem;
     justify-content: space-between;
-  }
-
-  .fa-eye-low-vision {
-    color: #ffffff;
-    position: absolute;
-    bottom: 100px;
-    right: 20px;
-    z-index: 999;
-    font-size: 27px;
-    border-radius: 100%;
-    background-color: var(--dark-blue-color);
-    padding: 1.1rem 0.8rem;
-    cursor: pointer;
-  }
-
-  .fa-plus {
-    color: #ffffff;
-    position: absolute;
-    bottom: 180px;
-    right: 20px;
-    z-index: 999;
-    font-size: 35px;
-    border-radius: 100%;
-    background-color: var(--dark-blue-color);
-    padding: 1.1rem 0.9rem;
-    cursor: pointer;
   }
 
   #action-delete {
@@ -1969,19 +1892,6 @@
     margin-left: auto;
     margin-right: auto;
     width: 100%;
-  }
-
-  .fa-location-crosshairs {
-    color: #ffffff;
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    z-index: 999;
-    font-size: 28px;
-    border-radius: 100%;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    cursor: pointer;
   }
 
   #map-section-logged,
