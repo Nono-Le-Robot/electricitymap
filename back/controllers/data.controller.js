@@ -1,6 +1,7 @@
 const e = require("express");
 const userModel = require("../models/auth.model.js");
 const pointsModel = require("../models/points.model.js");
+const eventsModel = require("../models/events.model.js");
 
 module.exports.appVersion = async (req, res) => {
   const appVersion = "v1.2";
@@ -136,12 +137,64 @@ module.exports.updatePointCoordinates = async (req, res) => {
     });
   }
 };
+
+module.exports.updateEventCoordinates = async (req, res) => {
+  const { pointId, lat, lng } = req.body;
+  try {
+    const existingPoint = await eventsModel.findById(pointId);
+    if (!existingPoint) {
+      return res.status(404).json({ message: "Point not found" });
+    }
+
+    // Update the point coordinates
+    existingPoint.coords.lat = lat;
+    existingPoint.coords.lng = lng;
+
+    // Save the updated point
+    await existingPoint.save();
+
+    res.json({
+      message: "Point coordinates updated successfully",
+      point: {
+        pointId: existingPoint._id,
+        eventName: existingPoint.pointName,
+        eventDescription: existingPoint.pointDescription,
+        coords: existingPoint.coords,
+        createdBy: existingPoint.addedBy,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error while updating the point coordinates",
+      error: error.message,
+    });
+  }
+};
+
 module.exports.getAllPoints = async (req, res) => {
   pointsModel.find().exec(function (err, points) {
     if (err) {
       res.status(500).send(err.message);
     } else {
       res.status(200).send(points);
+    }
+  });
+};
+module.exports.getAllEvents = async (req, res) => {
+  eventsModel.find().exec(function (err, events) {
+    if (err) {
+      res.status(500).send(err.message);
+    } else {
+      res.status(200).send(events);
+    }
+  });
+};
+module.exports.getEvents = async (req, res) => {
+  eventsModel.find().exec(function (err, events) {
+    if (err) {
+      res.status(500).send(err.message);
+    } else {
+      res.status(200).send(events);
     }
   });
 };
@@ -204,6 +257,72 @@ module.exports.addPoint = async (req, res) => {
               priseType: newPoint.priseType,
               spotState: newPoint.spotState,
               needValidate: newPoint.needValidate,
+            },
+          });
+        }
+      }
+    })
+    .catch((error) => res.status(401).send(error.message));
+};
+
+module.exports.createEvent = async (req, res) => {
+  console.log(req.body);
+  userModel
+    .findOne({ email: req.body.email })
+    .select("-password")
+    .then(async (user) => {
+      if (!user) {
+        return res.json({ msg: "User not found", status: false });
+      } else {
+        const {
+          createdBy,
+          email,
+          eventName,
+          eventDescription,
+          coords,
+          distance,
+          startDate,
+          endDate,
+          startHour,
+          informations,
+          addedDate,
+          needValidate,
+        } = req.body;
+        const checkUser = await userModel.findOne({ email });
+
+        if (!checkUser) {
+          return res.status(404).json({ message: "Utilisateur non trouvé" });
+        } else {
+          // a modifier si bug
+          const newEvent = new eventsModel({
+            createdBy,
+            email,
+            eventName,
+            eventDescription,
+            coords,
+            distance,
+            startDate,
+            endDate,
+            startHour,
+            informations,
+            addedDate,
+            needValidate,
+          });
+          await newEvent.save();
+          res.json({
+            message: "Event créer avec succées",
+            event: {
+              createdBy: newEvent.createdBy,
+              email: newEvent.email,
+              eventName: newEvent.eventName,
+              eventDescription: newEvent.eventDescription,
+              coords: newEvent.coords,
+              distance: newEvent.distance,
+              startDate: newEvent.startDate,
+              endDate: newEvent.endDate,
+              informations: newEvent.informations,
+              addedDate: newEvent.addedDate,
+              needValidate: newEvent.needValidate,
             },
           });
         }

@@ -1,54 +1,45 @@
 const mongoose = require("mongoose");
 
-const pointSchema = new mongoose.Schema({
+const eventSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    trim: true,
   },
-  pointName: {
+  eventName: {
     type: String,
     required: true,
-    trim: true,
   },
-  pointDescription: {
+  eventDescription: {
     type: String,
     required: true,
   },
   coords: {
     lat: {
       type: Number,
-      required: true,
     },
     lng: {
       type: Number,
-      required: true,
     },
   },
-  photos: [
-    {
-      type: String,
-    },
-  ],
-  addedBy: {
+  distance: {
     type: String,
     required: true,
   },
-  priseType: {
+  startDate: {
     type: String,
     required: true,
   },
-  spotState: {
-    type: Boolean,
-    default: true,
+  endDate: {
+    type: String,
+    required: true,
   },
-  likes: {
-    type: Number,
-    default: 0,
+  startHour: {
+    type: String,
+    required: true,
   },
-  reports: {
-    type: Number,
-    default: 0,
+  createdBy: {
+    type: String,
+    required: true,
   },
   commentaires: [
     {
@@ -57,11 +48,14 @@ const pointSchema = new mongoose.Schema({
   ],
   addedDate: {
     type: String,
+    required: true,
   },
   needValidate: {
     type: Boolean,
-    default: false,
+    required: true,
+
+    default: true,
   },
 });
 
-module.exports = mongoose.model("Point", pointSchema);
+module.exports = mongoose.model("Event", eventSchema);

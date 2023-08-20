@@ -8,44 +8,60 @@
   export let isLogged;
 
   let map;
+  let markersLayerEvents;
   let markersLayerEuropeene;
   let markersLayerAmericaine;
   let markersLayerCampingCar;
   let marker;
-  let isRouteIconListenerSet = false;
   let pressed = false;
   const userMail = localStorage.getItem("email");
   const userPseudo = localStorage.getItem("username");
   let allPoints = [];
+  let allEvents = [];
   let circles = [];
   let userCoords = [];
+  let groupMarkersEvents = [];
   let groupMarkersEuropeene = [];
   let groupMarkersAmericaine = [];
   let groupMarkersCampingCar = [];
   let selectedMarker;
   let namePointInput = "";
+  let nameEventInput = "";
   let descriptionPointInput = "";
+  let descriptionEventInput = "";
+  let distanceEventInput = "";
+  let startDateEventInput = "";
+  let endDateEventInput = "";
+  let startHourEventInput = "";
+  let informationEventInput = "";
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
   let showIconPanel = true;
-  let showModalAskAddPoint = false;
+  let showModalAskAction = false;
   let showModalAddPoint = false;
   let showModalModifyInfo = false;
   let showConfirmDelete = false;
   let showModalFilter = false;
   let showStartRoute = false;
+  let showModalSettings = false;
+  let showModalEvents = false;
+  let showModalPlacePoint = false;
+  let showModalPlaceEvent = false;
+  let showModalCreateEvent;
+  let coordsToAddPoint = { lat: null, lng: null };
   let showEU = true;
   let showUS = true;
   let showCC = true;
+  let showEvents = true;
   let route = null;
   let oldType = "";
-  let speedKmh = 0;
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
   let navigationInProgress = false;
   let typesPrises = ["Européenne", "Prise camping-car"];
-
+  let typePrise = "";
+  let enableToPlace = false;
   function createCustomIcon(
     iconUrl,
     iconSize,
@@ -72,9 +88,17 @@
     [4, 62],
     [0, -40]
   );
+  const customEventIcon = createCustomIcon(
+    "./assets/eventSpot.png",
+    [50, 50],
+    [25, 50],
+    [50, 64],
+    [4, 62],
+    [0, -40]
+  );
 
-  const customIconBlue = createCustomIcon(
-    "./assets/elecSpot2-blue.png",
+  const customIconError = createCustomIcon(
+    "./assets/elecSpot2-red.png",
     [50, 50],
     [25, 50],
     [50, 64],
@@ -125,11 +149,57 @@
     });
   };
 
+  const placePoint = async () => {
+    closePopup();
+    showIconPanel = false;
+    map.on("click", async (e) => {
+      if (enableToPlace) {
+        coordsToAddPoint.lat = e.latlng.lat;
+        coordsToAddPoint.lng = e.latlng.lng;
+        showModalPlacePoint = false;
+        showModalAddPoint = true;
+        showIconPanel = false;
+      }
+    });
+  };
+
+  const placeEvent = async () => {
+    closePopup();
+    showIconPanel = false;
+    map.on("click", async (e) => {
+      if (enableToPlace) {
+        coordsToAddPoint.lat = e.latlng.lat;
+        coordsToAddPoint.lng = e.latlng.lng;
+        showModalPlaceEvent = false;
+        showModalCreateEvent = true;
+        showIconPanel = false;
+      }
+    });
+  };
+
   const getAllPoints = async () => {
     allPoints = [];
+    allEvents = [];
     try {
       const res = await axios.get(`${apiUrl}/api/data/get-all-points`);
       allPoints = res.data;
+    } catch (err) {
+      console.log(err);
+    }
+    try {
+      const res = await axios.get(`${apiUrl}/api/data/get-all-events`);
+      allEvents = res.data;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getAllEvents = async () => {
+    allEvents = [];
+    try {
+      const res = await axios.get(`${apiUrl}/api/data/get-events`);
+      allEvents = res.data;
+      console.log(allEvents);
     } catch (err) {
       console.log(err);
     }
@@ -144,7 +214,7 @@
       if (lockView) {
         map.setView([userCoords[0], userCoords[1]]);
       }
-    }, 1000);
+    }, 2000);
   };
 
   const setNavigationView = () => {
@@ -185,13 +255,28 @@
     }
   };
 
+  const updateEventCoordinates = async (pointId, lat, lng) => {
+    try {
+      await axios.post(`${apiUrl}/api/data/update-event-coordinates`, {
+        pointId: pointId,
+        lat: lat,
+        lng: lng,
+      });
+      await refreshPoints();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const refreshPoints = async () => {
     await getAllPoints();
     circles.forEach((circle) => circle.removeFrom(map));
     circles = [];
+    markersLayerEvents.clearLayers();
     markersLayerEuropeene.clearLayers();
     markersLayerAmericaine.clearLayers();
     markersLayerCampingCar.clearLayers();
+    groupMarkersEvents = [];
     groupMarkersEuropeene = [];
     groupMarkersAmericaine = [];
     groupMarkersCampingCar = [];
@@ -203,13 +288,20 @@
         groupMarkersCampingCar.push(point);
       }
     });
+    allEvents.forEach((event, index) => {
+      groupMarkersEvents.push(event);
+    });
+
     function createMarkerAndBindEvents(markerGroup, markersLayer) {
       markerGroup.forEach((point) => {
         let customIconToUse;
         if (point.needValidate) {
-          customIconToUse = customIconBlue;
+          customIconToUse = customIconError;
         } else {
           customIconToUse = customIcon;
+        }
+        if (point.eventName) {
+          customIconToUse = customEventIcon;
         }
         selectedMarker = point._id;
         let pointCoords = [point.coords.lat, point.coords.lng];
@@ -221,7 +313,7 @@
           radius: minRadiusToAddPoint,
         }).addTo(map);
         circleMinSpaceBetweenPoint.on("contextmenu", () => {
-          showModalAskAddPoint = false;
+          showModalAskAction = false;
           alert("Un point existe déjà ici.");
         });
         circles.push(circleMinSpaceBetweenPoint);
@@ -232,6 +324,8 @@
             point.needValidate,
             pointId
           );
+        } else if (point.createdBy == userPseudo) {
+          createMarker(pointCoords, customIconToUse, true, pointId);
         } else {
           createMarker(pointCoords, customIconToUse, false, pointId);
         }
@@ -262,14 +356,45 @@
           }
         }
         marker.bindPopup(`
-        <img style="width:50px; height:50px; padding-bottom:10px;" class="flag" src="assets/${getImageSource(
-          point.priseType
-        )}" alt="logo" />
+        ${
+          point.eventName
+            ? ``
+            : `<img style="width:50px; height:50px; padding-bottom:10px;" class="flag" src="assets/${getImageSource(
+                point.priseType
+              )}" alt="logo" />`
+        }
+        
         <br>
-        <b>${point.pointName}</b>
-        <p>${point.pointDescription}</p>
-        <p>Type : ${point.priseType}</p>
-        <p>Ajouté par : ${point.addedBy}</p>
+        <b>${point.eventName ? point.eventName : point.pointName}</b>
+        <p>${
+          point.eventDescription
+            ? point.eventDescription
+            : point.pointDescription
+        }</p>
+        ${
+          point.eventName
+            ? `Depart :${point.startHour} `
+            : `<p>Type : ${point.priseType}</p>`
+        }
+        ${
+          point.eventName
+            ? `
+          <p>Distance : ${point.distance} Km</p>
+          `
+            : ``
+        }
+        ${
+          point.eventName
+            ? `<p>Créer par : ${point.createdBy}</p>`
+            : `<p>Ajouté par : ${point.addedBy}</p>`
+        }
+        ${
+          point.eventName
+            ? `
+          <p>Date : ${point.startDate} - ${point.endDate}</p>
+          `
+            : ``
+        }
         <div style="
         display:flex;
         align-items:center;
@@ -280,9 +405,10 @@
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
        ${isPointCreator(userMail, userPseudo)}
-    
+
         </div>
       `);
+
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
@@ -304,15 +430,11 @@
           const newCoords = event.target.getLatLng();
           circleMinSpaceBetweenPoint.setLatLng(newCoords);
         });
-        marker.on("contextmenu", () => {
-          selectedMarker = point;
-          showModalAskAddPoint = false;
-          alert("Un point existe déjà ici.");
-        });
         marker.on("dragend", (event) => {
           selectedMarker = point;
           const newCoords = event.target.getLatLng();
           updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
+          updateEventCoordinates(pointId, newCoords.lat, newCoords.lng);
         });
         marker.on("popupopen", (event) => {
           if (point.email === userMail && point.addedBy === userPseudo) {
@@ -355,84 +477,12 @@
               selectedMarker.coords.lat,
               selectedMarker.coords.lng
             );
-
-            // route = L.Routing.control({
-            //   waypoints: [L.latLng(userCoords), L.latLng(destinationCoords)],
-            //   router: L.Routing.graphHopper(
-            //     "c9c11441-d987-4b2e-af75-ddfc52c7168e",
-            //     {
-            //       urlParameters: {
-            //         vehicle: "bike",
-            //         locale: "fr",
-            //       },
-            //     }
-            //   ),
-            //   routeWhileDragging: true,
-            //   lineOptions: {
-            //     styles: [{ color: "blue", opacity: 0.8, weight: 6 }],
-            //   },
-            //   geocoder: L.Control.Geocoder.nominatim(),
-            //   createMarker: function (i, waypoint, n) {
-            //     return L.marker(waypoint.latLng, {
-            //       opacity: 0,
-            //       draggable: true,
-            //     });
-            //   },
-            // });
-            // route.addTo(map);
-            // route.on("routesfound", function (e) {
-            //   showStartRoute = true;
-            //   showIconPanel = false;
-            // });
-            // route.route();
             closePopup();
           });
         });
       });
     }
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; // Rayon de la Terre en kilomètres
-      const dLat = (lat2 - lat1) * (Math.PI / 180);
-      const dLon = (lon2 - lon1) * (Math.PI / 180);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-          Math.cos((lat2 * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c;
-      return distance;
-    }
-    function filterPointsNearRoute(allPoints, routeWaypoints, maxDistance) {
-      const pointsNearRoute = [];
-      allPoints.forEach((point) => {
-        const pointLat = point.coords.lat;
-        const pointLng = point.coords.lng;
-        let isNearRoute = false;
-        routeWaypoints.forEach((waypoint) => {
-          const routeWaypointLat = waypoint.lat;
-          const routeWaypointLng = waypoint.lng;
-          const distance = calculateDistance(
-            pointLat,
-            pointLng,
-            routeWaypointLat,
-            routeWaypointLng
-          );
-
-          if (distance <= maxDistance) {
-            isNearRoute = true;
-          }
-        });
-
-        if (isNearRoute) {
-          pointsNearRoute.push(point);
-          console.log(pointsNearRoute);
-        }
-      });
-
-      return pointsNearRoute;
-    }
+    createMarkerAndBindEvents(groupMarkersEvents, markersLayerEvents);
     createMarkerAndBindEvents(groupMarkersEuropeene, markersLayerEuropeene);
     createMarkerAndBindEvents(groupMarkersAmericaine, markersLayerAmericaine);
     createMarkerAndBindEvents(groupMarkersCampingCar, markersLayerCampingCar);
@@ -441,26 +491,166 @@
   const closePopup = () => {
     map.closePopup();
     showModalAddPoint = false;
-    showModalAskAddPoint = false;
+    showModalAskAction = false;
     showModalModifyInfo = false;
     showConfirmDelete = false;
     showModalFilter = false;
+    showModalSettings = false;
+    showModalEvents = false;
+    showModalCreateEvent = false;
+    showModalPlacePoint = false;
+    showModalPlaceEvent = false;
+    showIconPanel = true;
   };
 
   const addPoint = () => {
     namePointInput = "";
     descriptionPointInput = "";
-    showModalAskAddPoint = false;
-    showModalAddPoint = true;
+    showModalAskAction = false;
+    showModalPlacePoint = true;
+    showIconPanel = false;
+    enableToPlace = true;
   };
 
-  const onMapRightClick = (latlng) => {
-    closePopup();
-    map.closePopup();
-    latPointToAdd = latlng.lat;
-    lngPointToAdd = latlng.lng;
-    showModalAskAddPoint = true;
+  const addEvent = () => {
+    namePointInput = "";
+    descriptionPointInput = "";
+    showModalAskAction = false;
+    showModalPlaceEvent = true;
+    showIconPanel = false;
+    enableToPlace = true;
   };
+
+  const createEvent = async () => {
+    closePopup();
+    function isValidDate(date) {
+      const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (!datePattern.test(date)) {
+        return "Le format de date doit être xx/xx/xxxx";
+      }
+      const parts = date.split("/");
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const newDate = new Date(year, month, day);
+      if (
+        newDate.getFullYear() === year &&
+        newDate.getMonth() === month &&
+        newDate.getDate() === day
+      ) {
+        return null;
+      } else {
+        return "La date n'est pas valide";
+      }
+    }
+    function isValidTime(time) {
+      const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (!timePattern.test(time)) {
+        return "Le format de l'heure doit être HH:mm (24 heures)";
+      }
+      return null;
+    }
+    function isAfterCurrentDate(date) {
+      const currentDate = new Date();
+      const parts = date.split("/");
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const newDate = new Date(year, month, day);
+      return newDate > currentDate;
+    }
+    function isValidDistance(distance) {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    }
+    const startDateValidation = isValidDate(startDateEventInput);
+    const endDateValidation = isValidDate(endDateEventInput);
+    const startTimeValidation = isValidTime(startHourEventInput); // Valider l'heure de début
+    if (
+      startDateValidation !== null ||
+      endDateValidation !== null ||
+      startTimeValidation !== null
+    ) {
+      alert(
+        (startDateValidation !== null
+          ? "Date de début : " + startDateValidation + "\n"
+          : "") +
+          (endDateValidation !== null
+            ? "Date de fin : " + endDateValidation + "\n"
+            : "") +
+          (startTimeValidation !== null
+            ? "Heure de début : " + startTimeValidation
+            : "")
+      );
+      return;
+    }
+
+    if (
+      !isAfterCurrentDate(startDateEventInput) ||
+      !isAfterCurrentDate(endDateEventInput)
+    ) {
+      alert(
+        "Les dates doivent être dans le futur par rapport à la date actuelle"
+      );
+      return;
+    }
+
+    const startDateParts = startDateEventInput.split("/");
+    const endDateParts = endDateEventInput.split("/");
+
+    const startDate = new Date(
+      parseInt(startDateParts[2], 10),
+      parseInt(startDateParts[1], 10) - 1,
+      parseInt(startDateParts[0], 10)
+    );
+
+    const endDate = new Date(
+      parseInt(endDateParts[2], 10),
+      parseInt(endDateParts[1], 10) - 1,
+      parseInt(endDateParts[0], 10)
+    );
+
+    if (endDate < startDate) {
+      alert("La date de fin doit être après ou égale à la date de début");
+      return;
+    }
+
+    if (!isValidDistance(distanceEventInput)) {
+      alert("La distance doit être au format numérique");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${apiUrl}/api/data/create-event`, {
+        createdBy: localStorage.getItem("username"),
+        email: localStorage.getItem("email"),
+        eventName: nameEventInput,
+        eventDescription: descriptionEventInput,
+        coords: {
+          lat: coordsToAddPoint.lat,
+          lng: coordsToAddPoint.lng,
+        },
+        distance: distanceEventInput,
+        startDate: startDateEventInput,
+        endDate: endDateEventInput,
+        startHour: startHourEventInput,
+        informations: informationEventInput,
+        addedDate: new Date(),
+        needValiate: true,
+      });
+      namePointInput = "";
+      descriptionPointInput = "";
+      alert("Evénement créé avec succès");
+      await refreshPoints();
+      closePopup();
+    } catch (err) {
+      console.error(err);
+      alert(
+        "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
+      );
+    }
+    enableToPlace = false;
+  };
+
   function getViewportSize() {
     return {
       width:
@@ -480,6 +670,25 @@
     localStorage.removeItem("userId");
     window.location.reload();
   };
+
+  const settings = () => {
+    showModalSettings = !showModalSettings;
+    showIconPanel = false;
+  };
+
+  const goToUserLocation = () => {
+    map.setView(userCoords, 17);
+    setInterval(() => {
+      updateUserCoords();
+    }, 2000);
+  };
+
+  const events = () => {
+    getAllEvents();
+    showModalEvents = !showModalEvents;
+    showIconPanel = false;
+  };
+
   function getCenterOfViewport() {
     var viewportSize = getViewportSize();
     return map.containerPointToLatLng([
@@ -493,28 +702,28 @@
     map.closePopup();
     latPointToAdd = center.lat;
     lngPointToAdd = center.lng;
-    showModalAskAddPoint = true;
+    showModalAskAction = true;
+    showIconPanel = false;
   };
-  const submitInfoPoint = async () => {
-    const typePrise = document.querySelector("#type-prise");
-    try {
-      const res = await axios.post(`${apiUrl}/api/data/add-point`, {
-        email: localStorage.getItem("email"),
-        pointName: namePointInput,
-        pointDescription: descriptionPointInput,
-        coords: { lat: latPointToAdd, lng: lngPointToAdd },
-        addedBy: localStorage.getItem("username"),
-        priseType: typePrise.value,
-        addedDate: new Date(),
-        needValiate: true,
-      });
-      namePointInput = "";
-      descriptionPointInput = "";
-      await refreshPoints();
-      showModalAddPoint = false;
-    } catch (err) {
-      console.log(err);
-    }
+  const submitInfoPoint = async (lat, lng) => {
+    await axios.post(`${apiUrl}/api/data/add-point`, {
+      email: localStorage.getItem("email"),
+      pointName: namePointInput,
+      pointDescription: descriptionPointInput,
+      coords: {
+        lat: coordsToAddPoint.lat,
+        lng: coordsToAddPoint.lng,
+      },
+      addedBy: localStorage.getItem("username"),
+      priseType: typePrise,
+      addedDate: new Date(),
+      needValiate: true,
+    });
+    namePointInput = "";
+    descriptionPointInput = "";
+    await refreshPoints();
+    closePopup();
+    enableToPlace = false;
   };
 
   const confirmModify = async () => {
@@ -544,6 +753,7 @@
 
   const showFilter = () => {
     showModalFilter = !showModalFilter;
+    showIconPanel = false;
   };
 
   const toggleEU = () => {
@@ -556,16 +766,6 @@
     localStorage.setItem("showEU", showEU);
   };
 
-  const toggleUS = () => {
-    showUS = !showUS;
-    if (showUS) {
-      markersLayerAmericaine.addTo(map);
-    } else {
-      markersLayerAmericaine.removeFrom(map);
-    }
-    localStorage.setItem("showUS", showUS);
-  };
-
   const toggleCC = () => {
     showCC = !showCC;
     if (showCC) {
@@ -576,49 +776,35 @@
     localStorage.setItem("showCC", showCC);
   };
 
+  const toggleEvent = () => {
+    showEvents = !showEvents;
+    if (showEvents) {
+      markersLayerEvents.addTo(map);
+    } else {
+      markersLayerEvents.removeFrom(map);
+    }
+    localStorage.setItem("showEvents", showEvents);
+  };
+
   userCoords = [48.8588443, 2.2943506];
-  let previousCoords = [48.8588443, 2.2943506];
-  let currentCoords = [48.8588443, 2.2943506];
-  let timeElapsed = 0;
   const updateUserCoords = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
-        const currentTime = new Date().getTime();
-        const deltaTime = currentTime - timeElapsed;
-        timeElapsed = currentTime;
         previousCoords = currentCoords;
         userCoords = [position.coords.latitude, position.coords.longitude];
         currentCoords = userCoords;
         userLocationMarker.setLatLng(userCoords);
-        const distance = haversineDistance(previousCoords, currentCoords);
-        speedKmh = ((distance / (deltaTime / 1000)) * 3600).toFixed(0);
-        // console.log("Vitesse (km/h) :", speedKmh);
       });
     } else {
       console.error("Geolocation is not available in this browser.");
     }
   };
-  function haversineDistance(coords1, coords2) {
-    const [lat1, lon1] = coords1;
-    const [lat2, lon2] = coords2;
-    const earthRadiusKm = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = earthRadiusKm * c;
-    return distance;
-  }
 
   onMount(async () => {
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showUsLocalStorage = localStorage.getItem("showUS");
     let showCcLocalStorage = localStorage.getItem("showCC");
+    let showEventsLocalStorage = localStorage.getItem("showEvents");
 
     map = L.map("map");
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -627,6 +813,7 @@
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     map.setView([48.85120324709899, 2.344], 10);
+    markersLayerEvents = L.layerGroup().addTo(map);
     markersLayerEuropeene = L.layerGroup().addTo(map);
     markersLayerAmericaine = L.layerGroup().addTo(map);
     markersLayerCampingCar = L.layerGroup().addTo(map);
@@ -639,13 +826,6 @@
         userLocationMarker = L.marker(userCoords, {
           icon: myLocationIcon,
         }).addTo(map);
-        const goToUserLocation = document.querySelector("#location-icon");
-        goToUserLocation.addEventListener("click", () => {
-          map.setView(userCoords, 17);
-        });
-        setInterval(() => {
-          updateUserCoords();
-        }, 1000);
       });
     } else {
       console.error("Geolocation is not available in this browser.");
@@ -659,18 +839,6 @@
         map.closePopup();
       }
     });
-
-    // const mapElement = document.querySelector("#map");
-    // var hammer = new Hammer(mapElement);
-    // hammer.on("press", function (e) {
-    //   pressed = true;
-    //   const mapBounds = map.getBounds();
-    //   const mapSize = map.getSize();
-    //   const latLng = map.containerPointToLatLng([e.center.x, e.center.y]);
-    //   if (mapBounds.contains(latLng)) {
-    //     onMapRightClick(latLng);
-    //   }
-    // });
 
     if (showEuLocalStorage) {
       showEU = showEuLocalStorage === "true" ? true : false;
@@ -731,12 +899,20 @@
 
 {#if showIconPanel}
   <img
-    id="logout-icon"
-    src="./assets/icons/out.png"
+    id="settings-icon"
+    src="./assets/icons/gear.png"
     alt=""
     srcset=""
-    on:click={logout}
+    on:click={settings}
   />
+  <img
+    id="events-icon"
+    src="./assets/icons/list.png"
+    alt=""
+    srcset=""
+    on:click={events}
+  />
+
   <div id="icons-interface">
     <img
       id="plus-icon"
@@ -758,30 +934,125 @@
       src="./assets/icons/location.png"
       alt=""
       srcset=""
+      on:click={goToUserLocation}
     />
-    <!-- <img
-    id="leaderboard-icon"
-    src="./assets/icons/leaderboard.png"
-    alt=""
-    srcset=""
-  /> -->
   </div>
 {/if}
 
-<div id="filter">
-  <!-- <i class="fa-solid fa-eye-low-vision" on:click={showFilter} />
-   -->
-</div>
+<div id="filter" />
 
-<!-- <div id="driving-interface">
-  <p><span id="speed">{speedKmh}</span> km/h</p>
-</div> -->
+{#if showModalPlacePoint}
+  <div id="container-place-point">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
+    <p>Selectionnez l'emplacement du point.</p>
+    <p>(vous pourrez le déplacer avant validation)</p>
+    <button on:click={placePoint}>+</button>
+  </div>
+{/if}
+
+{#if showModalPlaceEvent}
+  <div id="container-place-point">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
+    <p>Selectionnez le point de départ.</p>
+    <button on:click={placeEvent}>+</button>
+  </div>
+{/if}
+
+{#if showModalSettings}
+  <div id="container-settings">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+    <div id="header-settings">
+      <div>
+        <img
+          id="profil-picture-settings"
+          src="./assets/CV.png"
+          alt=""
+          srcset=""
+        />
+      </div>
+    </div>
+    <div id="action-settings">
+      <div class="btn-settings">Social</div>
+      <div class="btn-settings">Paramètres</div>
+    </div>
+    <div id="footer-settings">
+      <h2 style="color:white;">Mes points ajoutés :</h2>
+      <div class="posted-point">
+        <p>1111gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+      <div class="posted-point">
+        <p>gbezrgergzergezrgzergzerg</p>
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if showModalEvents}
+  <div id="container-events">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+    <h2 style="color:white; ">Événements à venir :</h2>
+
+    <div id="list-events">
+      {#each allEvents as { createdBy, email, eventName, eventDescription, distance, coords, startDate, endDate, startHour }, i}
+        <div class="posted-events">
+          <h2>{eventName}</h2>
+          <h3>{eventDescription}</h3>
+          <h3>{startDate} - {endDate}</h3>
+          <h3>Départ : {startHour}</h3>
+        </div>
+      {/each}
+    </div>
+  </div>
+{/if}
 
 {#if showModalFilter}
-  <div id="container-remove-point">
+  <div id="container-filter">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
     <div id="EU-filter">
       <p>
-        Prises Européenne ({groupMarkersEuropeene.length})
+        Européenne ({groupMarkersEuropeene.length})
       </p>
       {#if showEU}
         <i class="fa-solid fa-eye" on:click={toggleEU} />
@@ -791,12 +1062,22 @@
     </div>
     <div id="CC-filter">
       <p>
-        Prises camping-car ({groupMarkersCampingCar.length})
+        Camping-car ({groupMarkersCampingCar.length})
       </p>
       {#if showCC}
         <i class="fa-solid fa-eye" on:click={toggleCC} />
       {:else}
         <i class="fa-solid fa-eye-slash" on:click={toggleCC} />
+      {/if}
+    </div>
+    <div id="Event-filter">
+      <p>
+        Evénements ({groupMarkersEvents.length})
+      </p>
+      {#if showEvents}
+        <i class="fa-solid fa-eye" on:click={toggleEvent} />
+      {:else}
+        <i class="fa-solid fa-eye-slash" on:click={toggleEvent} />
       {/if}
     </div>
     <div />
@@ -842,7 +1123,7 @@
         required
         bind:value={descriptionPointInput}
       />
-      <select required id="type-prise" style="width: 100%">
+      <select required id="type-prise">
         <option
           value="rethertherhterht"
           style="color:grey"
@@ -893,7 +1174,7 @@
         id="descriptionPointInput"
         bind:value={descriptionPointInput}
       />
-      <select required id="type-prise" style="width: 100%">
+      <select bind:value={typePrise} required id="type-prise">
         <option value="" style="color:grey" disabled selected hidden
           >Type de prise</option
         >
@@ -914,33 +1195,102 @@
   </div>
 {/if}
 
-{#if showModalAskAddPoint}
-  <div id="container-add-info-point">
+{#if showModalCreateEvent}
+  <div id="container-create-event">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
-
-    <p>Voulez vous ajouter un point ?</p>
-    <p>Vous pouvez déplacer le point avant validation.</p>
+    <div id="champ-text-add-point">
+      <input
+        autocomplete="off"
+        placeholder="Nom"
+        type="text"
+        name="nameEvent"
+        id="nameEventInput"
+        required
+        bind:value={nameEventInput}
+      />
+      <input
+        autocomplete="off"
+        placeholder="Description"
+        type="text"
+        name="descriptionEvent"
+        id="descriptionEventInput"
+        bind:value={descriptionEventInput}
+      />
+      <input
+        autocomplete="off"
+        placeholder="Distance (en Km)"
+        type="text"
+        name="distanceEvent"
+        id="distanceEventInput"
+        bind:value={distanceEventInput}
+      />
+      <input
+        autocomplete="off"
+        placeholder="Date début (xx/yy/zzzz)"
+        type="text"
+        name="startDateEvent"
+        id="startDateEventInput"
+        bind:value={startDateEventInput}
+      />
+      <input
+        autocomplete="off"
+        placeholder="Date fin (xx/yy/zzzz)"
+        type="text"
+        name="endDateEvent"
+        id="endDateEventInput"
+        bind:value={endDateEventInput}
+      />
+      <input
+        autocomplete="off"
+        placeholder="Heure du départ (hh:mm)"
+        type="text"
+        name="endDateEvent"
+        id="startHourEventInput"
+        bind:value={startHourEventInput}
+      />
+      <textarea
+        placeholder="Informations"
+        id="more-info-event"
+        name="story"
+        rows="5"
+        cols="33"
+        bind:value={informationEventInput}
+      />
+    </div>
     <div id="form'action">
       <button
         type="submit"
         id="add-point-btn"
         style="color:black"
-        on:click={addPoint}>Oui</button
+        on:click={createEvent}>Créer l'évenement</button
+      >
+    </div>
+  </div>
+{/if}
+
+{#if showModalAskAction}
+  <div id="container-add-info-point">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
+    <p>Que souhaitez vous faire ?</p>
+    <div id="form'action">
+      <button
+        type="submit"
+        id="add-point-btn"
+        style="color:black"
+        on:click={addPoint}>Ajouter un point de charge</button
       >
       <button
         type="submit"
-        id="cancel-add-point-btn"
-        style="background-color: var(--red-error); width: 100%; "
-        on:click={closePopup}>Non</button
+        id="add-point-btn"
+        style="color:black"
+        on:click={addEvent}>Créer un événement</button
       >
     </div>
   </div>
 {/if}
 
 {#if isLogged}
-  <!-- <i class="fa-solid fa-location-crosshairs" />
-   -->
-
   <section id="map-section-logged">
     <div id="map" />
   </section>
@@ -951,6 +1301,169 @@
 {/if}
 
 <style>
+  #container-place-point {
+    position: absolute;
+    background-color: var(--dark-blue-color);
+    top: 50vh;
+    left: 50vw;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    padding: 3rem;
+    color: white;
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  #type-prise,
+  #descriptionPointInput,
+  #namePointInput,
+  #more-info-event,
+  #type-prise {
+    width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #close-settings {
+    position: absolute;
+    right: 3rem;
+    top: 3rem;
+    font-size: 3rem;
+  }
+
+  #container-settings {
+    background-color: var(--dark-blue-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+    width: 90vw;
+    height: 90vh;
+    position: absolute;
+    z-index: 9999;
+    left: 50vw;
+    top: 50vh;
+    transform: translate(-50%, -50%);
+    border-radius: 1rem;
+  }
+
+  #header-settings {
+    display: flex;
+    gap: 2vh;
+    flex-direction: column;
+    width: 100%;
+    height: 40vh;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #profil-picture-settings {
+    height: 25vh;
+    width: 25vh;
+    background-color: rgba(21, 20, 37, 0.849);
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  #action-settings {
+    width: 90%;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .btn-settings {
+    background-color: var(--dark-blue-color);
+    width: 50%;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
+    padding: 2rem;
+    border-radius: 1rem;
+    text-align: center;
+    cursor: pointer;
+    background-color: white;
+  }
+
+  #footer-settings {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    width: 99.5%;
+    height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-direction: column;
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+    overflow-y: scroll;
+  }
+
+  #container-events {
+    background-color: var(--dark-blue-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-direction: column;
+    width: 80vw;
+    height: 90vh;
+    position: absolute;
+    z-index: 9999;
+    left: 50vw;
+    top: 50vh;
+    transform: translate(-50%, -50%);
+    border-radius: 1rem;
+    padding: 2rem;
+  }
+
+  #list-events {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    width: 99.5%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: start;
+    gap: 2rem;
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+    overflow-y: scroll;
+  }
+
+  .posted-events {
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.267);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+    background: var(--main-color);
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 200px;
+  }
+
+  .posted-point {
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.438);
+    cursor: pointer;
+    min-height: 70px;
+    margin-top: 1rem;
+    background: var(--main-color);
+    width: 90%;
+    border-radius: 1rem;
+    height: 100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
   #lock-view {
     cursor: pointer;
     width: 40px;
@@ -964,6 +1477,7 @@
     z-index: 999;
     transform: translateX(-50%) translateY(-50%);
   }
+
   #start-icon {
     width: 50px;
     background-color: var(--dark-blue-color);
@@ -976,6 +1490,7 @@
     right: 180px;
     transform: translateX(-50%);
   }
+
   #stop-icon {
     width: 50px;
     background-color: var(--dark-blue-color);
@@ -998,7 +1513,28 @@
     right: 10px;
     z-index: 999;
   }
+
   #logout-icon {
+    height: 80%;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #events-icon {
+    z-index: 99999;
+    position: absolute;
+    right: 10px;
+    top: 80px;
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #settings-icon {
     z-index: 99999;
     position: absolute;
     right: 10px;
@@ -1009,6 +1545,7 @@
     border-radius: 100%;
     cursor: pointer;
   }
+
   #plus-icon {
     width: 30px;
     background-color: var(--dark-blue-color);
@@ -1016,6 +1553,7 @@
     border-radius: 100%;
     cursor: pointer;
   }
+
   #leaderboard-icon {
     width: 30px;
 
@@ -1024,6 +1562,7 @@
     border-radius: 100%;
     cursor: pointer;
   }
+
   #eye-icon {
     width: 30px;
 
@@ -1032,6 +1571,7 @@
     border-radius: 100%;
     cursor: pointer;
   }
+
   #location-icon {
     width: 30px;
 
@@ -1040,6 +1580,7 @@
     border-radius: 100%;
     cursor: pointer;
   }
+
   #driving-interface {
     background-color: var(--dark-blue-color);
     color: white;
@@ -1052,6 +1593,7 @@
     border-bottom-right-radius: 1rem;
     z-index: 9999;
   }
+
   #speed {
     font-size: 25px;
     font-weight: bold;
@@ -1061,22 +1603,40 @@
     width: 50px;
     height: 50px;
   }
+
   .leaflet-routing-geocoders {
     display: none !important;
   }
-  #EU-filter,
-  #US-filter,
-  #CC-filter {
+
+  #container-filter {
+    padding: 4rem;
+    font-size: 20px;
+    color: white;
+    border-radius: 2rem;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    flex-direction: column;
+    justify-content: space-evenly;
+    z-index: 9999;
   }
 
-  #EU-filter i,
-  #US-filter i,
-  #CC-filter i {
+  #EU-filter,
+  #CC-filter,
+  #Event-filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    justify-content: space-between;
   }
 
   .fa-eye-low-vision {
@@ -1112,21 +1672,25 @@
     flex-direction: column;
     gap: 1rem;
   }
+
   .fa-xmark {
     position: absolute;
-    font-size: 1rem;
-    right: 5%;
-    top: 5%;
+    font-size: 2rem;
+    right: 20px;
+    top: 20px;
     color: var(--red-error);
     cursor: pointer;
   }
+
   p {
     text-align: center;
     font-size: 1rem;
   }
+
   select:required:invalid {
     color: gray;
   }
+
   button {
     font-size: 1rem;
     width: 150px;
@@ -1139,7 +1703,9 @@
     cursor: pointer;
     font-weight: bold;
   }
+
   input,
+  textarea,
   select {
     font-weight: bold;
     font-size: 17px;
@@ -1150,6 +1716,7 @@
     padding: 1rem;
     margin-top: 1rem;
   }
+
   #container-remove-point {
     position: fixed;
     z-index: 1000;
@@ -1169,29 +1736,55 @@
   #confirm-delete {
     background-color: var(--main-color);
   }
+
   #cancel-delete {
     background-color: var(--red-error);
   }
+
   #container-add-info-point {
+    padding: 3rem;
     position: fixed;
     z-index: 1000;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--dark-blue-color);
-    padding: 2rem;
     border-radius: 1rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
     color: white;
-    width: 260px;
+    width: 240px;
   }
+
+  #container-create-event {
+    padding: 3rem;
+    position: fixed;
+    z-index: 9999999;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+    width: 70vw;
+    height: 80vh;
+    max-height: 850px;
+    max-width: 400px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+
   #champ-text-add-point {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
+
   #add-point-btn {
     background-color: var(--main-color);
     border: none;
@@ -1204,6 +1797,7 @@
     margin-right: auto;
     width: 100%;
   }
+
   .fa-location-crosshairs {
     color: #ffffff;
     position: absolute;
@@ -1216,11 +1810,13 @@
     padding: 1rem;
     cursor: pointer;
   }
+
   #map-section-logged,
   #map-section {
     height: 100vh;
     width: 100vw;
   }
+
   #map {
     width: 100vw;
     height: 100vh;
@@ -1239,6 +1835,7 @@
       left: 50vw;
       transform: translateX(-50%);
     }
+
     #stop-icon {
       width: 50px;
       background-color: var(--dark-blue-color);
