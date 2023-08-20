@@ -13,6 +13,9 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  eventInformations: {
+    type: String,
+  },
   coords: {
     lat: {
       type: Number,
@@ -24,6 +27,9 @@ const eventSchema = new mongoose.Schema({
   distance: {
     type: String,
     required: true,
+  },
+  iframe: {
+    type: String,
   },
   startDate: {
     type: String,

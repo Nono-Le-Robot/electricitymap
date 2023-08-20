@@ -25,14 +25,27 @@
   let groupMarkersAmericaine = [];
   let groupMarkersCampingCar = [];
   let selectedMarker;
+  let selectedEventName;
+  let selectedEventDescription;
+  let selectedEventInformations;
+  let selectedEventCreatedBy;
+  let selectedEventEmail;
+  let selectedEventDistance;
+  let selectedEventIframe;
+  let selectedEventCoords;
+  let selectedEventStartDate;
+  let selectedEventEndDate;
+  let selectedEventStartHour;
   let namePointInput = "";
   let nameEventInput = "";
   let descriptionPointInput = "";
   let descriptionEventInput = "";
+  let informationsEventInput;
   let distanceEventInput = "";
   let startDateEventInput = "";
   let endDateEventInput = "";
   let startHourEventInput = "";
+  let iframeEventInput = "";
   let informationEventInput = "";
   let lockView = true;
   let latPointToAdd;
@@ -48,6 +61,7 @@
   let showModalEvents = false;
   let showModalPlacePoint = false;
   let showModalPlaceEvent = false;
+  let showModalEventDetails = false;
   let showModalCreateEvent;
   let coordsToAddPoint = { lat: null, lng: null };
   let showEU = true;
@@ -142,6 +156,13 @@
     [15, 0]
   );
 
+  const helpIframe = () => {
+    window.open(
+      "https://support.google.com/maps/answer/144361?hl=fr&co=GENIE.Platform%3DAndroid&oco=1",
+      "_blank"
+    );
+  };
+
   const createMarker = (coords, icon, draggable, id) => {
     marker = L.marker(coords, {
       icon: icon,
@@ -203,6 +224,12 @@
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const showSelectedEvent = () => {
+    map.setView(selectedEventCoords, 17);
+    showModalEventDetails = false;
+    showIconPanel = true;
   };
 
   const lockViewHandler = () => {
@@ -373,7 +400,7 @@
         }</p>
         ${
           point.eventName
-            ? `Depart :${point.startHour} `
+            ? `Départ : ${point.startHour} `
             : `<p>Type : ${point.priseType}</p>`
         }
         ${
@@ -391,7 +418,7 @@
         ${
           point.eventName
             ? `
-          <p>Date : ${point.startDate} - ${point.endDate}</p>
+          <p>${point.startDate} - ${point.endDate}</p>
           `
             : ``
         }
@@ -500,6 +527,7 @@
     showModalCreateEvent = false;
     showModalPlacePoint = false;
     showModalPlaceEvent = false;
+    showModalEventDetails = false;
     showIconPanel = true;
   };
 
@@ -523,6 +551,20 @@
 
   const createEvent = async () => {
     closePopup();
+    // Votre chaîne de caractères contenant la balise iframe
+    var iframeString = iframeEventInput;
+    // Utilisez une expression régulière pour extraire la valeur de l'attribut "src"
+    var srcRegex = /src="([^"]+)"/;
+    var matches = iframeString.match(srcRegex);
+
+    // Si des correspondances sont trouvées, la première correspondance (matches[1]) contiendra la valeur de l'attribut "src"
+    if (matches && matches.length > 1) {
+      var iframeLink = matches[1];
+    } else {
+      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
+    }
+
+    // Affichez la valeur de l'attribut "src" dans la console
     function isValidDate(date) {
       const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
       if (!datePattern.test(date)) {
@@ -625,19 +667,27 @@
         email: localStorage.getItem("email"),
         eventName: nameEventInput,
         eventDescription: descriptionEventInput,
+        eventInformations: informationsEventInput,
         coords: {
           lat: coordsToAddPoint.lat,
           lng: coordsToAddPoint.lng,
         },
         distance: distanceEventInput,
+        iframe: iframeLink,
         startDate: startDateEventInput,
         endDate: endDateEventInput,
         startHour: startHourEventInput,
-        informations: informationEventInput,
         addedDate: new Date(),
         needValiate: true,
       });
-      namePointInput = "";
+      nameEventInput = "";
+      descriptionEventInput = "";
+      distanceEventInput = "";
+      startDateEventInput = "";
+      endDateEventInput = "";
+      startHourEventInput = "";
+      iframeEventInput = "";
+
       descriptionPointInput = "";
       alert("Evénement créé avec succès");
       await refreshPoints();
@@ -681,6 +731,35 @@
     setInterval(() => {
       updateUserCoords();
     }, 2000);
+  };
+
+  const showEventDetails = (
+    createdBy,
+    email,
+    eventName,
+    eventDescription,
+    eventInformations,
+    distance,
+    iframe,
+    coords,
+    startDate,
+    endDate,
+    startHour
+  ) => {
+    selectedEventName = eventName;
+    selectedEventDescription = eventDescription;
+    selectedEventInformations = eventInformations;
+    console.log(eventInformations);
+    selectedEventCreatedBy = createdBy;
+    selectedEventEmail = email;
+    selectedEventDistance = distance;
+    selectedEventIframe = iframe;
+    selectedEventCoords = coords;
+    selectedEventStartDate = startDate;
+    selectedEventEndDate = endDate;
+    selectedEventStartHour = startHour;
+    showModalEvents = false;
+    showModalEventDetails = true;
   };
 
   const events = () => {
@@ -790,7 +869,6 @@
   const updateUserCoords = () => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
-        previousCoords = currentCoords;
         userCoords = [position.coords.latitude, position.coords.longitude];
         currentCoords = userCoords;
         userLocationMarker.setLatLng(userCoords);
@@ -939,6 +1017,34 @@
   </div>
 {/if}
 
+{#if showModalEventDetails}
+  <div id="container-event-details">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+    <p>{selectedEventName}</p>
+    <p>{selectedEventDescription}</p>
+    <p>Infos : {selectedEventInformations}</p>
+    <iframe
+      id="route-viewer"
+      src={selectedEventIframe}
+      width="600"
+      height="450"
+      style="border:0;"
+      allowfullscreen=""
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+    />
+    <p>Distance : {selectedEventDistance} km</p>
+    <p>Départ : {selectedEventStartHour}</p>
+    <p>Dates : {selectedEventStartDate} - {selectedEventEndDate}</p>
+    <p>Point de rassemblement :</p>
+    <i
+      style="cursor: pointer;"
+      class="fa-solid fa-eye"
+      on:click={showSelectedEvent}
+    />
+    <p>Créer par : {selectedEventCreatedBy}</p>
+  </div>
+{/if}
 <div id="filter" />
 
 {#if showModalPlacePoint}
@@ -955,7 +1061,7 @@
   <div id="container-place-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
 
-    <p>Selectionnez le point de départ.</p>
+    <p>Selectionnez l'emplacement du rassemblement.</p>
     <button on:click={placeEvent}>+</button>
   </div>
 {/if}
@@ -1034,8 +1140,23 @@
     <h2 style="color:white; ">Événements à venir :</h2>
 
     <div id="list-events">
-      {#each allEvents as { createdBy, email, eventName, eventDescription, distance, coords, startDate, endDate, startHour }, i}
-        <div class="posted-events">
+      {#each allEvents as { createdBy, email, eventName, eventInformations, eventDescription, distance, iframe, coords, startDate, endDate, startHour }, i}
+        <div
+          on:click={showEventDetails(
+            createdBy,
+            email,
+            eventName,
+            eventDescription,
+            eventInformations,
+            distance,
+            iframe,
+            coords,
+            startDate,
+            endDate,
+            startHour
+          )}
+          class="posted-events"
+        >
           <h2>{eventName}</h2>
           <h3>{eventDescription}</h3>
           <h3>{startDate} - {endDate}</h3>
@@ -1226,7 +1347,7 @@
       />
       <input
         autocomplete="off"
-        placeholder="Date début (xx/yy/zzzz)"
+        placeholder="Date début (jj/mm/aaaa)"
         type="text"
         name="startDateEvent"
         id="startDateEventInput"
@@ -1234,7 +1355,7 @@
       />
       <input
         autocomplete="off"
-        placeholder="Date fin (xx/yy/zzzz)"
+        placeholder="Date fin (jj/mm/aaaa)"
         type="text"
         name="endDateEvent"
         id="endDateEventInput"
@@ -1248,13 +1369,24 @@
         id="startHourEventInput"
         bind:value={startHourEventInput}
       />
+      <div id="iframe-line">
+        <input
+          autocomplete="off"
+          placeholder="iframe itinéraire (optionnel)"
+          type="text"
+          name="iframeEvent"
+          id="iframeEventInput"
+          bind:value={iframeEventInput}
+        />
+        <p id="help-iframe" on:click={helpIframe}>(?)</p>
+      </div>
       <textarea
-        placeholder="Informations"
+        placeholder="Informations (optionnel)"
         id="more-info-event"
         name="story"
         rows="5"
         cols="33"
-        bind:value={informationEventInput}
+        bind:value={informationsEventInput}
       />
     </div>
     <div id="form'action">
@@ -1301,6 +1433,46 @@
 {/if}
 
 <style>
+  #help-iframe {
+    right: 1rem;
+    cursor: pointer;
+    transform: translateY(5px);
+    margin-left: 10px;
+  }
+
+  #iframe-line {
+    transform: translateX(17px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #route-viewer {
+    width: 90%;
+    height: 40vh;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  #container-event-details {
+    padding: 1rem;
+    background-color: var(--dark-blue-color);
+    width: 90vw;
+    height: 90vh;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    z-index: 99999;
+    border-radius: 2rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    flex-direction: column;
+  }
+  #container-event-details p {
+    margin: 0;
+  }
   #container-place-point {
     position: absolute;
     background-color: var(--dark-blue-color);
@@ -1781,6 +1953,7 @@
 
   #champ-text-add-point {
     display: flex;
+    align-items: center;
     flex-direction: column;
     gap: 1rem;
   }
