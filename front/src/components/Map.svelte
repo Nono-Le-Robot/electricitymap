@@ -180,6 +180,7 @@
         showModalPlacePoint = false;
         showModalAddPoint = true;
         showIconPanel = false;
+        map.off("click");
       }
     });
   };
@@ -194,6 +195,7 @@
         showModalPlaceEvent = false;
         showModalCreateEvent = true;
         showIconPanel = false;
+        map.off("click");
       }
     });
   };
