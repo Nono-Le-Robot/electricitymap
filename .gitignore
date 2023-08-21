@@ -1,6 +1,6 @@
+.env
 back/node_modules/
 back/config/
-back/config/.env
 deploy
 idées
 a faire.txt
