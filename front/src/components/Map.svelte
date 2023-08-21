@@ -17,6 +17,7 @@
   const userMail = localStorage.getItem("email");
   const userPseudo = localStorage.getItem("username");
   let allPoints = [];
+  let myPoints = [];
   let allEvents = [];
   let circles = [];
   let userCoords = [];
@@ -46,7 +47,6 @@
   let endDateEventInput = "";
   let startHourEventInput = "";
   let iframeEventInput = "";
-  let informationEventInput = "";
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
@@ -138,8 +138,8 @@
     [15, 0]
   );
 
-  const USFlagIcon = createCustomIcon(
-    "./assets/us-flag.png",
+  const CCFlagIcon = createCustomIcon(
+    "./assets/cc-flag.png",
     [25, 25],
     [0, 60],
     [0, 0],
@@ -147,8 +147,8 @@
     [15, 0]
   );
 
-  const CCFlagIcon = createCustomIcon(
-    "./assets/cc-flag.png",
+  const EventFlagIcon = createCustomIcon(
+    "./assets/event-flag.png",
     [25, 25],
     [0, 60],
     [0, 0],
@@ -222,7 +222,6 @@
     try {
       const res = await axios.get(`${apiUrl}/api/data/get-events`);
       allEvents = res.data;
-      console.log(allEvents);
     } catch (err) {
       console.log(err);
     }
@@ -231,43 +230,6 @@
   const showSelectedEvent = () => {
     map.setView(selectedEventCoords, 17);
     showModalEventDetails = false;
-    showIconPanel = true;
-  };
-
-  const lockViewHandler = () => {
-    lockView = true;
-    setTimeout(() => {
-      map.setView([userCoords[0], userCoords[1]]);
-    }, 200);
-    setInterval(() => {
-      if (lockView) {
-        map.setView([userCoords[0], userCoords[1]]);
-      }
-    }, 2000);
-  };
-
-  const setNavigationView = () => {
-    navigationInProgress = true;
-    lockView = true;
-    map.setView([userCoords[0], userCoords[1]], 20);
-    showStartRoute = false;
-    setTimeout(() => {
-      map.on("drag", () => {
-        lockView = false;
-      });
-      map.on("zoom", () => {
-        lockView = false;
-      });
-    }, 1000);
-  };
-
-  const stopNavigation = () => {
-    if (route && navigationInProgress) {
-      route.remove();
-    }
-    closePopup();
-    navigationInProgress = false;
-    showStartRoute = false;
     showIconPanel = true;
   };
 
@@ -310,6 +272,9 @@
     groupMarkersAmericaine = [];
     groupMarkersCampingCar = [];
     allPoints.forEach((point, index) => {
+      if (point.addedBy === userPseudo) {
+        myPoints.push(point);
+      }
       if (point.priseType === "Européenne") {
         groupMarkersEuropeene.push(point);
       }
@@ -373,6 +338,13 @@
           });
           markersLayer.addLayer(flagMarker);
         }
+        if (point.eventName) {
+          const flagMarker = L.marker(pointCoords, {
+            icon: EventFlagIcon,
+            draggable: false,
+          });
+          markersLayer.addLayer(flagMarker);
+        }
 
         function isPointCreator(email, username) {
           if (email === point.addedBy || username === point.addedBy) {
@@ -381,7 +353,7 @@
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
             `;
           } else {
-            return ``;
+            return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
           }
         }
         marker.bindPopup(`
@@ -399,6 +371,8 @@
           point.eventDescription
             ? point.eventDescription
             : point.pointDescription
+            ? point.pointDescription
+            : ""
         }</p>
         ${
           point.eventName
@@ -427,14 +401,14 @@
         <div style="
         display:flex;
         align-items:center;
-        justify-content:center;
+        justify-content:space-evenly;
         gap:1rem;
         margin-top:1rem;
         margin-bottom:1.5rem;
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
+        <i class="fa-solid fa-eye" id="see-point" style="cursor:pointer; font-size:20px"></i>
        ${isPointCreator(userMail, userPseudo)}
-
         </div>
       `);
 
@@ -452,6 +426,7 @@
         marker.on("click", () => {
           selectedMarker = point;
         });
+
         marker.on("move", (event) => {
           selectedMarker = point;
           circles.forEach((circle) => circle.removeFrom(map));
@@ -459,12 +434,14 @@
           const newCoords = event.target.getLatLng();
           circleMinSpaceBetweenPoint.setLatLng(newCoords);
         });
+
         marker.on("dragend", (event) => {
           selectedMarker = point;
           const newCoords = event.target.getLatLng();
           updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
           updateEventCoordinates(pointId, newCoords.lat, newCoords.lng);
         });
+
         marker.on("popupopen", (event) => {
           if (point.email === userMail && point.addedBy === userPseudo) {
             const penIcon = document.querySelector(".fa-pen");
@@ -496,6 +473,31 @@
               showConfirmDelete = true;
             });
           }
+
+          const reportIcon = document.querySelector(".fa-triangle-exclamation");
+          reportIcon.addEventListener("click", async () => {
+            alert("report");
+          });
+
+          const eyeIcon = document.getElementById("see-point");
+          eyeIcon.addEventListener("click", () => {
+            if (point.eventName) {
+              ({
+                eventName: selectedEventName,
+                eventDescription: selectedEventDescription,
+                eventInformations: selectedEventInformations,
+                iframe: selectedEventIframe,
+                distance: selectedEventDistance,
+                startDate: selectedEventStartDate,
+                endDate: selectedEventEndDate,
+                startHour: selectedEventStartHour,
+                coords: selectedEventCoords,
+                createdBy: selectedEventCreatedBy,
+              } = point);
+              showModalEventDetails = true;
+            }
+          });
+
           const routeIcon = document.querySelector(".fa-route");
           routeIcon.addEventListener("click", async () => {
             function redirectToGoogleMapsBike(lat, lng) {
@@ -553,20 +555,14 @@
 
   const createEvent = async () => {
     closePopup();
-    // Votre chaîne de caractères contenant la balise iframe
     var iframeString = iframeEventInput;
-    // Utilisez une expression régulière pour extraire la valeur de l'attribut "src"
     var srcRegex = /src="([^"]+)"/;
     var matches = iframeString.match(srcRegex);
-
-    // Si des correspondances sont trouvées, la première correspondance (matches[1]) contiendra la valeur de l'attribut "src"
     if (matches && matches.length > 1) {
       var iframeLink = matches[1];
     } else {
       console.log("Aucune correspondance trouvée pour l'attribut 'src'");
     }
-
-    // Affichez la valeur de l'attribut "src" dans la console
     function isValidDate(date) {
       const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
       if (!datePattern.test(date)) {
@@ -608,7 +604,7 @@
     }
     const startDateValidation = isValidDate(startDateEventInput);
     const endDateValidation = isValidDate(endDateEventInput);
-    const startTimeValidation = isValidTime(startHourEventInput); // Valider l'heure de début
+    const startTimeValidation = isValidTime(startHourEventInput);
     if (
       startDateValidation !== null ||
       endDateValidation !== null ||
@@ -689,7 +685,6 @@
       endDateEventInput = "";
       startHourEventInput = "";
       iframeEventInput = "";
-
       descriptionPointInput = "";
       alert("Evénement créé avec succès");
       await refreshPoints();
@@ -715,6 +710,7 @@
         document.body.clientHeight,
     };
   }
+
   const logout = () => {
     localStorage.removeItem("username");
     localStorage.removeItem("email");
@@ -751,7 +747,6 @@
     selectedEventName = eventName;
     selectedEventDescription = eventDescription;
     selectedEventInformations = eventInformations;
-    console.log(eventInformations);
     selectedEventCreatedBy = createdBy;
     selectedEventEmail = email;
     selectedEventDistance = distance;
@@ -777,6 +772,7 @@
       viewportSize.height / 2,
     ]);
   }
+
   const addPointByPlus = (latlng) => {
     var center = getCenterOfViewport();
     closePopup();
@@ -786,6 +782,7 @@
     showModalAskAction = true;
     showIconPanel = false;
   };
+
   const submitInfoPoint = async (lat, lng) => {
     await axios.post(`${apiUrl}/api/data/add-point`, {
       email: localStorage.getItem("email"),
@@ -880,9 +877,14 @@
     }
   };
 
+  const goToMyAddedPoint = (coords) => {
+    closePopup();
+    console.log(coords);
+    map.setView([coords.lat, coords.lng], 20);
+  };
+
   onMount(async () => {
     let showEuLocalStorage = localStorage.getItem("showEU");
-    let showUsLocalStorage = localStorage.getItem("showUS");
     let showCcLocalStorage = localStorage.getItem("showCC");
     let showEventsLocalStorage = localStorage.getItem("showEvents");
 
@@ -926,17 +928,17 @@
         ? markersLayerEuropeene.addTo(map)
         : markersLayerEuropeene.removeFrom(map);
     }
-    if (showUsLocalStorage) {
-      showUS = showUsLocalStorage === "true" ? true : false;
-      showUsLocalStorage === "true"
-        ? markersLayerAmericaine.addTo(map)
-        : markersLayerAmericaine.removeFrom(map);
-    }
     if (showCcLocalStorage) {
       showCC = showCcLocalStorage === "true" ? true : false;
       showCcLocalStorage === "true"
         ? markersLayerCampingCar.addTo(map)
         : markersLayerCampingCar.removeFrom(map);
+    }
+    if (showEventsLocalStorage) {
+      showUS = showUsLocalStorage === "true" ? true : false;
+      showUsLocalStorage === "true"
+        ? markersLayerAmericaine.addTo(map)
+        : markersLayerAmericaine.removeFrom(map);
     }
   });
 </script>
@@ -1086,52 +1088,12 @@
       <div class="btn-settings">Paramètres</div>
     </div>
     <div id="footer-settings">
-      <h2 style="color:white;">Mes points ajoutés :</h2>
-      <div class="posted-point">
-        <p>1111gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
-      <div class="posted-point">
-        <p>gbezrgergzergezrgzergzerg</p>
-      </div>
+      <h2 style="color:white;">Mes points ajoutés : ({myPoints.length})</h2>
+      {#each myPoints as { pointName, coords }, i}
+        <div on:click={(e) => goToMyAddedPoint(coords)} class="posted-point">
+          <p>{pointName}</p>
+        </div>
+      {/each}s
     </div>
   </div>
 {/if}
@@ -1174,6 +1136,7 @@
     <i class="fa-solid fa-xmark" on:click={closePopup} />
 
     <div id="EU-filter">
+      <img src="./assets/eu-flag.png" style="width:25px" alt="" srcset="" />
       <p>
         Européenne ({groupMarkersEuropeene.length})
       </p>
@@ -1184,6 +1147,7 @@
       {/if}
     </div>
     <div id="CC-filter">
+      <img src="./assets/cc-flag.png" style="width:25px" alt="" srcset="" />
       <p>
         Camping-car ({groupMarkersCampingCar.length})
       </p>
@@ -1194,6 +1158,8 @@
       {/if}
     </div>
     <div id="Event-filter">
+      <img src="./assets/event-flag.png" style="width:25px" alt="" srcset="" />
+
       <p>
         Evénements ({groupMarkersEvents.length})
       </p>
@@ -1333,7 +1299,7 @@
       />
       <input
         autocomplete="off"
-        placeholder="Description"
+        placeholder="Description (optionnel)"
         type="text"
         name="descriptionEvent"
         id="descriptionEventInput"
@@ -1450,7 +1416,7 @@
   }
   #route-viewer {
     width: 90%;
-    height: 40vh;
+    height: 50vh;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
   }
@@ -1615,20 +1581,25 @@
     border-radius: 1rem;
     margin-left: auto;
     margin-right: auto;
-    min-width: 200px;
+    width: 300px;
   }
 
   .posted-point {
     box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.438);
     cursor: pointer;
-    min-height: 70px;
     margin-top: 1rem;
     background: var(--main-color);
     width: 90%;
     border-radius: 1rem;
-    height: 100px;
+    height: 400px;
+    text-align: center;
+
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .posted-point p {
+    margin: 1rem 0;
   }
 
   #lock-view {

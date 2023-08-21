@@ -81,7 +81,7 @@
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    filter: grayscale(80%);
+    /* filter: grayscale(80%); */
   }
 
   #main {

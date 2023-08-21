@@ -11,10 +11,11 @@ const eventSchema = new mongoose.Schema({
   },
   eventDescription: {
     type: String,
-    required: true,
+    default: "",
   },
   eventInformations: {
     type: String,
+    default: "",
   },
   coords: {
     lat: {
@@ -61,6 +62,10 @@ const eventSchema = new mongoose.Schema({
     required: true,
 
     default: true,
+  },
+  reports: {
+    type: Number,
+    default: 0,
   },
 });
 

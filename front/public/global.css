@@ -6,8 +6,8 @@ body {
   user-select: none;
 }
 :root {
-  --main-color: #43be43;
-  --dark-blue-color: #181a29;
+  --main-color: rgb(181, 198, 255);
+  --dark-blue-color: #171b38;
   --green-validate: #80ff80;
   --red-error: #ff6e6e;
 }

@@ -62,6 +62,10 @@ const pointSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  reports: {
+    type: Number,
+    default: 0,
+  },
 });
 
 module.exports = mongoose.model("Point", pointSchema);
