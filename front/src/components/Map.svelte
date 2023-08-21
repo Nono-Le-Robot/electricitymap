@@ -935,8 +935,8 @@
         : markersLayerCampingCar.removeFrom(map);
     }
     if (showEventsLocalStorage) {
-      showUS = showUsLocalStorage === "true" ? true : false;
-      showUsLocalStorage === "true"
+      showEvents = showEventsLocalStorage === "true" ? true : false;
+      showEventsLocalStorage === "true"
         ? markersLayerAmericaine.addTo(map)
         : markersLayerAmericaine.removeFrom(map);
     }
