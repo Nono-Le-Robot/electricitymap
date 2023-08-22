@@ -5,6 +5,10 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  idUser:{
+    type: String,
+    required: true,
+  },
   eventName: {
     type: String,
     required: true,

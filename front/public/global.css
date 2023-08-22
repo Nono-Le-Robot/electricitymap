@@ -6,8 +6,8 @@ body {
   user-select: none;
 }
 :root {
-  --main-color: #43be43;
-  --dark-blue-color: #181a29;
+  --main-color: rgb(181, 198, 255);
+  --dark-blue-color: #171b38;
   --green-validate: #80ff80;
   --red-error: #ff6e6e;
 }
@@ -23,7 +23,7 @@ body {
 .leaflet-popup-content,
 .leaflet-popup-tip-container {
   text-align: center;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   color: white;
   background-color: rgb(21, 32, 66);
 }
@@ -82,13 +82,14 @@ body {
   overflow-x: hidden;
 }
 ::-webkit-scrollbar {
-  width: 0.6rem;
-  border-radius: 2rem;
+  width: 0.4rem;
+  border-radius: 0.5rem;
   background-color: var(--dark-blue-color);
 }
 ::-webkit-scrollbar-thumb {
   background-image: linear-gradient(45deg, #26213b, #9695aa);
-  border-radius: 2rem;
+  border-radius: 0.5rem;
+
   transition: 1s;
 }
 #map
@@ -159,16 +160,7 @@ body {
     overflow: scroll;
     overflow-x: hidden;
   }
-  ::-webkit-scrollbar {
-    width: 0.6rem;
-    border-radius: 2rem;
-    background-color: var(--dark-blue-color);
-  }
-  ::-webkit-scrollbar-thumb {
-    background-image: linear-gradient(45deg, #26213b, #9695aa);
-    border-radius: 2rem;
-    transition: 1s;
-  }
+
   #map
     > div.leaflet-control-container
     > div.leaflet-top.leaflet-right

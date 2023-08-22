@@ -211,6 +211,13 @@
 </ToastContainer>
 
 <style>
+  #version-user {
+    color: white;
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    z-index: 888888;
+  }
   .inputs-form {
     display: flex;
     flex-direction: column;
@@ -236,14 +243,15 @@
     justify-content: center;
 
     background-color: var(--main-color);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
   }
   #login-form button,
   #register-form button {
     font-size: 20px;
     width: 150px;
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     background-color: white;
     color: black;
     padding: 1rem;
@@ -257,7 +265,8 @@
     font-size: 17px;
     width: 225px;
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     background-color: white;
     padding: 1rem;
     margin-top: 1rem;

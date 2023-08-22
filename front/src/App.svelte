@@ -3,7 +3,7 @@
   import Auth from "./components/Auth.svelte";
   import axios from "axios";
 
-  const userVersion = "v1.2";
+  const userVersion = "v1.3";
   const userId = localStorage.getItem("userId");
   const username = localStorage.getItem("username");
   const email = localStorage.getItem("email");
@@ -39,6 +39,7 @@
 </script>
 
 <section id="main">
+  <p id="version-user">{userVersion}</p>
   {#if logged}
     <Map isLogged={logged} />
   {:else}
@@ -56,6 +57,14 @@
 </section>
 
 <style>
+  #version-user {
+    color: var(--dark-blue-color);
+    position: absolute;
+    bottom: 5px;
+    left: 15px;
+    z-index: 888888;
+    font-size: 0.5rem;
+  }
   #privacy-policy {
     position: absolute;
     bottom: 20px;
@@ -81,7 +90,7 @@
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    filter: grayscale(80%);
+    /* filter: grayscale(80%); */
   }
 
   #main {

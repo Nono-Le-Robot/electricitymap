@@ -4,7 +4,7 @@ const pointsModel = require("../models/points.model.js");
 const eventsModel = require("../models/events.model.js");
 
 module.exports.appVersion = async (req, res) => {
-  const appVersion = "v1.2";
+  const appVersion = "v1.3";
   const userVersion = req.body.userVersion;
   if (appVersion === userVersion) {
     res.send({
@@ -175,15 +175,70 @@ module.exports.updateEventCoordinates = async (req, res) => {
 };
 
 module.exports.getAllPoints = async (req, res) => {
-  pointsModel.find().exec(function (err, points) {
+  // try {
+  //   const points = await pointsModel.find().exec();
+  //   const users = await userModel.find().exec();
+
+  //   const emailToUserIdMap = {};
+  //   users.forEach(user => {
+  //     emailToUserIdMap[user.email] = user._id;
+  //   });
+
+  //   const updatePromises = points.map(async (point) => {
+  //     const userId = emailToUserIdMap[point.email];
+  //     console.log(userId);
+  //     const objectIdString = userId.toHexString();
+  //     console.log(objectIdString);
+  //     if (objectIdString) {
+  //     console.log('lala');
+  //       await pointsModel.updateOne({ _id: point._id }, { idUser: objectIdString });
+  //     }
+  //   });
+
+  //   await Promise.all(updatePromises);
+
+  //   res.status(200).send("Points mis à jour avec succès.");
+  // } catch (err) {
+  //   res.status(500).send(err.message);
+  // }
+  pointsModel.find().exec(function (err, events) {
     if (err) {
       res.status(500).send(err.message);
     } else {
-      res.status(200).send(points);
+      res.status(200).send(events);
     }
   });
 };
 module.exports.getAllEvents = async (req, res) => {
+  // try {
+  //   const points = await eventsModel.find().exec();
+  //   const users = await userModel.find().exec();
+
+  //   const emailToUserIdMap = {};
+  //   users.forEach(user => {
+  //     emailToUserIdMap[user.email] = user._id;
+  //   });
+
+  //   const updatePromises = points.map(async (point) => {
+  //     const userId = emailToUserIdMap[point.email];
+  //     console.log(userId);
+  //     const objectIdString = userId.toHexString();
+  //     console.log(objectIdString);
+  //     if (objectIdString) {
+  //       console.log('lala');
+  //       await eventsModel.updateOne({ _id: point._id }, { idUser: objectIdString });
+  //     }
+  //   });
+  //   await Promise.all(updatePromises);
+
+  //   res.status(200).send("Points mis à jour avec succès.");
+  // } catch (err) {
+  //   res.status(500).send(err.message);
+  // }
+
+
+
+
   eventsModel.find().exec(function (err, events) {
     if (err) {
       res.status(500).send(err.message);
@@ -208,13 +263,13 @@ module.exports.deletePoint = async (req, res) => {
       res.status(500).send(err.message);
     } else {
       console.clear();
-      console.log(point);
       res.status(200).send(point);
     }
   });
 };
 
 module.exports.addPoint = async (req, res) => {
+console.log(req);
   userModel
     .findOne({ email: req.body.email })
     .select("-password")
@@ -224,7 +279,7 @@ module.exports.addPoint = async (req, res) => {
       } else {
         const {
           email,
-          idUser,
+          idUser = user._id,
           pointName,
           pointDescription,
           coords,
@@ -256,7 +311,7 @@ module.exports.addPoint = async (req, res) => {
               pointName: newPoint.pointName,
               pointDescription: newPoint.pointDescription,
               coords: newPoint.coords,
-              addedBy: newPoint.addBy,
+              addedBy: newPoint.addedBy,
               priseType: newPoint.priseType,
               spotState: newPoint.spotState,
               needValidate: newPoint.needValidate,
@@ -269,7 +324,7 @@ module.exports.addPoint = async (req, res) => {
 };
 
 module.exports.createEvent = async (req, res) => {
-  console.log(req.body);
+
   userModel
     .findOne({ email: req.body.email })
     .select("-password")
@@ -280,6 +335,7 @@ module.exports.createEvent = async (req, res) => {
         const {
           createdBy,
           email,
+          idUser = user._id,
           eventName,
           eventDescription,
           eventInformations,
@@ -301,6 +357,7 @@ module.exports.createEvent = async (req, res) => {
           const newEvent = new eventsModel({
             createdBy,
             email,
+            idUser,
             eventName,
             eventDescription,
             eventInformations,
@@ -336,3 +393,5 @@ module.exports.createEvent = async (req, res) => {
     })
     .catch((error) => res.status(401).send(error.message));
 };
+
+
