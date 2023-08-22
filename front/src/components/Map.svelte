@@ -605,147 +605,127 @@
   };
 
   const createEvent = async () => {
+    const isValidDistance = (distance) => {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    };
+
+    const formatDate = (date) => {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
+
+    const isEndDateAfterStartDate = (startDate, endDate) => {
+      return new Date(startDate) <= new Date(endDate);
+    };
+
+    const isTimeAfterCurrentTime = (time) => {
+      const [hour, minute] = time.split(":");
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      return (
+        parseInt(hour, 10) > currentHour ||
+        (parseInt(hour, 10) === currentHour &&
+          parseInt(minute, 10) > currentMinute)
+      );
+    };
+
+    const resetFields = () => {
+      const fieldsToReset = [
+        "nameEventInput",
+        "descriptionEventInput",
+        "distanceEventInput",
+        "startDateEventInput",
+        "endDateEventInput",
+        "startHourEventInput",
+        "iframeEventInput",
+        "descriptionPointInput",
+      ];
+
+      fieldsToReset.forEach((field) => {
+        window[field] = ""; // Réinitialise les champs à une chaîne vide
+      });
+    };
+
     closePopup();
-    var iframeString = iframeEventInput;
-    var srcRegex = /src="([^"]+)"/;
-    var matches = iframeString.match(srcRegex);
+
+    const iframeString = iframeEventInput;
+    const srcRegex = /src="([^"]+)"/;
+    const matches = iframeString.match(srcRegex);
+    let iframeLink = "";
+
     if (matches && matches.length > 1) {
-      var iframeLink = matches[1];
+      iframeLink = matches[1];
     } else {
       console.log("Aucune correspondance trouvée pour l'attribut 'src'");
     }
-    function isValidDate(date) {
-      const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
-      if (!datePattern.test(date)) {
-        return "Le format de date doit être xx/xx/xxxx";
-      }
-      const parts = date.split("/");
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      const newDate = new Date(year, month, day);
-      if (
-        newDate.getFullYear() === year &&
-        newDate.getMonth() === month &&
-        newDate.getDate() === day
-      ) {
-        return null;
-      } else {
-        return "La date n'est pas valide";
-      }
-    }
-    function isValidTime(time) {
-      const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
-      if (!timePattern.test(time)) {
-        return "Le format de l'heure doit être HH:mm (24 heures)";
-      }
-      return null;
-    }
-    function isAfterCurrentDate(date) {
-      const currentDate = new Date();
-      const parts = date.split("/");
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      const newDate = new Date(year, month, day);
-      return newDate > currentDate;
-    }
-    function isValidDistance(distance) {
-      return !isNaN(parseFloat(distance)) && isFinite(distance);
-    }
-    const startDateValidation = isValidDate(startDateEventInput);
-    const endDateValidation = isValidDate(endDateEventInput);
-    const startTimeValidation = isValidTime(startHourEventInput);
-    if (
-      startDateValidation !== null ||
-      endDateValidation !== null ||
-      startTimeValidation !== null
-    ) {
-      alert(
-        (startDateValidation !== null
-          ? "Date de début : " + startDateValidation + "\n"
-          : "") +
-          (endDateValidation !== null
-            ? "Date de fin : " + endDateValidation + "\n"
-            : "") +
-          (startTimeValidation !== null
-            ? "Heure de début : " + startTimeValidation
-            : "")
-      );
-      return;
-    }
-
-    if (
-      !isAfterCurrentDate(startDateEventInput) ||
-      !isAfterCurrentDate(endDateEventInput)
-    ) {
-      alert(
-        "Les dates doivent être dans le futur par rapport à la date actuelle"
-      );
-      return;
-    }
-
-    const startDateParts = startDateEventInput.split("/");
-    const endDateParts = endDateEventInput.split("/");
-
-    const startDate = new Date(
-      parseInt(startDateParts[2], 10),
-      parseInt(startDateParts[1], 10) - 1,
-      parseInt(startDateParts[0], 10)
-    );
-
-    const endDate = new Date(
-      parseInt(endDateParts[2], 10),
-      parseInt(endDateParts[1], 10) - 1,
-      parseInt(endDateParts[0], 10)
-    );
-
-    if (endDate < startDate) {
-      alert("La date de fin doit être après ou égale à la date de début");
-      return;
-    }
-
-    if (!isValidDistance(distanceEventInput)) {
-      alert("La distance doit être au format numérique");
-      return;
-    }
 
     try {
-      const res = await axios.post(`${apiUrl}/api/data/create-event`, {
-        createdBy: localStorage.getItem("username"),
-        email: localStorage.getItem("email"),
-        eventName: nameEventInput,
-        eventDescription: descriptionEventInput,
-        eventInformations: informationsEventInput,
-        coords: {
-          lat: coordsToAddPoint.lat,
-          lng: coordsToAddPoint.lng,
-        },
-        distance: distanceEventInput,
-        iframe: iframeLink,
-        startDate: startDateEventInput,
-        endDate: endDateEventInput,
-        startHour: startHourEventInput,
-        addedDate: new Date(),
-        needValiate: true,
-      });
-      nameEventInput = "";
-      descriptionEventInput = "";
-      distanceEventInput = "";
-      startDateEventInput = "";
-      endDateEventInput = "";
-      startHourEventInput = "";
-      iframeEventInput = "";
-      descriptionPointInput = "";
-      alert("Evénement créé avec succès");
-      await refreshPoints();
-      closePopup();
+      const distance = parseFloat(distanceEventInput);
+
+      if (!isValidDistance(distance)) {
+        alert("La distance doit être au format numérique");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        !isEndDateAfterStartDate(startDateEventInput, endDateEventInput)
+      ) {
+        alert("La date de fin doit être après la date de début");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        new Date(startDateEventInput) < new Date() &&
+        !(
+          new Date(startDateEventInput).getDate() === new Date().getDate() &&
+          isTimeAfterCurrentTime(startHourEventInput)
+        )
+      ) {
+        alert("La date de début doit être postérieure à la date actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (!isTimeAfterCurrentTime(startHourEventInput)) {
+        alert("L'heure de début doit être postérieure à l'heure actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else {
+        const res = await axios.post(`${apiUrl}/api/data/create-event`, {
+          createdBy: localStorage.getItem("username"),
+          email: localStorage.getItem("email"),
+          eventName: nameEventInput,
+          eventDescription: descriptionEventInput,
+          eventInformations: informationsEventInput,
+          coords: {
+            lat: coordsToAddPoint.lat,
+            lng: coordsToAddPoint.lng,
+          },
+          distance: distanceEventInput,
+          iframe: iframeLink,
+          startDate: formatDate(new Date(startDateEventInput)),
+          endDate: formatDate(new Date(endDateEventInput)),
+          startHour: startHourEventInput,
+          addedDate: new Date(),
+          needValiate: true,
+        });
+        alert("Événement créé avec succès");
+        nameEventInput = "";
+        descriptionEventInput = "";
+        distanceEventInput = "";
+        startDateEventInput = "";
+        endDateEventInput = "";
+        startHourEventInput = "";
+        iframeEventInput = "";
+        informationsEventInput = "";
+        await refreshPoints();
+        closePopup();
+      }
     } catch (err) {
       console.error(err);
       alert(
         "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
       );
     }
+
     enableToPlace = false;
   };
 
@@ -884,6 +864,33 @@
     showModalFilter = !showModalFilter;
     showIconPanel = false;
   };
+  let isStartDateInput = false;
+  let isEndDateInput = false;
+  let isStartHourInput = false;
+  let activeInput = null;
+
+  function toggleStartDateInput() {
+    isStartDateInput = true;
+  }
+
+  function toggleEndDateInput() {
+    isEndDateInput = true;
+  }
+
+  function toggleStartHourInput() {
+    isStartHourInput = true;
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Les mois sont indexés à partir de 0
+    const year = date.getFullYear().toString();
+    return `${day}/${month}/${year}`;
+  }
+
+  $: formattedStartDate = formatDate(startDateEventInput);
+  $: formattedEndDate = formatDate(endDateEventInput);
 
   const toggleEU = () => {
     showEU = !showEU;
@@ -1445,35 +1452,79 @@
       <input
         autocomplete="off"
         placeholder="Distance (en Km)"
-        type="text"
+        type="number"
         name="distanceEvent"
         id="distanceEventInput"
         bind:value={distanceEventInput}
       />
-      <input
-        autocomplete="off"
-        placeholder="Date début (jj/mm/aaaa)"
-        type="text"
-        name="startDateEvent"
-        id="startDateEventInput"
-        bind:value={startDateEventInput}
-      />
-      <input
-        autocomplete="off"
-        placeholder="Date fin (jj/mm/aaaa)"
-        type="text"
-        name="endDateEvent"
-        id="endDateEventInput"
-        bind:value={endDateEventInput}
-      />
-      <input
-        autocomplete="off"
-        placeholder="Heure du départ (hh:mm)"
-        type="text"
-        name="endDateEvent"
-        id="startHourEventInput"
-        bind:value={startHourEventInput}
-      />
+      {#if !isStartDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date début"
+          type="text"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:click={toggleStartDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:blur={() => {
+            isStartDateInput = false;
+            startDateEventInput = formattedStartDate; // Utilisez la date formatée
+          }}
+        />
+      {/if}
+
+      {#if !isEndDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date fin"
+          type="text"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:click={toggleEndDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:blur={() => {
+            isEndDateInput = false;
+            endDateEventInput = formattedEndDate; // Utilisez la date formatée
+          }}
+        />
+      {/if}
+
+      {#if !isStartHourInput}
+        <input
+          autocomplete="off"
+          placeholder="Heure du départ (hh:mm)"
+          type="text"
+          name="startHourEvent"
+          id="startHourEventInput"
+          bind:value={startHourEventInput}
+          on:click={toggleStartHourInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="time"
+          name="startHourEvent"
+          id="startHourEventInput"
+          bind:value={startHourEventInput}
+          on:blur={() => (isStartHourInput = false)}
+        />
+      {/if}
       <div id="iframe-line">
         <input
           autocomplete="off"
@@ -1877,7 +1928,7 @@
     z-index: 99999;
     position: absolute;
     right: 10px;
-    top: 80px;
+    top: 10px;
     width: 30px;
     background-color: var(--dark-blue-color);
     padding: 1rem;
@@ -1886,6 +1937,7 @@
   }
 
   #settings-icon {
+    display: none;
     z-index: 99999;
     position: absolute;
     right: 10px;
