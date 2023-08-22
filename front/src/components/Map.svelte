@@ -15,7 +15,7 @@
   let marker;
   let pressed = false;
   const userMail = localStorage.getItem("email");
-  const userPseudo = localStorage.getItem("username");
+  let userPseudo = localStorage.getItem("username");
   let allPoints = [];
   let myPoints = [];
   let allEvents = [];
@@ -47,6 +47,7 @@
   let endDateEventInput = "";
   let startHourEventInput = "";
   let iframeEventInput = "";
+  let newUsernameInput = "";
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
@@ -63,6 +64,8 @@
   let showModalPlaceEvent = false;
   let showModalEventDetails = false;
   let showModalAccountSettings = false;
+  let showModalEnterNewUsername = false;
+  let showModalConfirmDeleteAccount = false;
   let showModalCreateEvent;
   let coordsToAddPoint = { lat: null, lng: null };
   let showEU = true;
@@ -156,6 +159,46 @@
     [0, 0],
     [15, 0]
   );
+
+  const askNewUsername = async () => {
+    closePopup();
+    showModalEnterNewUsername = true;
+  };
+
+  const contactSupport = () => {
+    let adresseEmail = "sannier.renaud@gmail.com";
+    window.open("mailto:" + adresseEmail);
+  };
+
+  const changeUsername = async () => {
+    try {
+      await axios.post(`${apiUrl}/api/data/modify-username`, {
+        username: userPseudo,
+        newUsername: newUsernameInput,
+      });
+      localStorage.removeItem("username");
+      localStorage.setItem("username", newUsernameInput);
+      userPseudo = newUsernameInput;
+      newUsernameInput = "";
+      showModalEnterNewUsername = false;
+      showModalAccountSettings = true;
+      refreshPoints();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const seeAllEvents = () => {
+    closePopup();
+    showIconPanel = false;
+    showModalEvents = true;
+  };
+
+  const confirmDeleteAccount = () => {
+    closePopup();
+    showIconPanel = false;
+    showModalConfirmDeleteAccount = !showModalConfirmDeleteAccount;
+  };
 
   const helpIframe = () => {
     window.open(
@@ -371,7 +414,7 @@
         }
         
         <br>
-        <b>${point.eventName ? point.eventName : point.pointName}</b>
+        <h3>${point.eventName ? point.eventName : point.pointName}</h3>
         <p>${
           point.eventDescription
             ? point.eventDescription
@@ -381,11 +424,6 @@
         }</p>
         ${
           point.eventName
-            ? `Départ : ${point.startHour} `
-            : `<p>Type : ${point.priseType}</p>`
-        }
-        ${
-          point.eventName
             ? `
           <p>Distance : ${point.distance} Km</p>
           `
@@ -393,15 +431,20 @@
         }
         ${
           point.eventName
-            ? `<p>Créer par : ${point.createdBy}</p>`
-            : `<p>Ajouté par : ${point.addedBy}</p>`
-        }
-        ${
-          point.eventName
             ? `
           <p>${point.startDate} - ${point.endDate}</p>
           `
             : ``
+        }
+        ${
+          point.eventName
+            ? `Départ : ${point.startHour} `
+            : `<p>Type : ${point.priseType}</p>`
+        }
+        ${
+          point.eventName
+            ? `<p>Créer par : ${point.createdBy}</p>`
+            : `<p>Ajouté par : ${point.addedBy}</p>`
         }
         <div style="
         display:flex;
@@ -538,6 +581,8 @@
     showModalPlaceEvent = false;
     showModalEventDetails = false;
     showModalAccountSettings = false;
+    showModalConfirmDeleteAccount = false;
+    showModalEnterNewUsername = false;
     showIconPanel = true;
   };
 
@@ -1030,28 +1075,34 @@
 {#if showModalEventDetails}
   <div id="container-event-details">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
-    <p>{selectedEventName}</p>
+    <h3>{selectedEventName}</h3>
     <p>{selectedEventDescription}</p>
-    <p>Infos : {selectedEventInformations}</p>
-    <iframe
-      id="route-viewer"
-      src={selectedEventIframe}
-      width="600"
-      height="450"
-      style="border:0;"
-      allowfullscreen=""
-      loading="lazy"
-      referrerpolicy="no-referrer-when-downgrade"
-    />
+    <p style="max-width:90vw">
+      Infos : {selectedEventInformations}
+    </p>
+    {#if selectedEventIframe && selectedEventIframe.includes("https://www.google.com/maps/")}
+      <iframe
+        id="route-viewer"
+        src={selectedEventIframe}
+        width="600"
+        height="450"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      />
+    {/if}
     <p>Distance : {selectedEventDistance} km</p>
     <p>Départ : {selectedEventStartHour}</p>
     <p>Dates : {selectedEventStartDate} - {selectedEventEndDate}</p>
-    <p>Point de rassemblement :</p>
-    <i
-      style="cursor: pointer;"
-      class="fa-solid fa-eye"
-      on:click={showSelectedEvent}
-    />
+    <p>
+      Point de rassemblement :<i
+        style="cursor: pointer; margin-left: 10px"
+        class="fa-solid fa-eye"
+        on:click={showSelectedEvent}
+      />
+    </p>
+
     <p>Créer par : {selectedEventCreatedBy}</p>
   </div>
 {/if}
@@ -1181,8 +1232,6 @@
 
 {#if showModalAccountSettings}
   <div id="container-account-settings">
-    <i class="fa-solid fa-xmark" on:click={closePopup} />
-
     <div id="header-account-settings">
       <img
         id="profil-picture-account-settings"
@@ -1191,34 +1240,73 @@
         srcset=""
       />
       <i class="fa-solid fa-pen" id="modify-image-settings" />
+    </div>
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
 
-      <br />
-      <div id="pseudo-account-settings">
-        <h2>NonoLeRobot</h2>
-        <i class="fa-solid fa-pen" id="modify-pseudo-settings" />
-      </div>
+    <div id="pseudo-account-settings">
+      <h2>{userPseudo}</h2>
+      <i
+        class="fa-solid fa-pen"
+        id="modify-pseudo-settings"
+        on:click={askNewUsername}
+      />
     </div>
     <div id="action-account-settings">
-      <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Localisation</h3>
-        <p style="margin:0">Partager ma position : - slider</p>
-        <p style="margin:0">Gérer ma visibilité</p>
-      </div>
+      <p style="margin:0 cursor:pointer" on:click={contactSupport}>
+        Contacter le support
+      </p>
+      <p style="cursor:pointer" on:click={logout}>Déconnexion</p>
 
-      <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Evenements</h3>
-        <p style="margin:0">A venir</p>
-        <p style="margin:0">Voir tout les événements</p>
-      </div>
-
-      <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Aide</h3>
-        <p style="margin:0">Contacter le support</p>
-        <p style="margin:0">boite à idées</p>
-      </div>
+      <p
+        style="color:red ; margin:0; cursor:pointer;"
+        on:click={confirmDeleteAccount}
+      >
+        Supprimer mon compte
+      </p>
     </div>
-    <div id="footer-account-settings" />
-    <p style="color:red ; margin:0; cursor:pointer;">Supprimer mon compte</p>
+  </div>
+{/if}
+
+{#if showModalConfirmDeleteAccount}
+  <div id="container-remove-point">
+    <div>
+      <p>Voulez vous vraiment supprimer votre compte ?</p>
+      <p style="color:red">Cette action est irréversible.</p>
+    </div>
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete">Oui</button>
+      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
+      >
+    </div>
+    <div />
+  </div>
+{/if}
+
+{#if showModalEnterNewUsername}
+  <div id="container-remove-point">
+    <div>
+      <input
+        type="text"
+        name=""
+        id=""
+        placeholder={userPseudo}
+        bind:value={newUsernameInput}
+      />
+    </div>
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete" on:click={changeUsername}
+        >Confirmer</button
+      >
+      <button
+        type="submit"
+        id="cancel-delete"
+        on:click={() => {
+          closePopup();
+          showModalAccountSettings = true;
+        }}>Annuler</button
+      >
+    </div>
+    <div />
   </div>
 {/if}
 
@@ -1454,7 +1542,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
+    gap: 2rem;
     width: 90vw;
     height: 95vh;
     overflow-y: visible;
@@ -1493,7 +1582,7 @@
     display: flex;
     align-items: center;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 2rem;
     justify-content: center;
   }
   .sub-action-account-settings {
@@ -1518,8 +1607,11 @@
     box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
     color: black;
     cursor: pointer;
-    position: fixed;
-    transform: translateY(-30px);
+    position: relative;
+    top: -50%;
+    left: 0;
+    transform: translateY(25%);
+
     font-size: 1rem;
   }
   #help-iframe {
@@ -1544,28 +1636,26 @@
     justify-content: center;
   }
   #route-viewer {
-    width: 90%;
-    height: 50vh;
+    width: 95%;
+    height: 40vh;
     border-radius: 0.5rem;
-    margin-bottom: 1rem;
   }
   #container-event-details {
     padding: 1rem;
     background-color: var(--dark-blue-color);
     width: 90vw;
-    height: 90vh;
+    height: 95vh;
     position: absolute;
     top: 50vh;
     left: 50vw;
     transform: translate(-50%, -50%);
     z-index: 99999;
     border-radius: 0.5rem;
-
     color: white;
     display: flex;
     align-items: center;
     gap: 1rem;
-    justify-content: center;
+    justify-content: space-evenly;
     flex-direction: column;
   }
   #container-event-details p {
@@ -1787,7 +1877,7 @@
     z-index: 99999;
     position: absolute;
     right: 10px;
-    top: 10px;
+    top: 80px;
     width: 30px;
     background-color: var(--dark-blue-color);
     padding: 1rem;
@@ -1796,7 +1886,6 @@
   }
 
   #settings-icon {
-    display: none;
     z-index: 99999;
     position: absolute;
     right: 10px;
