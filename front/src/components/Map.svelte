@@ -352,7 +352,7 @@
         }
 
         function isPointCreator(email, username) {
-          if (email === point.addedBy || username === point.addedBy) {
+          if (email === point.email && username === point.addedBy) {
             return `
         <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
@@ -944,7 +944,7 @@
       showEvents = showEventsLocalStorage === "true" ? true : false;
       showEventsLocalStorage === "true"
         ? markersLayerEvents.addTo(map)
-        : markersLayerEvents.removeFrom(map)
+        : markersLayerEvents.removeFrom(map);
     }
   });
 </script>
