@@ -4,7 +4,7 @@ const pointsModel = require("../models/points.model.js");
 const eventsModel = require("../models/events.model.js");
 
 module.exports.appVersion = async (req, res) => {
-  const appVersion = "v1.2";
+  const appVersion = "v1.3";
   const userVersion = req.body.userVersion;
   if (appVersion === userVersion) {
     res.send({
