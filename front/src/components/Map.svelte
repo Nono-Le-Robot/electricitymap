@@ -62,6 +62,7 @@
   let showModalPlacePoint = false;
   let showModalPlaceEvent = false;
   let showModalEventDetails = false;
+  let showModalAccountSettings = false;
   let showModalCreateEvent;
   let coordsToAddPoint = { lat: null, lng: null };
   let showEU = true;
@@ -225,6 +226,10 @@
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const goToSettings = () => {
+    showModalAccountSettings = true;
   };
 
   const showSelectedEvent = () => {
@@ -446,7 +451,7 @@
           if (point.email === userMail && point.addedBy === userPseudo) {
             const penIcon = document.querySelector(".fa-pen");
             const trashIcon = document.querySelector(".fa-trash-can");
-            penIcon.addEventListener("click", async () => {
+            penIcon?.addEventListener("click", async () => {
               if (userMail !== point.email && userPseudo !== point.addedBy) {
                 alert(
                   "Vous n'etes pas le createur de ce point, vous ne pouvez pas le modifier"
@@ -460,7 +465,7 @@
               map.closePopup();
               showModalModifyInfo = true;
             });
-            trashIcon.addEventListener("click", async () => {
+            trashIcon?.addEventListener("click", async () => {
               const userMail = localStorage.getItem("email");
               if (userMail !== point.email) {
                 alert(
@@ -475,12 +480,12 @@
           }
 
           const reportIcon = document.querySelector(".fa-triangle-exclamation");
-          reportIcon.addEventListener("click", async () => {
+          reportIcon?.addEventListener("click", async () => {
             alert("report");
           });
 
           const eyeIcon = document.getElementById("see-point");
-          eyeIcon.addEventListener("click", () => {
+          eyeIcon?.addEventListener("click", () => {
             if (point.eventName) {
               ({
                 eventName: selectedEventName,
@@ -499,7 +504,7 @@
           });
 
           const routeIcon = document.querySelector(".fa-route");
-          routeIcon.addEventListener("click", async () => {
+          routeIcon?.addEventListener("click", async () => {
             function redirectToGoogleMapsBike(lat, lng) {
               const googleMapsURL = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=bicycling`;
               window.open(googleMapsURL, "_blank");
@@ -532,6 +537,7 @@
     showModalPlacePoint = false;
     showModalPlaceEvent = false;
     showModalEventDetails = false;
+    showModalAccountSettings = false;
     showIconPanel = true;
   };
 
@@ -937,8 +943,8 @@
     if (showEventsLocalStorage) {
       showEvents = showEventsLocalStorage === "true" ? true : false;
       showEventsLocalStorage === "true"
-        ? markersLayerAmericaine.addTo(map)
-        : markersLayerAmericaine.removeFrom(map);
+        ? markersLayerEvents.addTo(map)
+        : markersLayerEvents.removeFrom(map)
     }
   });
 </script>
@@ -1077,7 +1083,7 @@
       <div>
         <img
           id="profil-picture-settings"
-          src="./assets/CV.png"
+          src="./assets/photo.jpg"
           alt=""
           srcset=""
         />
@@ -1085,7 +1091,7 @@
     </div>
     <div id="action-settings">
       <div class="btn-settings">Social</div>
-      <div class="btn-settings">Paramètres</div>
+      <div class="btn-settings" on:click={goToSettings}>Paramètres</div>
     </div>
     <div id="footer-settings">
       <h2 style="color:white;">Mes points ajoutés : ({myPoints.length})</h2>
@@ -1170,6 +1176,49 @@
       {/if}
     </div>
     <div />
+  </div>
+{/if}
+
+{#if showModalAccountSettings}
+  <div id="container-account-settings">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
+    <div id="header-account-settings">
+      <img
+        id="profil-picture-account-settings"
+        src="./assets/photo.jpg"
+        alt=""
+        srcset=""
+      />
+      <i class="fa-solid fa-pen" id="modify-image-settings" />
+
+      <br />
+      <div id="pseudo-account-settings">
+        <h2>NonoLeRobot</h2>
+        <i class="fa-solid fa-pen" id="modify-pseudo-settings" />
+      </div>
+    </div>
+    <div id="action-account-settings">
+      <div class="sub-action-account-settings">
+        <h3 style="margin:5px 0">Localisation</h3>
+        <p style="margin:0">Partager ma position : - slider</p>
+        <p style="margin:0">Gérer ma visibilité</p>
+      </div>
+
+      <div class="sub-action-account-settings">
+        <h3 style="margin:5px 0">Evenements</h3>
+        <p style="margin:0">A venir</p>
+        <p style="margin:0">Voir tout les événements</p>
+      </div>
+
+      <div class="sub-action-account-settings">
+        <h3 style="margin:5px 0">Aide</h3>
+        <p style="margin:0">Contacter le support</p>
+        <p style="margin:0">boite à idées</p>
+      </div>
+    </div>
+    <div id="footer-account-settings" />
+    <p style="color:red ; margin:0; cursor:pointer;">Supprimer mon compte</p>
   </div>
 {/if}
 
@@ -1401,11 +1450,91 @@
 {/if}
 
 <style>
+  #container-account-settings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 90vw;
+    height: 95vh;
+    overflow-y: visible;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    z-index: 9999;
+    color: white;
+    border-radius: 0.5rem;
+
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+  }
+  #profil-picture-account-settings {
+    margin-top: 25px;
+    height: 20vh;
+    width: 20vh;
+    background-color: rgba(21, 20, 37, 0.849);
+    border-radius: 50%;
+    object-fit: cover;
+    filter: grayscale(80%);
+  }
+  #header-account-settings {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+  }
+  #pseudo-account-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+  #action-account-settings {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .sub-action-account-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  #modify-pseudo-settings {
+    padding: 0.5rem;
+    background-color: var(--main-color);
+    border-radius: 0.5rem;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
+    color: black;
+    cursor: pointer;
+  }
+  #modify-image-settings {
+    padding: 1rem;
+    background-color: rgba(181, 198, 255, 0.7);
+    border-radius: 100%;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
+    color: black;
+    cursor: pointer;
+    position: fixed;
+    transform: translateY(-30px);
+    font-size: 1rem;
+  }
   #help-iframe {
     right: 1rem;
     cursor: pointer;
     transform: translateY(5px);
     margin-left: 10px;
+  }
+  #profil-picture-settings {
+    margin-top: 2rem;
+    height: 25vh;
+    width: 25vh;
+    background-color: rgba(21, 20, 37, 0.849);
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   #iframe-line {
@@ -1430,7 +1559,8 @@
     left: 50vw;
     transform: translate(-50%, -50%);
     z-index: 99999;
-    border-radius: 2rem;
+    border-radius: 0.5rem;
+
     color: white;
     display: flex;
     align-items: center;
@@ -1450,7 +1580,8 @@
     transform: translate(-50%, -50%);
     padding: 3rem;
     color: white;
-    border-radius: 2rem;
+    border-radius: 0.5rem;
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1479,7 +1610,7 @@
     left: 50vw;
     top: 50vh;
     transform: translate(-50%, -50%);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
   }
 
   #header-settings {
@@ -1488,18 +1619,11 @@
     flex-direction: column;
     width: 100%;
     height: 40vh;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  #profil-picture-settings {
-    height: 25vh;
-    width: 25vh;
-    background-color: rgba(21, 20, 37, 0.849);
-    border-radius: 50%;
-    object-fit: cover;
   }
 
   #action-settings {
@@ -1515,8 +1639,9 @@
     background-color: var(--dark-blue-color);
     width: 50%;
     box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
-    padding: 2rem;
-    border-radius: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+
     text-align: center;
     cursor: pointer;
     background-color: white;
@@ -1550,7 +1675,8 @@
     left: 50vw;
     top: 50vh;
     transform: translate(-50%, -50%);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     padding: 2rem;
   }
 
@@ -1561,7 +1687,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: start;
+    justify-content: center;
     gap: 2rem;
     border-bottom-right-radius: 1rem;
     border-bottom-left-radius: 1rem;
@@ -1578,10 +1704,14 @@
     cursor: pointer;
     background: var(--main-color);
     padding: 1rem;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     margin-left: auto;
     margin-right: auto;
     width: 300px;
+    height: 300px;
+
+    margin: 0 1rem;
   }
 
   .posted-point {
@@ -1590,7 +1720,8 @@
     margin-top: 1rem;
     background: var(--main-color);
     width: 90%;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     height: 400px;
     text-align: center;
 
@@ -1656,7 +1787,7 @@
     z-index: 99999;
     position: absolute;
     right: 10px;
-    top: 80px;
+    top: 10px;
     width: 30px;
     background-color: var(--dark-blue-color);
     padding: 1rem;
@@ -1665,6 +1796,7 @@
   }
 
   #settings-icon {
+    display: none;
     z-index: 99999;
     position: absolute;
     right: 10px;
@@ -1706,7 +1838,8 @@
     padding: 4rem;
     font-size: 20px;
     color: white;
-    border-radius: 2rem;
+    border-radius: 0.5rem;
+
     position: absolute;
     top: 50vh;
     left: 50vw;
@@ -1745,7 +1878,7 @@
     position: absolute;
     font-size: 2rem;
     right: 20px;
-    top: 20px;
+    top: 16px;
     color: var(--red-error);
     cursor: pointer;
   }
@@ -1763,7 +1896,8 @@
     font-size: 1rem;
     width: 150px;
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     background-color: white;
     color: black;
     padding: 1rem;
@@ -1779,7 +1913,8 @@
     font-size: 17px;
     width: 225px;
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     background-color: white;
     padding: 1rem;
     margin-top: 1rem;
@@ -1793,7 +1928,8 @@
     transform: translate(-50%, -50%);
     background-color: var(--dark-blue-color);
     padding: 2rem;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -1817,7 +1953,8 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--dark-blue-color);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -1833,7 +1970,8 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--dark-blue-color);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1857,7 +1995,8 @@
   #add-point-btn {
     background-color: var(--main-color);
     border: none;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
+
     padding: 1rem;
     color: white;
     font-size: 1rem;

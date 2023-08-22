@@ -60,7 +60,7 @@ const pointSchema = new mongoose.Schema({
   },
   needValidate: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   reports: {
     type: Number,
