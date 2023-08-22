@@ -13,5 +13,6 @@ router.post("/update-point-coordinates", dataController.updatePointCoordinates);
 router.post("/update-event-coordinates", dataController.updateEventCoordinates);
 router.get("/get-events", dataController.getEvents);
 router.post("/create-event", dataController.createEvent);
+router.post("/modify-username", dataController.modifyUsername);
 
 module.exports = router;
