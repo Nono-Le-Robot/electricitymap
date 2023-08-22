@@ -944,7 +944,7 @@
       showEvents = showEventsLocalStorage === "true" ? true : false;
       showEventsLocalStorage === "true"
         ? markersLayerEvents.addTo(map)
-        : markersLayerEvents.removeFrom(map);
+        : markersLayerEvents.removeFrom(map)
     }
   });
 </script>
