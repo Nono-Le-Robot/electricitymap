@@ -77,12 +77,12 @@
   let showCC = true;
   let showEvents = true;
   let route = null;
-  let oldType = "";
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
   let navigationInProgress = false;
   let typesPrises = ["Européenne", "Prise camping-car"];
   let typePrise = "";
+  let oldType = "Type de prise";
   let enableToPlace = false;
   function createCustomIcon(
     iconUrl,
@@ -170,6 +170,9 @@
       "_blank"
     );
   };
+
+
+
 
   const createMarker = (coords, icon, draggable, id) => {
     marker = L.marker(coords, {
@@ -378,30 +381,7 @@
             return ``;
           }
         }  
-        
-        
-       
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    
         marker.bindPopup(`
         ${
           point.eventName
@@ -462,8 +442,12 @@
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
+            // typePrise = "Européenne"
+            oldType = "Européenne"
               return "eu-flag.png";
             case "Prise camping-car":
+            // typePrise = "Prise camping-car"
+            oldType = "Prise camping-car"
               return "cc-flag.png";
             default:
               return "";
@@ -571,7 +555,6 @@
   const reportPointConfirm = async () =>{
               const commentTextarea = document.getElementById("commentReport");
               commentReport = commentTextarea.value
-              console.log(commentReport);
               await axios.post(`${apiUrl}/api/report/reportPoint`, {
               idPoint: selectedMarker,
               idUser: userId,
@@ -626,6 +609,7 @@
   closePopup()
   },4000)
   }
+
 
 
   const addPoint = () => {
@@ -876,8 +860,11 @@
     showIconPanel = false;
   };
 
+
   const submitInfoPoint = async (lat, lng) => {
     await axios.post(`${apiUrl}/api/data/add-point`, {
+      token: localStorage.getItem("token"),
+      idUser: localStorage.getItem("userId"),
       email: localStorage.getItem("email"),
       pointName: namePointInput,
       pointDescription: descriptionPointInput,
@@ -889,23 +876,37 @@
       priseType: typePrise,
       addedDate: new Date(),
       needValiate: true,
-    });
+    }).then(() => {
     namePointInput = "";
-    descriptionPointInput = "";
-    await refreshPoints();
+    descriptionPointInput = ""
+    typePrise = "";
+    // oldType = "";
+    refreshPoints();
     closePopup();
     enableToPlace = false;
+    }).catch((err) => {
+    closePopup();
+    showModalReportPointError = true;
+    closePopUpTimerError();
+    });
   };
+  
+
+
 
   const confirmModify = async () => {
     await axios
       .post(`${apiUrl}/api/data/modify-point`, {
+        token: localStorage.getItem("token"),
+        idUser: localStorage.getItem("userId"),
         pointId: selectedMarker._id,
         pointName: namePointInput,
         pointDescription: descriptionPointInput,
-        priseType: oldType,
+        priseType: typePrise,
       })
       .then(async (res) => {
+      typePrise = "";
+      // oldType = ""
         await refreshPoints();
         showModalModifyInfo = false;
       })
@@ -916,6 +917,8 @@
 
   const confirmDelete = async () => {
     await axios.post(`${apiUrl}/api/data/delete-point`, {
+      token: localStorage.getItem("token"),
+      idUser: localStorage.getItem("userId"),
       pointId: selectedMarker._id,
     });
     await refreshPoints();
@@ -1417,14 +1420,15 @@
         required
         bind:value={descriptionPointInput}
       />
-      <select required id="type-prise">
+      <select bind:value={typePrise} required id="type-prise">
         <option
-          value="rethertherhterht"
+          value=""
           style="color:grey"
           disabled
           selected
           hidden>{oldType}</option
         >
+        
         <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -1470,8 +1474,8 @@
       />
       <select bind:value={typePrise} required id="type-prise">
         <option value="" style="color:grey" disabled selected hidden
-          >Type de prise</option
-        >
+           >Type de prise</option
+        > 
         <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
