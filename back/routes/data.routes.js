@@ -17,4 +17,5 @@ router.post("/create-event", controlAuth.requireAuthAdmin, dataController.create
 router.post("/modify-event", controlAuth.requireAuthAdmin, dataController.modifyEvent);
 router.post("/delete-event", controlAuth.requireAuthAdmin, dataController.deleteEvent);
 
+
 module.exports = router;

@@ -50,6 +50,7 @@
   let endDateEventInput = "";
   let startHourEventInput = "";
   let iframeEventInput = "";
+  let newUsernameInput = "";
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
@@ -70,6 +71,8 @@
   let showModalReportPointTwoStep = false; 
   let showModalReportPointConfirm = false;
   let showModalReportPointError = false;
+  let showModalEnterNewUsername = false;
+  let showModalConfirmDeleteAccount = false;
   let showModalCreateEvent;
   let coordsToAddPoint = { lat: null, lng: null };
   let showEU = true;
@@ -163,6 +166,46 @@
     [0, 0],
     [15, 0]
   );
+
+  const askNewUsername = async () => {
+    closePopup();
+    showModalEnterNewUsername = true;
+  };
+
+  const contactSupport = () => {
+    let adresseEmail = "sannier.renaud@gmail.com";
+    window.open("mailto:" + adresseEmail);
+  };
+
+  const changeUsername = async () => {
+    try {
+      await axios.post(`${apiUrl}/api/data/modify-username`, {
+        username: userPseudo,
+        newUsername: newUsernameInput,
+      });
+      localStorage.removeItem("username");
+      localStorage.setItem("username", newUsernameInput);
+      userPseudo = newUsernameInput;
+      newUsernameInput = "";
+      showModalEnterNewUsername = false;
+      showModalAccountSettings = true;
+      refreshPoints();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const seeAllEvents = () => {
+    closePopup();
+    showIconPanel = false;
+    showModalEvents = true;
+  };
+
+  const confirmDeleteAccount = () => {
+    closePopup();
+    showIconPanel = false;
+    showModalConfirmDeleteAccount = !showModalConfirmDeleteAccount;
+  };
 
   const helpIframe = () => {
     window.open(
@@ -368,7 +411,7 @@
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
             `;
           } else {
-            return ``;
+            return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
           }
         }
         
@@ -392,7 +435,7 @@
         }
         
         <br>
-        <b>${point.eventName ? point.eventName : point.pointName}</b>
+        <h3>${point.eventName ? point.eventName : point.pointName}</h3>
         <p>${
           point.eventDescription
             ? point.eventDescription
@@ -402,11 +445,6 @@
         }</p>
         ${
           point.eventName
-            ? `Départ : ${point.startHour} `
-            : `<p>Type : ${point.priseType}</p>`
-        }
-        ${
-          point.eventName
             ? `
           <p>Distance : ${point.distance} Km</p>
           `
@@ -414,15 +452,20 @@
         }
         ${
           point.eventName
-            ? `<p>Créer par : ${point.createdBy}</p>`
-            : `<p>Ajouté par : ${point.addedBy}</p>`
-        }
-        ${
-          point.eventName
             ? `
           <p>${point.startDate} - ${point.endDate}</p>
           `
             : ``
+        }
+        ${
+          point.eventName
+            ? `Départ : ${point.startHour} `
+            : `<p>Type : ${point.priseType}</p>`
+        }
+        ${
+          point.eventName
+            ? `<p>Créer par : ${point.createdBy}</p>`
+            : `<p>Ajouté par : ${point.addedBy}</p>`
         }
         <div style="
         display:flex;
@@ -438,7 +481,6 @@
         ${isPointUser(userMail, userPseudo,userId,userToken,point.createdBy,point.addedBy,point._id)}
          </div>
        `);
-
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
@@ -505,6 +547,10 @@
             });
           }
 
+          const reportIcon = document.querySelector(".fa-triangle-exclamation");
+          reportIcon?.addEventListener("click", async () => {
+            alert("report");
+          });
           const eyeIcon = document.getElementById("see-point");
           eyeIcon?.addEventListener("click", () => {
             if (point.eventName) {
@@ -595,6 +641,8 @@
     showModalReportPointTwoStep = false;
     showModalReportPointConfirm = false;
     showModalReportPointError = false;
+    showModalConfirmDeleteAccount = false;
+    showModalEnterNewUsername = false;
     showIconPanel = true;
   };
 
@@ -631,6 +679,7 @@
   };
 
   const createEvent = async () => {
+
     closePopup();
     var iframeString = iframeEventInput;
     var srcRegex = /src="([^"]+)"/;
@@ -701,42 +750,65 @@
       return;
     }
 
-    if (
-      !isAfterCurrentDate(startDateEventInput) ||
-      !isAfterCurrentDate(endDateEventInput)
-    ) {
-      alert(
-        "Les dates doivent être dans le futur par rapport à la date actuelle"
+    const isValidDistance = (distance) => {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    };
+
+    const formatDate = (date) => {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
+
+    const isEndDateAfterStartDate = (startDate, endDate) => {
+      return new Date(startDate) <= new Date(endDate);
+    };
+
+
+    const isTimeAfterCurrentTime = (time) => {
+      const [hour, minute] = time.split(":");
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      return (
+        parseInt(hour, 10) > currentHour ||
+        (parseInt(hour, 10) === currentHour &&
+          parseInt(minute, 10) > currentMinute)
       );
-      return;
-    }
+    };
 
-    const startDateParts = startDateEventInput.split("/");
-    const endDateParts = endDateEventInput.split("/");
+    const resetFields = () => {
+      const fieldsToReset = [
+        "nameEventInput",
+        "descriptionEventInput",
+        "distanceEventInput",
+        "startDateEventInput",
+        "endDateEventInput",
+        "startHourEventInput",
+        "iframeEventInput",
+        "descriptionPointInput",
+      ];
 
-    const startDate = new Date(
-      parseInt(startDateParts[2], 10),
-      parseInt(startDateParts[1], 10) - 1,
-      parseInt(startDateParts[0], 10)
-    );
+      fieldsToReset.forEach((field) => {
+        window[field] = ""; // Réinitialise les champs à une chaîne vide
+      });
+    };
 
-    const endDate = new Date(
-      parseInt(endDateParts[2], 10),
-      parseInt(endDateParts[1], 10) - 1,
-      parseInt(endDateParts[0], 10)
-    );
+    closePopup();
 
-    if (endDate < startDate) {
-      alert("La date de fin doit être après ou égale à la date de début");
-      return;
-    }
+    const iframeString = iframeEventInput;
+    const srcRegex = /src="([^"]+)"/;
+    const matches = iframeString.match(srcRegex);
+    let iframeLink = "";
 
-    if (!isValidDistance(distanceEventInput)) {
-      alert("La distance doit être au format numérique");
-      return;
+    if (matches && matches.length > 1) {
+      iframeLink = matches[1];
+    } else {
+      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
     }
 
     try {
+
       const res = await axios.post(`${apiUrl}/api/data/create-event`, {
         createdBy: localStorage.getItem("username"),
         email: localStorage.getItem("email"),
@@ -766,12 +838,72 @@
       alert("Evénement créé avec succès");
       await refreshPoints();
       closePopup();
+
+      const distance = parseFloat(distanceEventInput);
+
+      if (!isValidDistance(distance)) {
+        alert("La distance doit être au format numérique");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        !isEndDateAfterStartDate(startDateEventInput, endDateEventInput)
+      ) {
+        alert("La date de fin doit être après la date de début");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        new Date(startDateEventInput) < new Date() &&
+        !(
+          new Date(startDateEventInput).getDate() === new Date().getDate() &&
+          isTimeAfterCurrentTime(startHourEventInput)
+        )
+      ) {
+        alert("La date de début doit être postérieure à la date actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (!isTimeAfterCurrentTime(startHourEventInput)) {
+        alert("L'heure de début doit être postérieure à l'heure actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else {
+        const res = await axios.post(`${apiUrl}/api/data/create-event`, {
+          createdBy: localStorage.getItem("username"),
+          email: localStorage.getItem("email"),
+          eventName: nameEventInput,
+          eventDescription: descriptionEventInput,
+          eventInformations: informationsEventInput,
+          coords: {
+            lat: coordsToAddPoint.lat,
+            lng: coordsToAddPoint.lng,
+          },
+          distance: distanceEventInput,
+          iframe: iframeLink,
+          startDate: formatDate(new Date(startDateEventInput)),
+          endDate: formatDate(new Date(endDateEventInput)),
+          startHour: startHourEventInput,
+          addedDate: new Date(),
+          needValiate: true,
+        });
+        alert("Événement créé avec succès");
+        nameEventInput = "";
+        descriptionEventInput = "";
+        distanceEventInput = "";
+        startDateEventInput = "";
+        endDateEventInput = "";
+        startHourEventInput = "";
+        iframeEventInput = "";
+        informationsEventInput = "";
+        await refreshPoints();
+        closePopup();
+      }
+
     } catch (err) {
       console.error(err);
       alert(
         "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
       );
     }
+
     enableToPlace = false;
   };
 
@@ -860,7 +992,6 @@
     showIconPanel = false;
   };
 
-
   const submitInfoPoint = async (lat, lng) => {
     await axios.post(`${apiUrl}/api/data/add-point`, {
       token: localStorage.getItem("token"),
@@ -929,6 +1060,33 @@
     showModalFilter = !showModalFilter;
     showIconPanel = false;
   };
+  let isStartDateInput = false;
+  let isEndDateInput = false;
+  let isStartHourInput = false;
+  let activeInput = null;
+
+  function toggleStartDateInput() {
+    isStartDateInput = true;
+  }
+
+  function toggleEndDateInput() {
+    isEndDateInput = true;
+  }
+
+  function toggleStartHourInput() {
+    isStartHourInput = true;
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Les mois sont indexés à partir de 0
+    const year = date.getFullYear().toString();
+    return `${day}/${month}/${year}`;
+  }
+
+  $: formattedStartDate = formatDate(startDateEventInput);
+  $: formattedEndDate = formatDate(endDateEventInput);
 
   const toggleEU = () => {
     showEU = !showEU;
@@ -1035,6 +1193,7 @@
       showEventsLocalStorage === "true"
         ? markersLayerEvents.addTo(map)
         : markersLayerEvents.removeFrom(map)
+
     }
   });
 </script>
@@ -1120,28 +1279,34 @@
 {#if showModalEventDetails}
   <div id="container-event-details">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
-    <p>{selectedEventName}</p>
+    <h3>{selectedEventName}</h3>
     <p>{selectedEventDescription}</p>
-    <p>Infos : {selectedEventInformations}</p>
-    <iframe
-      id="route-viewer"
-      src={selectedEventIframe}
-      width="600"
-      height="450"
-      style="border:0;"
-      allowfullscreen=""
-      loading="lazy"
-      referrerpolicy="no-referrer-when-downgrade"
-    />
+    <p style="max-width:90vw">
+      Infos : {selectedEventInformations}
+    </p>
+    {#if selectedEventIframe && selectedEventIframe.includes("https://www.google.com/maps/")}
+      <iframe
+        id="route-viewer"
+        src={selectedEventIframe}
+        width="600"
+        height="450"
+        style="border:0;"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      />
+    {/if}
     <p>Distance : {selectedEventDistance} km</p>
     <p>Départ : {selectedEventStartHour}</p>
     <p>Dates : {selectedEventStartDate} - {selectedEventEndDate}</p>
-    <p>Point de rassemblement :</p>
-    <i
-      style="cursor: pointer;"
-      class="fa-solid fa-eye"
-      on:click={showSelectedEvent}
-    />
+    <p>
+      Point de rassemblement :<i
+        style="cursor: pointer; margin-left: 10px"
+        class="fa-solid fa-eye"
+        on:click={showSelectedEvent}
+      />
+    </p>
+
     <p>Créer par : {selectedEventCreatedBy}</p>
   </div>
 {/if}
@@ -1340,8 +1505,8 @@
 
 {#if showModalAccountSettings}
   <div id="container-account-settings">
-    <i class="fa-solid fa-xmark" on:click={closePopup} />
 
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
     <div id="header-account-settings">
       <img
         id="profil-picture-account-settings"
@@ -1350,6 +1515,7 @@
         srcset=""
       />
       <i class="fa-solid fa-pen" id="modify-image-settings" />
+
 
       <br />
       <div id="pseudo-account-settings">
@@ -1378,6 +1544,75 @@
     </div>
     <div id="footer-account-settings" />
     <p style="color:red ; margin:0; cursor:pointer;">Supprimer mon compte</p>
+
+    </div>
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+
+    <div id="pseudo-account-settings">
+      <h2>{userPseudo}</h2>
+      <i
+        class="fa-solid fa-pen"
+        id="modify-pseudo-settings"
+        on:click={askNewUsername}
+      />
+    </div>
+    <div id="action-account-settings">
+      <p style="margin:0 cursor:pointer" on:click={contactSupport}>
+        Contacter le support
+      </p>
+      <p style="cursor:pointer" on:click={logout}>Déconnexion</p>
+
+      <p
+        style="color:red ; margin:0; cursor:pointer;"
+        on:click={confirmDeleteAccount}
+      >
+        Supprimer mon compte
+      </p>
+    </div>
+  </div>
+{/if}
+
+{#if showModalConfirmDeleteAccount}
+  <div id="container-remove-point">
+    <div>
+      <p>Voulez vous vraiment supprimer votre compte ?</p>
+      <p style="color:red">Cette action est irréversible.</p>
+    </div>
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete">Oui</button>
+      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
+      >
+    </div>
+    <div />
+  </div>
+{/if}
+
+{#if showModalEnterNewUsername}
+  <div id="container-remove-point">
+    <div>
+      <input
+        type="text"
+        name=""
+        id=""
+        placeholder={userPseudo}
+        bind:value={newUsernameInput}
+      />
+    </div>
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete" on:click={changeUsername}
+        >Confirmer</button
+      >
+      <button
+        type="submit"
+        id="cancel-delete"
+        on:click={() => {
+          closePopup();
+          showModalAccountSettings = true;
+        }}>Annuler</button
+      >
+    </div>
+    <div />
+
   </div>
 {/if}
 
@@ -1517,35 +1752,79 @@
       <input
         autocomplete="off"
         placeholder="Distance (en Km)"
-        type="text"
+        type="number"
         name="distanceEvent"
         id="distanceEventInput"
         bind:value={distanceEventInput}
       />
-      <input
-        autocomplete="off"
-        placeholder="Date début (jj/mm/aaaa)"
-        type="text"
-        name="startDateEvent"
-        id="startDateEventInput"
-        bind:value={startDateEventInput}
-      />
-      <input
-        autocomplete="off"
-        placeholder="Date fin (jj/mm/aaaa)"
-        type="text"
-        name="endDateEvent"
-        id="endDateEventInput"
-        bind:value={endDateEventInput}
-      />
-      <input
-        autocomplete="off"
-        placeholder="Heure du départ (hh:mm)"
-        type="text"
-        name="endDateEvent"
-        id="startHourEventInput"
-        bind:value={startHourEventInput}
-      />
+      {#if !isStartDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date début"
+          type="text"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:click={toggleStartDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:blur={() => {
+            isStartDateInput = false;
+            startDateEventInput = formattedStartDate; // Utilisez la date formatée
+          }}
+        />
+      {/if}
+
+      {#if !isEndDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date fin"
+          type="text"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:click={toggleEndDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:blur={() => {
+            isEndDateInput = false;
+            endDateEventInput = formattedEndDate; // Utilisez la date formatée
+          }}
+        />
+      {/if}
+
+      {#if !isStartHourInput}
+        <input
+          autocomplete="off"
+          placeholder="Heure du départ (hh:mm)"
+          type="text"
+          name="startHourEvent"
+          id="startHourEventInput"
+          bind:value={startHourEventInput}
+          on:click={toggleStartHourInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="time"
+          name="startHourEvent"
+          id="startHourEventInput"
+          bind:value={startHourEventInput}
+          on:blur={() => (isStartHourInput = false)}
+        />
+      {/if}
       <div id="iframe-line">
         <input
           autocomplete="off"
@@ -1614,7 +1893,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
+    gap: 2rem;
     width: 90vw;
     height: 95vh;
     overflow-y: visible;
@@ -1653,7 +1933,7 @@
     display: flex;
     align-items: center;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 2rem;
     justify-content: center;
   }
   .sub-action-account-settings {
@@ -1678,8 +1958,10 @@
     box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
     color: black;
     cursor: pointer;
-    position: fixed;
-    transform: translateY(-30px);
+    position: relative;
+    top: -50%;
+    left: 0;
+    transform: translateY(25%);
     font-size: 1rem;
   }
   #help-iframe {
@@ -1704,28 +1986,26 @@
     justify-content: center;
   }
   #route-viewer {
-    width: 90%;
-    height: 50vh;
+    width: 95%;
+    height: 40vh;
     border-radius: 0.5rem;
-    margin-bottom: 1rem;
   }
   #container-event-details {
     padding: 1rem;
     background-color: var(--dark-blue-color);
     width: 90vw;
-    height: 90vh;
+    height: 95vh;
     position: absolute;
     top: 50vh;
     left: 50vw;
     transform: translate(-50%, -50%);
     z-index: 99999;
     border-radius: 0.5rem;
-
     color: white;
     display: flex;
     align-items: center;
     gap: 1rem;
-    justify-content: center;
+    justify-content: space-evenly;
     flex-direction: column;
   }
   #container-event-details p {

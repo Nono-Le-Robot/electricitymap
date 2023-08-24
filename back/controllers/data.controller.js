@@ -21,43 +21,64 @@ module.exports.appVersion = async (req, res) => {
   }
 };
 
-module.exports.getMyData = async (req, res) => {
-  userModel
-    .findOne({ email: req.body.email })
-    .select("-password")
-    .then((user) => {
-      if (!user) {
-        return res.json({ msg: "User not found", status: false });
-      } else {
-        res.send(user);
-      }
-    })
-    .catch((error) => res.status(401).send(error.message));
-};
-
-module.exports.updateData = async (req, res) => {
+module.exports.modifyUsername = async (req, res) => {
+  const { username, newUsername } = req.body;
   try {
-    const user = await userModel.findOne({ email: req.body.email });
+    const user = await userModel.findOne({ username: username });
     if (!user) {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
-
-    if (req.body.round > user.maxRound) {
-      user.maxRound = req.body.round;
-    }
-
+    user.username = newUsername;
     await user.save();
+    await pointsModel.updateMany(
+      { addedBy: username },
+      { $set: { addedBy: newUsername } }
+    );
+    await eventsModel.updateMany(
+      { createdBy: username },
+      { $set: { createdBy: newUsername } }
+    );
 
     res.json({
       message: "Données utilisateur mises à jour avec succès",
       user: {
-        email: user.email,
+        oldUsername: username,
+        newUsername: newUsername,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erreur lors de la mise à jour des données utilisateur",
+      error: error,
+    });
+  }
+};
+
+module.exports.getMyData = async (req, res) => {
+  const { username } = req.body;
+  try {
+    const existingUser = await userModel.findById(username);
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the point properties
+    existingUser.username = username;
+
+    // Save the updated point
+    await existingUser.save();
+
+    res.json({
+      message: "user updated successfully",
+      user: {
+        newUsername: username,
       },
     });
   } catch (error) {
     res.status(500).json({
-      message: "Erreur lors de la mise à jour des données utilisateur",
-      error: error,
+      message: "Error while updating the point",
+      error: error.message,
     });
   }
 };
