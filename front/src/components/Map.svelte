@@ -14,10 +14,10 @@
   let markersLayerCampingCar;
   let marker;
   let pressed = false;
-  const userMail = localStorage.getItem("email");
-  const userPseudo = localStorage.getItem("username");
-  const userId = localStorage.getItem("userId");
-  const userToken = localStorage.getItem("token");
+  let userMail = localStorage.getItem("email");
+  let userPseudo = localStorage.getItem("username");
+  let userId = localStorage.getItem("userId");
+  let userToken = localStorage.getItem("token");
   let allPoints = [];
   let myPoints = [];
   let allEvents = [];
@@ -411,7 +411,8 @@
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
             `;
           } else {
-            return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
+            // return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
+            return ``
           }
         }
         
@@ -549,7 +550,7 @@
 
           const reportIcon = document.querySelector(".fa-triangle-exclamation");
           reportIcon?.addEventListener("click", async () => {
-            alert("report");
+            // alert("report");
           });
           const eyeIcon = document.getElementById("see-point");
           eyeIcon?.addEventListener("click", () => {
@@ -583,7 +584,7 @@
             closePopup();
           });
 
-          const reportIcon = document.querySelector(".reportPoint");
+          // const reportIcon = document.querySelector(".reportPoint");
             reportIcon?.addEventListener("click", async () => {
             closePopup();
             showModalReportPointFirstStep = true
@@ -750,9 +751,9 @@
       return;
     }
 
-    const isValidDistance = (distance) => {
-      return !isNaN(parseFloat(distance)) && isFinite(distance);
-    };
+    // const isValidDistance = (distance) => {
+    //   return !isNaN(parseFloat(distance)) && isFinite(distance);
+    // };
 
     const formatDate = (date) => {
       const dd = String(date.getDate()).padStart(2, "0");
@@ -796,10 +797,10 @@
 
     closePopup();
 
-    const iframeString = iframeEventInput;
-    const srcRegex = /src="([^"]+)"/;
-    const matches = iframeString.match(srcRegex);
-    let iframeLink = "";
+    // const iframeString = iframeEventInput;
+    // const srcRegex = /src="([^"]+)"/;
+    // const matches = iframeString.match(srcRegex);
+    // let iframeLink = "";
 
     if (matches && matches.length > 1) {
       iframeLink = matches[1];
@@ -1569,7 +1570,7 @@
         Supprimer mon compte
       </p>
     </div>
-  </div>
+  <!-- </div> -->
 {/if}
 
 {#if showModalConfirmDeleteAccount}
