@@ -15,7 +15,9 @@
   let marker;
   let pressed = false;
   const userMail = localStorage.getItem("email");
-  let userPseudo = localStorage.getItem("username");
+  const userPseudo = localStorage.getItem("username");
+  const userId = localStorage.getItem("userId");
+  const userToken = localStorage.getItem("token");
   let allPoints = [];
   let myPoints = [];
   let allEvents = [];
@@ -37,6 +39,7 @@
   let selectedEventStartDate;
   let selectedEventEndDate;
   let selectedEventStartHour;
+  let commentReport = "";
   let namePointInput = "";
   let nameEventInput = "";
   let descriptionPointInput = "";
@@ -64,6 +67,10 @@
   let showModalPlaceEvent = false;
   let showModalEventDetails = false;
   let showModalAccountSettings = false;
+  let showModalReportPointFirstStep = false;
+  let showModalReportPointTwoStep = false; 
+  let showModalReportPointConfirm = false;
+  let showModalReportPointError = false;
   let showModalEnterNewUsername = false;
   let showModalConfirmDeleteAccount = false;
   let showModalCreateEvent;
@@ -73,12 +80,12 @@
   let showCC = true;
   let showEvents = true;
   let route = null;
-  let oldType = "";
   let userLocationMarker;
   let circleMinSpaceBetweenPoint;
   let navigationInProgress = false;
   let typesPrises = ["Européenne", "Prise camping-car"];
   let typePrise = "";
+  let oldType = "Type de prise";
   let enableToPlace = false;
   function createCustomIcon(
     iconUrl,
@@ -206,6 +213,9 @@
       "_blank"
     );
   };
+
+
+
 
   const createMarker = (coords, icon, draggable, id) => {
     marker = L.marker(coords, {
@@ -394,7 +404,7 @@
           markersLayer.addLayer(flagMarker);
         }
 
-        function isPointCreator(email, username) {
+        function isPointCreator(email, username,userId,userToken) {
           if (email === point.email && username === point.addedBy) {
             return `
         <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
@@ -404,6 +414,17 @@
             return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
           }
         }
+        
+        function isPointUser(email, username,userId,userToken,pointCreatedBy,pointAddedBy,pointId) {
+          if (email !== point.email && username !== point.addedBy) {
+            return `
+        <i class="fa-solid fa-triangle-exclamation reportPoint" id="reportTest" style="cursor:pointer; font-size:20px; color:red"></i>
+            `;
+          } else {
+            return ``;
+          }
+        }  
+    
         marker.bindPopup(`
         ${
           point.eventName
@@ -456,15 +477,19 @@
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-eye" id="see-point" style="cursor:pointer; font-size:20px"></i>
-       ${isPointCreator(userMail, userPseudo)}
-        </div>
-      `);
-
+        ${isPointCreator(userMail, userPseudo,userId,userToken)}
+        ${isPointUser(userMail, userPseudo,userId,userToken,point.createdBy,point.addedBy,point._id)}
+         </div>
+       `);
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
+            // typePrise = "Européenne"
+            oldType = "Européenne"
               return "eu-flag.png";
             case "Prise camping-car":
+            // typePrise = "Prise camping-car"
+            oldType = "Prise camping-car"
               return "cc-flag.png";
             default:
               return "";
@@ -526,7 +551,6 @@
           reportIcon?.addEventListener("click", async () => {
             alert("report");
           });
-
           const eyeIcon = document.getElementById("see-point");
           eyeIcon?.addEventListener("click", () => {
             if (point.eventName) {
@@ -558,15 +582,47 @@
             );
             closePopup();
           });
-        });
-      });
+
+          const reportIcon = document.querySelector(".reportPoint");
+            reportIcon?.addEventListener("click", async () => {
+            closePopup();
+            showModalReportPointFirstStep = true
+          });
+          
+       });
+    });
     }
     createMarkerAndBindEvents(groupMarkersEvents, markersLayerEvents);
     createMarkerAndBindEvents(groupMarkersEuropeene, markersLayerEuropeene);
     createMarkerAndBindEvents(groupMarkersAmericaine, markersLayerAmericaine);
     createMarkerAndBindEvents(groupMarkersCampingCar, markersLayerCampingCar);
   };
-
+  
+  const reportPointConfirm = async () =>{
+              const commentTextarea = document.getElementById("commentReport");
+              commentReport = commentTextarea.value
+              await axios.post(`${apiUrl}/api/report/reportPoint`, {
+              idPoint: selectedMarker,
+              idUser: userId,
+              comment : commentReport,
+              
+              }).then((res,err)=>{
+              if (res){
+              showModalReportPointTwoStep= !showModalReportPointTwoStep
+              commentReport = ""
+              showModalReportPointConfirm = true
+              closePopUpTimer()
+              }
+              })
+              .catch((err) => {
+               closePopup()
+              showModalReportPointError = true
+               closePopUpTimerError()
+                console.log(err);
+              });    
+    }
+ 
+    
   const closePopup = () => {
     map.closePopup();
     showModalAddPoint = false;
@@ -581,10 +637,28 @@
     showModalPlaceEvent = false;
     showModalEventDetails = false;
     showModalAccountSettings = false;
+    showModalReportPointFirstStep = false;
+    showModalReportPointTwoStep = false;
+    showModalReportPointConfirm = false;
+    showModalReportPointError = false;
     showModalConfirmDeleteAccount = false;
     showModalEnterNewUsername = false;
     showIconPanel = true;
   };
+
+  const closePopUpTimer = () =>{
+  setTimeout(()=>{
+  closePopup()
+  },2000)
+  }
+
+  const closePopUpTimerError = () =>{
+  setTimeout(()=>{
+  closePopup()
+  },4000)
+  }
+
+
 
   const addPoint = () => {
     namePointInput = "";
@@ -605,6 +679,77 @@
   };
 
   const createEvent = async () => {
+
+    closePopup();
+    var iframeString = iframeEventInput;
+    var srcRegex = /src="([^"]+)"/;
+    var matches = iframeString.match(srcRegex);
+    if (matches && matches.length > 1) {
+      var iframeLink = matches[1];
+    } else {
+      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
+    }
+    function isValidDate(date) {
+      const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
+      if (!datePattern.test(date)) {
+        return "Le format de date doit être xx/xx/xxxx";
+      }
+      const parts = date.split("/");
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const newDate = new Date(year, month, day);
+      if (
+        newDate.getFullYear() === year &&
+        newDate.getMonth() === month &&
+        newDate.getDate() === day
+      ) {
+        return null;
+      } else {
+        return "La date n'est pas valide";
+      }
+    }
+    function isValidTime(time) {
+      const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (!timePattern.test(time)) {
+        return "Le format de l'heure doit être HH:mm (24 heures)";
+      }
+      return null;
+    }
+    function isAfterCurrentDate(date) {
+      const currentDate = new Date();
+      const parts = date.split("/");
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const newDate = new Date(year, month, day);
+      return newDate > currentDate;
+    }
+    function isValidDistance(distance) {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    }
+    const startDateValidation = isValidDate(startDateEventInput);
+    const endDateValidation = isValidDate(endDateEventInput);
+    const startTimeValidation = isValidTime(startHourEventInput);
+    if (
+      startDateValidation !== null ||
+      endDateValidation !== null ||
+      startTimeValidation !== null
+    ) {
+      alert(
+        (startDateValidation !== null
+          ? "Date de début : " + startDateValidation + "\n"
+          : "") +
+          (endDateValidation !== null
+            ? "Date de fin : " + endDateValidation + "\n"
+            : "") +
+          (startTimeValidation !== null
+            ? "Heure de début : " + startTimeValidation
+            : "")
+      );
+      return;
+    }
+
     const isValidDistance = (distance) => {
       return !isNaN(parseFloat(distance)) && isFinite(distance);
     };
@@ -619,6 +764,7 @@
     const isEndDateAfterStartDate = (startDate, endDate) => {
       return new Date(startDate) <= new Date(endDate);
     };
+
 
     const isTimeAfterCurrentTime = (time) => {
       const [hour, minute] = time.split(":");
@@ -662,6 +808,37 @@
     }
 
     try {
+
+      const res = await axios.post(`${apiUrl}/api/data/create-event`, {
+        createdBy: localStorage.getItem("username"),
+        email: localStorage.getItem("email"),
+        eventName: nameEventInput,
+        eventDescription: descriptionEventInput,
+        eventInformations: informationsEventInput,
+        coords: {
+          lat: coordsToAddPoint.lat,
+          lng: coordsToAddPoint.lng,
+        },
+        distance: distanceEventInput,
+        iframe: iframeLink,
+        startDate: startDateEventInput,
+        endDate: endDateEventInput,
+        startHour: startHourEventInput,
+        addedDate: new Date(),
+        needValiate: true,
+      });
+      nameEventInput = "";
+      descriptionEventInput = "";
+      distanceEventInput = "";
+      startDateEventInput = "";
+      endDateEventInput = "";
+      startHourEventInput = "";
+      iframeEventInput = "";
+      descriptionPointInput = "";
+      alert("Evénement créé avec succès");
+      await refreshPoints();
+      closePopup();
+
       const distance = parseFloat(distanceEventInput);
 
       if (!isValidDistance(distance)) {
@@ -719,6 +896,7 @@
         await refreshPoints();
         closePopup();
       }
+
     } catch (err) {
       console.error(err);
       alert(
@@ -816,6 +994,8 @@
 
   const submitInfoPoint = async (lat, lng) => {
     await axios.post(`${apiUrl}/api/data/add-point`, {
+      token: localStorage.getItem("token"),
+      idUser: localStorage.getItem("userId"),
       email: localStorage.getItem("email"),
       pointName: namePointInput,
       pointDescription: descriptionPointInput,
@@ -827,23 +1007,37 @@
       priseType: typePrise,
       addedDate: new Date(),
       needValiate: true,
-    });
+    }).then(() => {
     namePointInput = "";
-    descriptionPointInput = "";
-    await refreshPoints();
+    descriptionPointInput = ""
+    typePrise = "";
+    // oldType = "";
+    refreshPoints();
     closePopup();
     enableToPlace = false;
+    }).catch((err) => {
+    closePopup();
+    showModalReportPointError = true;
+    closePopUpTimerError();
+    });
   };
+  
+
+
 
   const confirmModify = async () => {
     await axios
       .post(`${apiUrl}/api/data/modify-point`, {
+        token: localStorage.getItem("token"),
+        idUser: localStorage.getItem("userId"),
         pointId: selectedMarker._id,
         pointName: namePointInput,
         pointDescription: descriptionPointInput,
-        priseType: oldType,
+        priseType: typePrise,
       })
       .then(async (res) => {
+      typePrise = "";
+      // oldType = ""
         await refreshPoints();
         showModalModifyInfo = false;
       })
@@ -854,6 +1048,8 @@
 
   const confirmDelete = async () => {
     await axios.post(`${apiUrl}/api/data/delete-point`, {
+      token: localStorage.getItem("token"),
+      idUser: localStorage.getItem("userId"),
       pointId: selectedMarker._id,
     });
     await refreshPoints();
@@ -996,7 +1192,8 @@
       showEvents = showEventsLocalStorage === "true" ? true : false;
       showEventsLocalStorage === "true"
         ? markersLayerEvents.addTo(map)
-        : markersLayerEvents.removeFrom(map);
+        : markersLayerEvents.removeFrom(map)
+
     }
   });
 </script>
@@ -1134,6 +1331,75 @@
   </div>
 {/if}
 
+{#if showModalReportPointError}
+  <div id="container-remove-point">
+    <div>
+      <p>Oupss il y a une erreur</p>
+      <p>Veuillez recommencer dans un moment</p>
+      <p>Si le probleme persiste contacter le support</p>
+    </div>
+    
+    <div />
+  </div>
+{/if}
+
+{#if showModalReportPointFirstStep}
+
+  <div id="container-remove-point">
+    <div>
+      <p>Voulez vous signaler ce point ?</p>
+    </div>
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete" on:click={() => { closePopup(), showModalReportPointTwoStep = true}}
+        >Oui</button
+      >
+      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
+      >
+    </div>
+    <div />
+  </div>
+{/if}
+
+{#if showModalReportPointTwoStep}
+  <div id="container-remove-point">
+    <div>
+      <p>Quel est la raison ? </p>
+    </div>
+    <div>
+    <textarea id="commentReport" maxlength="200" >
+    </textarea>
+    </div>
+    
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete" on:click={reportPointConfirm}
+        >Confirmer</button
+      >
+      <button type="submit" id="cancel-delete" on:click={closePopup}>Annuler</button
+      >
+    </div>
+    <div />
+  </div>
+{/if}
+
+
+{#if showModalReportPointConfirm}
+  <div id="container-remove-point">
+    <div>
+      <p>Votre signalement à bien été pris en compte</p>
+      <p>Merci et bon ride</p>
+    </div>
+    <div />
+  </div>
+{/if}
+
+
+
+
+
+
+
+
+
 {#if showModalSettings}
   <div id="container-settings">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
@@ -1239,6 +1505,8 @@
 
 {#if showModalAccountSettings}
   <div id="container-account-settings">
+
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
     <div id="header-account-settings">
       <img
         id="profil-picture-account-settings"
@@ -1247,6 +1515,36 @@
         srcset=""
       />
       <i class="fa-solid fa-pen" id="modify-image-settings" />
+
+
+      <br />
+      <div id="pseudo-account-settings">
+        <h2>NonoLeRobot</h2>
+        <i class="fa-solid fa-pen" id="modify-pseudo-settings" />
+      </div>
+    </div>
+    <div id="action-account-settings">
+      <div class="sub-action-account-settings">
+        <h3 style="margin:5px 0">Localisation</h3>
+        <p style="margin:0">Partager ma position : - slider</p>
+        <p style="margin:0">Gérer ma visibilité</p>
+      </div>
+
+      <div class="sub-action-account-settings">
+        <h3 style="margin:5px 0">Evenements</h3>
+        <p style="margin:0">A venir</p>
+        <p style="margin:0">Voir tout les événements</p>
+      </div>
+
+      <div class="sub-action-account-settings">
+        <h3 style="margin:5px 0">Aide</h3>
+        <p style="margin:0">Contacter le support</p>
+        <p style="margin:0">boite à idées</p>
+      </div>
+    </div>
+    <div id="footer-account-settings" />
+    <p style="color:red ; margin:0; cursor:pointer;">Supprimer mon compte</p>
+
     </div>
     <i class="fa-solid fa-xmark" on:click={closePopup} />
 
@@ -1314,6 +1612,7 @@
       >
     </div>
     <div />
+
   </div>
 {/if}
 
@@ -1356,14 +1655,15 @@
         required
         bind:value={descriptionPointInput}
       />
-      <select required id="type-prise">
+      <select bind:value={typePrise} required id="type-prise">
         <option
-          value="rethertherhterht"
+          value=""
           style="color:grey"
           disabled
           selected
           hidden>{oldType}</option
         >
+        
         <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -1409,8 +1709,8 @@
       />
       <select bind:value={typePrise} required id="type-prise">
         <option value="" style="color:grey" disabled selected hidden
-          >Type de prise</option
-        >
+           >Type de prise</option
+        > 
         <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -1662,7 +1962,6 @@
     top: -50%;
     left: 0;
     transform: translateY(25%);
-
     font-size: 1rem;
   }
   #help-iframe {

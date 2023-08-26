@@ -6,6 +6,10 @@ const pointSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  idUser: {
+    type: String,
+    required: true,
+  },
   pointName: {
     type: String,
     required: true,
@@ -46,10 +50,18 @@ const pointSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  reports: {
-    type: Number,
-    default: 0,
+  reports: { 
+  type: Number,
+  default: 0,
   },
+  
+  reportdetail: [{
+    reportId: { type: String, },
+    username : { type: String, },
+    comment: { type: String, },
+    }],
+   
+
   commentaires: [
     {
       type: String,
