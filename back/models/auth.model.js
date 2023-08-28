@@ -29,6 +29,14 @@ const userModel = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  likedUsers: 
+    [
+      String
+    ],
+  likers:
+    [
+      String
+    ],
 });
 
 module.exports = mongoose.model("User", userModel);

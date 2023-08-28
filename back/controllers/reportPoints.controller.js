@@ -47,3 +47,30 @@ module.exports.reportPoint = async (req, res) => {
     }
 
 };
+
+
+module.exports.unReportPoint = async (req, res) => {
+    const { idPoint, idUser } = req.body
+    try {
+        const User = await userModel.findById(idUser)
+        const usernameReporter = User.username
+        await pointsModel.updateOne(
+            { _id: idPoint._id },
+            {
+                $inc: { reports: - 1 },
+                $pull: {
+                    reportdetail: {
+                        username: usernameReporter,
+                    },
+                },
+            }
+        );
+        if (res) {
+            res.status(200).json("ok")
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "erreur dans le report" });
+    }
+
+};
