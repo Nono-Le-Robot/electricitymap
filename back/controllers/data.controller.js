@@ -537,3 +537,47 @@ module.exports.deleteEvent = async (req, res) => {
   res.status(404).json("Erreur lors de la suppression de l'event")
   }
 };
+
+
+
+module.exports.likePoint = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") {
+    const idPoint = req.body.idPoint._id;
+    pointsModel.findByIdAndUpdate(idPoint, { $inc: { likes: 1 } }, (err, result) => {
+      if (err) {
+        res.status(500).json({ error: "Erreur lors de l'ajout du like" });
+      } else {
+        pointsModel.findByIdAndUpdate(idPoint, { $push: { likers: req.user } }, (err, result) => {
+          if (!err) {
+            res.status(200).json('like enregistré avec succès.');
+          } else {
+            res.status(500).json({ error: "Erreur lors de l'ajout du dislike" });
+          }
+        });
+      }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};
+
+module.exports.dislikePoint = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") {
+    const idPoint = req.body.idPoint._id;
+    pointsModel.findByIdAndUpdate(idPoint, { $inc: { likes: - 1 } }, (err, result) => {
+      if (err) {
+        res.status(500).json({ error: "Erreur lors de l'ajout du dislike" });
+      } else {
+        pointsModel.findByIdAndUpdate(idPoint, { $pull: { likers: req.user } }, (err, result) => {
+          if (!err) {
+            res.status(200).json('disLike enregistré avec succès.');
+          } else {
+            res.status(500).json({ error: "Erreur lors de l'ajout du dislike" });
+          }
+        });
+      }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};

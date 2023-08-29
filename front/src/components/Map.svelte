@@ -404,7 +404,10 @@
           markersLayer.addLayer(flagMarker);
         }
 
+     
+
         function isPointCreator(email, username,userId,userToken) {
+           
           if (email === point.email && username === point.addedBy) {
             return `
         <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
@@ -416,7 +419,7 @@
           }
         }
         
-        function isPointUser(email, username,userId,userToken,pointCreatedBy,pointAddedBy,pointId) {
+        function isPointUserReport(email, username,userId,userToken,pointCreatedBy,pointAddedBy,pointId) {
           if (email !== point.email && username !== point.addedBy) {
             return `
         <i class="fa-solid fa-triangle-exclamation reportPoint" id="reportTest" style="cursor:pointer; font-size:20px; color:red"></i>
@@ -425,8 +428,92 @@
             return ``;
           }
         }  
+        
+         
+    function switchLikePoint(user, pointliker) {
+    if (point.likers === undefined || point.likers.includes(user)) {
+      return `
+     <i class="fa-regular fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
+      `;
+    } else {
+      return `
+            <i class="fa-solid fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
+      `;
+    }
+  
+}
+
+//    function switchLikeUser(user, lovers, haters) {
+//    console.log(point.lovers)
+//    console.log(point.haters)
+//     switch (true) {
+//     case haters === undefined && lovers === undefined: 
+//       return `
+//         <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+//         <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+//       `;
+//       case lovers.includes(!user) && haters.includes(!user): 
+//        return `
+//         <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+//         <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+//       `;
+//       case haters.includes(user) || haters === undefined:
+//         console.log(point.likers)
+//         return `
+//               <i class="fa-solid fa-thumbs-up" id="unapprouveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+//       `; 
+      
+//        case haters.includes(user) || lovers === undefined:
+//         return `
+//               <i class="fa-solid fa-thumbs-down" id="undesapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+//       `; 
+//        default : 
+//          return `
+//          <div>il y a un bud la </div>
+//       `;
+//     }
+// }    
+
+function switchLikeUser(user, lovers, haters) {
+
+  if (
+    (point.lovers === undefined && point.haters === undefined) ||
+    (point.lovers.includes(!user) && point.haters.includes(!user))
+  ) {
+    return `
+      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+    `;
+  } else if (point.lovers.includes(user) || point.haters === undefined) {
+    return `
+      <i class="fa-solid fa-thumbs-up" id="unapprouveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+    `;
+  } else if (point.haters.includes(user) || point.lovers === undefined) {
+    return `
+      <i class="fa-solid fa-thumbs-down" id="undesapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+    `;
+  } else {
+    return `
+      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+    `;
+  }
+}
+  
+        
+        function isLikePointCreator(email,username,userId, userToken, pointCreateBy,pointAddedBy,pointId) {
+         if (email !== point.email && username !== point.addedBy) {
+            return `
+            <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+            <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:blue"></i>
+            `;
+          } else {
+            return ``;
+          }
+        }  
     
         marker.bindPopup(`
+        ${switchLikePoint(userId, point.likers)}
         ${
           point.eventName
             ? ``
@@ -468,6 +555,7 @@
             ? `<p>Créer par : ${point.createdBy}</p>`
             : `<p>Ajouté par : ${point.addedBy}</p>`
         }
+         ${ switchLikeUser(userId, point.lovers, point.haters)}
         <div style="
         display:flex;
         align-items:center;
@@ -479,7 +567,7 @@
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-eye" id="see-point" style="cursor:pointer; font-size:20px"></i>
         ${isPointCreator(userMail, userPseudo,userId,userToken)}
-        ${isPointUser(userMail, userPseudo,userId,userToken,point.createdBy,point.addedBy,point._id)}
+        ${isPointUserReport(userMail, userPseudo,userId,userToken,point.createdBy,point.addedBy,point._id)}
          </div>
        `);
         function getImageSource(priseType) {
@@ -552,6 +640,94 @@
           reportIcon?.addEventListener("click", async () => {
             // alert("report");
           });
+     
+            const likeIcon = document.getElementById("likeIcone")
+          if (likeIcon) {
+          likeIcon.addEventListener("click", async () => {  
+           await axios.post(`${apiUrl}/api/data/like-point`, {
+              token : userToken,
+              idUser:  userId,
+              idPoint: selectedMarker,
+                      
+              }).then((data) => {
+               getAllPoints();
+              console.log(data)
+              })
+          })}
+          
+
+      
+  const dislikeIcone = document.getElementById("dislikeIcone");
+  
+  if (dislikeIcone) {
+    dislikeIcone.addEventListener("click", async () => { 
+      await axios.post(`${apiUrl}/api/data/dislike-point`, {
+        token: userToken, 
+        idUser: userId,
+        idPoint: selectedMarker,
+      }).then((data) => {
+          getAllPoints();
+        console.log(data);
+      });
+    });
+  }
+
+       
+          const approuveIcone = document.getElementById("approuveIcone")
+          if (approuveIcone){
+          approuveIcone.addEventListener("click", async () => {  
+          await axios.post(`${apiUrl}/api/auth/likeUser`, {
+              token : userToken,
+              idUser:  userId,
+              idPoint: selectedMarker,      
+              }).then((data) => {
+               getAllPoints();
+              console.log(data)
+              })
+          })}
+          
+           const unapprouveIcone = document.getElementById("unapprouveIcone")
+          if (unapprouveIcone) {
+          unapprouveIcone.addEventListener("click", async () => {  
+          await axios.post(`${apiUrl}/api/auth/unlikeUser`, {
+              token : userToken,
+              idUser:  userId,
+              idPoint: selectedMarker,        
+              }).then((data) => {
+                getAllPoints();
+              console.log(data)
+              })
+          })
+      }
+          
+          const desapprouveIcone = document.getElementById("desapprouveIcone")
+          if (desapprouveIcone) {
+          desapprouveIcone.addEventListener("click", async () => {  
+          await axios.post(`${apiUrl}/api/auth/dislikeUser`, {
+              token : userToken,
+              idUser:  userId,
+              idPoint: selectedMarker,        
+              }).then((data) => {
+                getAllPoints();
+              console.log(data)
+              })
+          })
+      }
+      
+        const undesapprouveIcone = document.getElementById("undesapprouveIcone")
+          if (undesapprouveIcone) {
+          undesapprouveIcone.addEventListener("click", async () => {  
+          await axios.post(`${apiUrl}/api/auth/undislikeUser`, {
+              token : userToken,
+              idUser:  userId,
+              idPoint: selectedMarker,        
+              }).then((data) => {
+                getAllPoints();
+              console.log(data)
+              })
+          })
+      }
+       
           const eyeIcon = document.getElementById("see-point");
           eyeIcon?.addEventListener("click", () => {
             if (point.eventName) {
