@@ -44,6 +44,7 @@
   let nameEventInput = "";
   let descriptionPointInput = "";
   let descriptionEventInput = "";
+  let hasAnimation = false;
   let informationsEventInput;
   let distanceEventInput = "";
   let startDateEventInput = "";
@@ -51,6 +52,8 @@
   let startHourEventInput = "";
   let iframeEventInput = "";
   let newUsernameInput = "";
+  let animationDescription = "";
+  let participationFee = '';
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
@@ -73,6 +76,7 @@
   let showModalReportPointError = false;
   let showModalEnterNewUsername = false;
   let showModalConfirmDeleteAccount = false;
+  let showModalAnimation = false;
   let showModalCreateEvent;
   let coordsToAddPoint = { lat: null, lng: null };
   let showEU = true;
@@ -785,6 +789,7 @@ function switchLikeUser(user, lovers, haters) {
     showModalConfirmDeleteAccount = false;
     showModalEnterNewUsername = false;
     showIconPanel = true;
+    showModalAnimation = false;
   };
 
   const closePopUpTimer = () =>{
@@ -799,6 +804,10 @@ function switchLikeUser(user, lovers, haters) {
   },4000)
   }
 
+ const reopenModaleEvent = () =>{
+ showModalCreateEvent = true
+ 
+ }
 
 
   const addPoint = () => {
@@ -934,6 +943,8 @@ function switchLikeUser(user, lovers, haters) {
           eventName: nameEventInput,
           eventDescription: descriptionEventInput,
           eventInformations: informationsEventInput,
+          participation: participationFee,
+          animationDescription : animationDescription,
           coords: {
             lat: coordsToAddPoint.lat,
             lng: coordsToAddPoint.lng,
@@ -949,8 +960,11 @@ function switchLikeUser(user, lovers, haters) {
         if (res){
         alert("Événement créé avec succès");
         nameEventInput = "";
+        hasAnimation = false;
         descriptionEventInput = "";
         distanceEventInput = "";
+        participationFee = "";
+        animationDescription = "";
         startDateEventInput = "";
         endDateEventInput = "";
         startHourEventInput = "";
@@ -1011,6 +1025,8 @@ function switchLikeUser(user, lovers, haters) {
     eventName,
     eventDescription,
     eventInformations,
+    participationFee,
+    descriptionAnimation,
     distance,
     iframe,
     coords,
@@ -1021,6 +1037,8 @@ function switchLikeUser(user, lovers, haters) {
     selectedEventName = eventName;
     selectedEventDescription = eventDescription;
     selectedEventInformations = eventInformations;
+    selectedEventDescriptionAnimation = descriptionAnimation;
+    selectedEventParticipationFee = participationFee;
     selectedEventCreatedBy = createdBy;
     selectedEventEmail = email;
     selectedEventDistance = distance;
@@ -1504,7 +1522,7 @@ function isDateValid(inputDate) {
     <h2 style="color:white; ">Événements à venir :</h2>
 
     <div id="list-events">
-      {#each allEvents as { createdBy, email, eventName, eventInformations, eventDescription, distance, iframe, coords, startDate, endDate, startHour }, i}
+      {#each allEvents as { createdBy, email, eventName, eventInformations, eventDescription,  animationDescription,participation,distance, iframe, coords, startDate, endDate, startHour }, i}
         <div
           on:click={showEventDetails(
             createdBy,
@@ -1512,6 +1530,8 @@ function isDateValid(inputDate) {
             eventName,
             eventDescription,
             eventInformations,
+            animationDescription,
+            participation,
             distance,
             iframe,
             coords,
@@ -1525,6 +1545,13 @@ function isDateValid(inputDate) {
           <h3>{eventDescription}</h3>
           <h3>{startDate} - {endDate}</h3>
           <h3>Départ : {startHour}</h3>
+          <div>
+          attention event avec animation :
+          {animationDescription}
+          Prix: 
+          {participation}
+          
+          </div>
         </div>
       {/each}
     </div>
@@ -1819,6 +1846,27 @@ function isDateValid(inputDate) {
         id="descriptionEventInput"
         bind:value={descriptionEventInput}
       />
+      <label>
+        Animation :
+        <input
+          type="checkbox"
+          bind:checked={hasAnimation}
+        />
+      {#if hasAnimation}
+        <div class="animation-dropdown">
+          <input
+            type="number"
+            placeholder="Frais de participation"
+            bind:value={participationFee}
+          />
+          <textarea
+            placeholder="Description de l'événement"
+            rows="4"
+            bind:value={animationDescription}
+          />
+        </div>
+      {/if}
+      </label>
       <input
         autocomplete="off"
         placeholder="Distance (en Km)"
@@ -1967,6 +2015,37 @@ function isDateValid(inputDate) {
     <div id="map" />
   </section>
 {/if}
+
+// <!-- {#if showModalAnimation}
+//   <div id="container-add-info-point">
+
+//     <i class="fa-solid fa-xmark" on:click={() => { closePopup(), showModalCreateEvent = true,hasAnimation = false}} />
+//     <p>Que souhaitez vous faire ?</p>
+
+//      <textarea
+//       bind:value={animationDescription}
+//       placeholder="Entrez une description (max 200 caractères)"
+//       rows="4"
+//       maxlength="200"
+//     />
+//      <input
+//           autocomplete="off"
+//           placeholder="Frais de particip"
+//           type="text"
+//           name="costDiner"
+//           id="costDiner"
+//           bind:value={participationFee}
+//         />
+//       <div id="action-delete">
+//       <button type="submit" id="confirm-delete" on:click={() => { closePopup(), showModalCreateEvent = true}}
+//         >Confirmer</button
+//       >
+//       <button type="submit" id="cancel-delete" on:click={() => { closePopup(), showModalCreateEvent = true , hasAnimation = false}}>Annuler</button
+//       >
+//     </div>
+     
+//   </div>
+// {/if} -->
 
 <style>
   #container-account-settings {

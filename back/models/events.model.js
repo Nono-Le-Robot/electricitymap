@@ -16,6 +16,12 @@ const eventSchema = new mongoose.Schema({
   eventDescription: {
     type: String,
   },
+  animationDescription : {
+      type: String,
+  },
+  participation: {
+      type: Number,
+  },
   eventInformations: {
     type: String,
   },
