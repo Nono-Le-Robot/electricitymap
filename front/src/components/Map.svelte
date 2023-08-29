@@ -422,57 +422,33 @@
         function isPointUserReport(email, username,userId,userToken,pointCreatedBy,pointAddedBy,pointId) {
           if (email !== point.email && username !== point.addedBy) {
             return `
-        <i class="fa-solid fa-triangle-exclamation reportPoint" id="reportTest" style="cursor:pointer; font-size:20px; color:red"></i>
+        <i class="fa-solid fa-flag" id="reportPoint" style="cursor:pointer; font-size:20px; color:red"></i>
             `;
           } else {
             return ``;
           }
         }  
-        
-         
-    function switchLikePoint(user, pointliker) {
-    if (point.likers === undefined || point.likers.includes(user)) {
-      return `
-     <i class="fa-regular fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
-      `;
-    } else {
-      return `
-            <i class="fa-solid fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
-      `;
-    }
-  
+ 
+function switchLikePoint(user, like) {
+if(point.likers !== undefined){
+  if (point.likers.includes(user)) {
+    return `
+      <div style="display: flex; align-items: flex-start;">
+       <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
+   
+      </div>
+    `;
+  } else{
+    return `
+      <div style="display: flex; align-items: flex-start;">
+            <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
+      </div>
+    `;
+  }
+  }
 }
+         
 
-//    function switchLikeUser(user, lovers, haters) {
-//    console.log(point.lovers)
-//    console.log(point.haters)
-//     switch (true) {
-//     case haters === undefined && lovers === undefined: 
-//       return `
-//         <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
-//         <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
-//       `;
-//       case lovers.includes(!user) && haters.includes(!user): 
-//        return `
-//         <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
-//         <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
-//       `;
-//       case haters.includes(user) || haters === undefined:
-//         console.log(point.likers)
-//         return `
-//               <i class="fa-solid fa-thumbs-up" id="unapprouveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
-//       `; 
-      
-//        case haters.includes(user) || lovers === undefined:
-//         return `
-//               <i class="fa-solid fa-thumbs-down" id="undesapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
-//       `; 
-//        default : 
-//          return `
-//          <div>il y a un bud la </div>
-//       `;
-//     }
-// }    
 
 function switchLikeUser(user, lovers, haters) {
 
@@ -500,18 +476,7 @@ function switchLikeUser(user, lovers, haters) {
   }
 }
   
-        
-        function isLikePointCreator(email,username,userId, userToken, pointCreateBy,pointAddedBy,pointId) {
-         if (email !== point.email && username !== point.addedBy) {
-            return `
-            <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
-            <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:blue"></i>
-            `;
-          } else {
-            return ``;
-          }
-        }  
-    
+
         marker.bindPopup(`
         ${switchLikePoint(userId, point.likers)}
         ${
@@ -636,10 +601,10 @@ function switchLikeUser(user, lovers, haters) {
             });
           }
 
-          const reportIcon = document.querySelector(".fa-triangle-exclamation");
-          reportIcon?.addEventListener("click", async () => {
-            // alert("report");
-          });
+          // const reportIcon = document.querySelector(".fa-triangle-exclamation");
+          // reportIcon?.addEventListener("click", async () => {
+          //   // alert("report");
+          // });
      
             const likeIcon = document.getElementById("likeIcone")
           if (likeIcon) {
@@ -650,7 +615,7 @@ function switchLikeUser(user, lovers, haters) {
               idPoint: selectedMarker,
                       
               }).then((data) => {
-               getAllPoints();
+               refreshPoints();
               console.log(data)
               })
           })}
@@ -658,7 +623,6 @@ function switchLikeUser(user, lovers, haters) {
 
       
   const dislikeIcone = document.getElementById("dislikeIcone");
-  
   if (dislikeIcone) {
     dislikeIcone.addEventListener("click", async () => { 
       await axios.post(`${apiUrl}/api/data/dislike-point`, {
@@ -666,7 +630,7 @@ function switchLikeUser(user, lovers, haters) {
         idUser: userId,
         idPoint: selectedMarker,
       }).then((data) => {
-          getAllPoints();
+           refreshPoints();
         console.log(data);
       });
     });
@@ -681,7 +645,7 @@ function switchLikeUser(user, lovers, haters) {
               idUser:  userId,
               idPoint: selectedMarker,      
               }).then((data) => {
-               getAllPoints();
+                  refreshPoints();
               console.log(data)
               })
           })}
@@ -694,7 +658,7 @@ function switchLikeUser(user, lovers, haters) {
               idUser:  userId,
               idPoint: selectedMarker,        
               }).then((data) => {
-                getAllPoints();
+                  refreshPoints();
               console.log(data)
               })
           })
@@ -708,7 +672,7 @@ function switchLikeUser(user, lovers, haters) {
               idUser:  userId,
               idPoint: selectedMarker,        
               }).then((data) => {
-                getAllPoints();
+                 refreshPoints();
               console.log(data)
               })
           })
@@ -722,7 +686,7 @@ function switchLikeUser(user, lovers, haters) {
               idUser:  userId,
               idPoint: selectedMarker,        
               }).then((data) => {
-                getAllPoints();
+                refreshPoints();
               console.log(data)
               })
           })
@@ -760,7 +724,7 @@ function switchLikeUser(user, lovers, haters) {
             closePopup();
           });
 
-          // const reportIcon = document.querySelector(".reportPoint");
+          const reportIcon = document.getElementById("reportPoint");
             reportIcon?.addEventListener("click", async () => {
             closePopup();
             showModalReportPointFirstStep = true
