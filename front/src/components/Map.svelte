@@ -831,82 +831,36 @@ function switchLikeUser(user, lovers, haters) {
       console.log("Aucune correspondance trouvée pour l'attribut 'src'");
     }
     
-    function isValidDate(date) {
-       const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return new Date(date).toLocaleDateString(undefined, options);
-      // const datePattern = /^\d{2}\-\d{2}\-\d{4}$/;
-      // if (!datePattern.test(date)) {
-      //   return "Le format de date doit être xx/xx/xxxx";
-      // }
-      // const parts = date.split("/");
-      // const day = parseInt(parts[0], 10);
-      // const month = parseInt(parts[1], 10) - 1;
-      // const year = parseInt(parts[2], 10);
-      // const newDate = new Date(year, month, day);
-      // if (
-      //   newDate.getFullYear() === year &&
-      //   newDate.getMonth() === month &&
-      //   newDate.getDate() === day
-      // ) {
-      //   return null;
-      // } else {
-      //   return "La date n'est pas valide";
-      // }
-    }
-    function isValidTime(time) {
-      const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
-      if (!timePattern.test(time)) {
-        return "Le format de l'heure doit être HH:mm (24 heures)";
-      }
-      return null;
-    }
-    function isAfterCurrentDate(date) {
-      const currentDate = new Date();
-      const parts = date.split("/");
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      const newDate = new Date(year, month, day);
-      return newDate > currentDate;
-    }
+    // function isValidDate(date) {
+    //    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    // return new Date(date).toLocaleDateString(undefined, options);
+  
+    // }
+    // function isValidTime(time) {
+    //   const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    //   if (!timePattern.test(time)) {
+    //     return "Le format de l'heure doit être HH:mm (24 heures)";
+    //   }
+    //   return null;
+    // }
+    // function isAfterCurrentDate(date) {
+    //   const currentDate = new Date();
+    //   const parts = date.split("/");
+    //   const day = parseInt(parts[0], 10);
+    //   const month = parseInt(parts[1], 10) - 1;
+    //   const year = parseInt(parts[2], 10);
+    //   const newDate = new Date(year, month, day);
+    //   return newDate > currentDate;
+    // }
     function isValidDistance(distance) {
       return !isNaN(parseFloat(distance)) && isFinite(distance);
     }
-    const startDateValidation = isValidDate(startDateEventInput);
-    const endDateValidation = isValidDate(endDateEventInput);
-    const startTimeValidation = isValidTime(startHourEventInput);
-    if (
-      startDateValidation !== null ||
-      endDateValidation !== null ||
-      startTimeValidation !== null
-    ) {
-      alert(
-        (startDateValidation !== null
-          ? "Date de début : " + startDateValidation + "\n"
-          : "") +
-          (endDateValidation !== null
-            ? "Date de fin : " + endDateValidation + "\n"
-            : "") +
-          (startTimeValidation !== null
-            ? "Heure de début : " + startTimeValidation
-            : "")
-      );
-      return;
-    }
-
-    // const isValidDistance = (distance) => {
-    //   return !isNaN(parseFloat(distance)) && isFinite(distance);
-    // };
-
+ 
     const formatDate = (date) => {
       const dd = String(date.getDate()).padStart(2, "0");
       const mm = String(date.getMonth() + 1).padStart(2, "0");
       const yyyy = date.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
-    };
-
-    const isEndDateAfterStartDate = (startDate, endDate) => {
-      return new Date(startDate) <= new Date(endDate);
     };
 
 
@@ -960,17 +914,9 @@ function switchLikeUser(user, lovers, haters) {
         showIconPanel = false;
         showModalCreateEvent = true;
       } else if (
-        isEndDateAfterStartDate(startDateEventInput, endDateEventInput)
-      ) {
-        alert("La date de fin doit être après la date de début");
-        showIconPanel = false;
-        showModalCreateEvent = true;
-      } else if (
-        new Date(startDateEventInput) < new Date() &&
-        !(
           new Date(startDateEventInput).getDate() === new Date().getDate() &&
-          isTimeAfterCurrentTime(startHourEventInput)
-        )
+          !isTimeAfterCurrentTime(startHourEventInput)
+
       ) {
         alert("La date de début doit être postérieure à la date actuelle");
         showIconPanel = false;
@@ -1204,17 +1150,18 @@ function switchLikeUser(user, lovers, haters) {
     return `${day}/${month}/${year}`;
   }
   
-   function isDateValid(dateInput) {
-    const currentDate = new Date();
-    const inputDate = new Date(dateInput + 'T00:00:00'); // Ajoutez la partie de l'heure pour rendre la date au format ISO complet
-    return inputDate > currentDate;
-  }
 
-  //   function isDateValid(dateInput) {
-  //   const currentDate = new Date();
-  //   const inputDate = new Date(dateInput);
-  //   return inputDate > currentDate;
-  // }
+function isDateValid(inputDate) {
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    const inputDateObj = new Date(inputDate)
+    if (inputDateObj < today) {
+        return false;
+    } else {
+        return true;
+    }
+}
 
   $: formattedStartDate = formatDate(startDateEventInput);
   $: formattedEndDate = formatDate(endDateEventInput);
