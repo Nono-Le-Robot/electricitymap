@@ -726,7 +726,9 @@
       const newDate = new Date(year, month, day);
       return newDate > currentDate;
     }
- 
+    function isValidDistance(distance) {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    }
     const startDateValidation = isValidDate(startDateEventInput);
     const endDateValidation = isValidDate(endDateEventInput);
     const startTimeValidation = isValidTime(startHourEventInput);
@@ -807,51 +809,48 @@
     }
 
     try {
-  
 
-      // const res = await axios.post(`${apiUrl}/api/data/create-event`, {
-      //   token : userToken,
-      //   idUser : userId,
-      //   createdBy: userPseudo,
-      //   email: userMail,
-      //   eventName: nameEventInput,
-      //   eventDescription: descriptionEventInput,
-      //   eventInformations: informationsEventInput,
-      //   coords: {
-      //     lat: coordsToAddPoint.lat,
-      //     lng: coordsToAddPoint.lng,
-      //   },
-      //   distance: distanceEventInput,
-      //   iframe: iframeLink,
-      //   startDate: startDateEventInput,
-      //   endDate: endDateEventInput,
-      //   startHour: startHourEventInput,
-      //   addedDate: new Date(),
-      //   needValiate: true,
-      // });
-      // nameEventInput = "";
-      // descriptionEventInput = "";
-      // distanceEventInput = "";
-      // startDateEventInput = "";
-      // endDateEventInput = "";
-      // startHourEventInput = "";
-      // iframeEventInput = "";
-      // descriptionPointInput = "";
-      // alert("Evénement créé avec succès");
-      // await refreshPoints();
-      // closePopup();
-      
-      function isValidDistance(distance) {
-      return !isNaN(parseFloat(distance)) && isFinite(distance);
-      }
+
+      const res = await axios.post(`${apiUrl}/api/data/create-event`, {
+        token : userToken,
+        idUser : userId,
+        createdBy: localStorage.getItem("username"),
+        email: localStorage.getItem("email"),
+        eventName: nameEventInput,
+        eventDescription: descriptionEventInput,
+        eventInformations: informationsEventInput,
+        coords: {
+          lat: coordsToAddPoint.lat,
+          lng: coordsToAddPoint.lng,
+        },
+        distance: distanceEventInput,
+        iframe: iframeLink,
+        startDate: startDateEventInput,
+        endDate: endDateEventInput,
+        startHour: startHourEventInput,
+        addedDate: new Date(),
+        needValiate: true,
+      });
+      nameEventInput = "";
+      descriptionEventInput = "";
+      distanceEventInput = "";
+      startDateEventInput = "";
+      endDateEventInput = "";
+      startHourEventInput = "";
+      iframeEventInput = "";
+      descriptionPointInput = "";
+      alert("Evénement créé avec succès");
+      await refreshPoints();
+      closePopup();
+
       const distance = parseFloat(distanceEventInput);
 
-      if (isValidDistance(distance)) {
+      if (!isValidDistance(distance)) {
         alert("La distance doit être au format numérique");
         showIconPanel = false;
         showModalCreateEvent = true;
       } else if (
-        isEndDateAfterStartDate(startDateEventInput, endDateEventInput)
+        !isEndDateAfterStartDate(startDateEventInput, endDateEventInput)
       ) {
         alert("La date de fin doit être après la date de début");
         showIconPanel = false;
@@ -866,17 +865,14 @@
         alert("La date de début doit être postérieure à la date actuelle");
         showIconPanel = false;
         showModalCreateEvent = true;
-      } else if (isTimeAfterCurrentTime(startHourEventInput)) {
+      } else if (!isTimeAfterCurrentTime(startHourEventInput)) {
         alert("L'heure de début doit être postérieure à l'heure actuelle");
         showIconPanel = false;
         showModalCreateEvent = true;
       } else {
-
-         await axios.post(`${apiUrl}/api/data/create-event`, {
-          idUser : userId,
-          token : userToken,
-          createdBy: userPseudo,
-          email: userMail,
+        const res = await axios.post(`${apiUrl}/api/data/create-event`, {
+          createdBy: localStorage.getItem("username"),
+          email: localStorage.getItem("email"),
           eventName: nameEventInput,
           eventDescription: descriptionEventInput,
           eventInformations: informationsEventInput,
@@ -891,31 +887,27 @@
           startHour: startHourEventInput,
           addedDate: new Date(),
           needValiate: true,
-        }).then((res,err)=>{
-        if(res){
-
-        refreshPoints();
+        });
+        alert("Événement créé avec succès");
+        nameEventInput = "";
+        descriptionEventInput = "";
+        distanceEventInput = "";
+        startDateEventInput = "";
+        endDateEventInput = "";
+        startHourEventInput = "";
+        iframeEventInput = "";
+        informationsEventInput = "";
+        await refreshPoints();
         closePopup();
-        // nameEventInput = "";
-        // descriptionEventInput = "";
-        // distanceEventInput = "";
-        // startDateEventInput = "";
-        // endDateEventInput = "";
-        // startHourEventInput = "";
-        // iframeEventInput = "";
-        // informationsEventInput = "";
-        } else {
-         console.error(err);
-          alert(
-        "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
-         );
-        }
+      }
 
-      })
-  alert(
-         "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
-        );
-   
+    } catch (err) {
+      console.error(err);
+      alert(
+        "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
+      );
+    }
+
     enableToPlace = false;
   };
 
@@ -1016,7 +1008,7 @@
         lat: coordsToAddPoint.lat,
         lng: coordsToAddPoint.lng,
       },
-      addedBy: userPseudo,
+      addedBy: localStorage.getItem("username"),
       priseType: typePrise,
       addedDate: new Date(),
       needValiate: true,

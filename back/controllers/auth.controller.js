@@ -14,7 +14,7 @@ module.exports.register = async (req, res) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new userModel({
+  const newUser =  new userModel({
     email: email,
     username: username,
     password: hashedPassword,
@@ -50,22 +50,22 @@ module.exports.login = async (req, res) => {
               status: false,
             });
           }
-          const generateAcessToken = (data) => {
-            const email = data.email;
-            const id = data._id;
-            const username = data.username
-            const token = jwt.sign({ email, id, username }, process.env.ACCESS_TOKEN_SECRET, {
+         const generateAcessToken = (data) =>  {
+          const email = data.email;
+          const id = data._id;
+          const username = data.username
+            const token = jwt.sign({email, id, username}, process.env.ACCESS_TOKEN_SECRET, {
               expiresIn: '30d',
             })
             return token
           }
           const accessToken = generateAcessToken(user);
-
+          
           res.status(200).json({
             userId: user._id,
             username: user.username,
             email: req.body.email,
-            token: accessToken
+            token : accessToken
 
           });
         })
@@ -77,9 +77,9 @@ module.exports.login = async (req, res) => {
 
 module.exports.deleteUser = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
-    const UserToDelete = req.user;
+    const UserToDelete = req.user; // Assurez-vous de passer l'ID de l'événement dans les paramètres de l'URL
 
-    userModel.findOneAndDelete({ _id: UserToDelete })
+    eventsModel.findOneAndDelete({ _id: UserToDelete })
       .then((userDelete) => {
         if (!userDelete) {
           return res.status(404).json({ message: "Événement non trouvé" });
@@ -89,54 +89,5 @@ module.exports.deleteUser = async (req, res) => {
       .catch((error) => res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur", error: error.message }));
   } else {
     res.status(404).json("Erreur lors de la suppression de l'utilisateur")
-  }
-};
-
-
-module.exports.likeUser = async (req, res) => {
-  console.log(req.body);
-  if (req.user === req.body.idUser || req.role === "admin") {
-    const UserLike = req.body.idUser;
-    const UserToLike = req.body.idPoint.idUser;
-
-    userModel.findByIdAndUpdate(UserToLike, { $push: { likers: UserLike } }, (err, result) => {
-      if (err) {
-        res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
-      } else {
-        userModel.findByIdAndUpdate(UserLike, { $push: { likedUsers: UserToLike } }, (err, result) => {
-          if (err) {
-            res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
-          } else {
-            res.status(200).json('Like enregistré avec succès.');
-          }
-        });
-      }
-    });
-  } else {
-    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
-  }
-};
-
-module.exports.dislikeUser = async (req, res) => {
-  console.log(req.body);
-  if (req.user === req.body.idUser || req.role === "admin") {
-    const UserDislike = req.body.idUser;
-    const UserToDislike = req.body.idPoint.idUser;
-
-    userModel.findByIdAndUpdate(UserToDislike, { $pull: { likers: UserDislike } }, (err, result) => {
-      if (err) {
-        res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
-      } else {
-        userModel.findByIdAndUpdate(UserDislike, { $pull: { likedUsers: UserToDislike } }, (err, result) => {
-          if (err) {
-            res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
-          } else {
-            res.status(200).json('Like enregistré avec succès.');
-          }
-        });
-      }
-    });
-  } else {
-    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
 };

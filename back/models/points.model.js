@@ -50,21 +50,17 @@ const pointSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  likers: [
-    String
-  ],
-
-  reports: {
-    type: Number,
-    default: 0,
+  reports: { 
+  type: Number,
+  default: 0,
   },
-
+  
   reportdetail: [{
     reportId: { type: String, },
-    username: { type: String, },
+    username : { type: String, },
     comment: { type: String, },
-  }],
-
+    }],
+   
 
   commentaires: [
     {
@@ -76,7 +72,11 @@ const pointSchema = new mongoose.Schema({
   },
   needValidate: {
     type: Boolean,
-    default: false,
+    default: true,
+  },
+  reports: {
+    type: Number,
+    default: 0,
   },
 });
 

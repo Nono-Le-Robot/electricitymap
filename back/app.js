@@ -8,7 +8,16 @@ const pointReportRoutes = require("./routes/reportPoint.routes");
 
 const app = express();
 const cors = require("cors");
-app.use(cors());
+const corsOptions = {
+  Origin: '*',
+  origin: 'http://localhost:5000',
+  credentials: true,
+  allowedHeaders: ["*", "Content-type"],
+  exposeHeaders: ["*"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+};
+app.use(cors(corsOptions));
 
 app.use(cookieParser());
 app.use(express.json())

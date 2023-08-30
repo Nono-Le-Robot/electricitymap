@@ -27,13 +27,12 @@ exports.requireAuthUser = (req, res, next) => {
     } else {
         req.user = "";
         console.log("access denied invalid token ");
-        next();
+        res.status(400).json("erreur d'autentification")
     }
 };
 
 
 exports.requireAuthAdmin = (req, res, next) => {
-   console.log(req);
     const token = req.body.token;
     const userId = req.body.idUser;
     if (token) {
