@@ -22,6 +22,16 @@ const eventSchema = new mongoose.Schema({
   participation: {
       type: Number,
   },
+  registration: [
+    String,
+  ],
+  participantsDetails: [{
+    Fee: { type: String, },
+    username: { type: String, },
+    userId: { type: String, },
+    comment: { type: String, },
+  }
+  ],
   eventInformations: {
     type: String,
   },

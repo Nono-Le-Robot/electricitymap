@@ -18,6 +18,9 @@ router.get("/get-events", dataController.getEvents);
 router.post("/create-event", controlAuth.requireAuthAdmin, dataController.createEvent);
 router.post("/modify-event", controlAuth.requireAuthAdmin, dataController.modifyEvent);
 router.post("/delete-event", controlAuth.requireAuthAdmin, dataController.deleteEvent);
+router.post("/registration-event", controlAuth.requireAuthAdmin, dataController.registrationEvent);
+router.post("/deregistration-event", controlAuth.requireAuthAdmin, dataController.deregistrationEvent);
+router.post("/registrationDetailEvent", controlAuth.requireAuthAdmin, dataController.registrationDetailEvent);
 
 
 module.exports = router;

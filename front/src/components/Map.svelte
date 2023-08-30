@@ -39,21 +39,29 @@
   let selectedEventStartDate;
   let selectedEventEndDate;
   let selectedEventStartHour;
+  let selectedEventDescriptionAnimation;
+  let selectedEventParticipationFee;
+  let selectedEventRegistration;
   let commentReport = "";
   let namePointInput = "";
   let nameEventInput = "";
+  let idEventToUpdate = "";
   let descriptionPointInput = "";
   let descriptionEventInput = "";
   let hasAnimation = false;
+  let hasInscription = false;
   let informationsEventInput;
+  let userParticipationFee = "";
   let distanceEventInput = "";
+  let giveDescription = "";
+  let inscriptionEvent = false;
   let startDateEventInput = "";
   let endDateEventInput = "";
   let startHourEventInput = "";
   let iframeEventInput = "";
   let newUsernameInput = "";
   let animationDescription = "";
-  let participationFee = '';
+  let participationFee = "";
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
@@ -61,7 +69,9 @@
   let showModalAskAction = false;
   let showModalAddPoint = false;
   let showModalModifyInfo = false;
+  let showModalModifyInfoEvent = false;
   let showConfirmDelete = false;
+  let showConfirmDeleteEvent = false;
   let showModalFilter = false;
   let showStartRoute = false;
   let showModalSettings = false;
@@ -71,7 +81,7 @@
   let showModalEventDetails = false;
   let showModalAccountSettings = false;
   let showModalReportPointFirstStep = false;
-  let showModalReportPointTwoStep = false; 
+  let showModalReportPointTwoStep = false;
   let showModalReportPointConfirm = false;
   let showModalReportPointError = false;
   let showModalEnterNewUsername = false;
@@ -217,9 +227,6 @@
       "_blank"
     );
   };
-
-
-
 
   const createMarker = (coords, icon, draggable, id) => {
     marker = L.marker(coords, {
@@ -408,22 +415,39 @@
           markersLayer.addLayer(flagMarker);
         }
 
-     
-
-        function isPointCreator(email, username,userId,userToken) {
-           
-          if (email === point.email && username === point.addedBy) {
+        function isPointCreator(email, username, userId, userToken) {
+          if (point.eventName === undefined && email === point.email && userId === point.idUser) {
             return `
         <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
             `;
           } else {
             // return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
-            return ``
+            return ``;
           }
         }
         
-        function isPointUserReport(email, username,userId,userToken,pointCreatedBy,pointAddedBy,pointId) {
+            function isEventCreator(email, username, userId, userToken) {
+          if ( point.eventName !== undefined && email === point.email && userId === point.idUser) {
+            return `
+        <i class="fa-solid fa-pen" id='modify-event'  style="cursor:pointer; font-size:20px"></i>
+        <i class="fa-solid fa-trash-can" id='delete-event' style="cursor:pointer; color:red; font-size:20px;"></i>
+            `;
+          } else {
+            // return ` <i class="fa-solid fa-triangle-exclamation" style="cursor:pointer; font-size:20px; color:red"></i>`;
+            return ``;
+          }
+        }
+        
+        function isPointUserReport(
+          email,
+          username,
+          userId,
+          userToken,
+          pointCreatedBy,
+          pointAddedBy,
+          pointId
+        ) {
           if (email !== point.email && username !== point.addedBy) {
             return `
         <i class="fa-solid fa-flag" id="reportPoint" style="cursor:pointer; font-size:20px; color:red"></i>
@@ -431,55 +455,107 @@
           } else {
             return ``;
           }
-        }  
- 
-function switchLikePoint(user, like) {
-if(point.likers !== undefined){
-  if (point.likers.includes(user)) {
-    return `
+        }
+
+        function switchLikePoint(user, like) {
+          if (point.likers !== undefined) {
+            if (point.likers.includes(user)) {
+              return `
       <div style="display: flex; align-items: flex-start;">
        <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
    
       </div>
     `;
-  } else{
-    return `
+            } else {
+              return `
       <div style="display: flex; align-items: flex-start;">
             <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
       </div>
     `;
-  }
-  }
-}
-         
+            }
+          }
+        }
+
+        function animationEvent() {
+          if (point.participation !== undefined) {
+            return `
+ <div style="border:solid ;1px; blue;">
+    <h4>Animation</h4>
+     <span> Prix:  ${
+       point.participation ? point.participation : point.participation
+     }€</span>
+      <p> Description :</p>
+       ${
+         point.animationDescription
+           ? point.animationDescription
+           : point.animationDescription
+       }</span>
+        </p> 
+         <label for="inscription">Voir détails</label>
+        <input
+            type="checkbox"
+            id="inscription"
+            name="inscription"
+            value="inscription"
+          />
+        </div>
+        `;
+          } else {
+            return ``;
+          }
+        }
+        
+        
+         function RegistrationEvent(user) {
+         console.log(point.registration);
+         if(point.registration !== undefined && point.registration.includes(userId)) {
+            return ` 
+          <div style="display:flex;  align-items:center; justify-content:center;cursor:pointer">
+         <button style="display:flex" id="deregistrationevent"> me desinscrire</button> 
+         </div>`;
+          ;
+          } else if (point.eventName) {
+            return `
+    <div  style="display:flex;  align-items:center; justify-content:center;cursor:pointer">
+         <button style="display:flex" id="registrationevent"> Je participe</button> 
+         </div>
+        `
+          } else {
+            return ``;
+          }
+        }
 
 
-function switchLikeUser(user, lovers, haters) {
-
-  if (
-    (point.lovers === undefined && point.haters === undefined) ||
-    (point.lovers.includes(!user) && point.haters.includes(!user))
-  ) {
-    return `
+        function switchLikeUser(user, lovers, haters) {
+          if (
+            (point.lovers === undefined && point.haters === undefined) ||
+            (point.lovers.includes(!user) && point.haters.includes(!user))
+          ) {
+            return `
       <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
       <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
     `;
-  } else if (point.lovers.includes(user) || point.haters === undefined) {
-    return `
+          } else if (
+            point.lovers.includes(user) ||
+            point.haters === undefined
+          ) {
+            return `
       <i class="fa-solid fa-thumbs-up" id="unapprouveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
     `;
-  } else if (point.haters.includes(user) || point.lovers === undefined) {
-    return `
+          } else if (
+            point.haters.includes(user) ||
+            point.lovers === undefined
+          ) {
+            return `
       <i class="fa-solid fa-thumbs-down" id="undesapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
     `;
-  } else {
-    return `
+          } else {
+            return `
       <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
       <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
     `;
-  }
-}
-  
+          }
+        }
 
         marker.bindPopup(`
         ${switchLikePoint(userId, point.likers)}
@@ -490,7 +566,7 @@ function switchLikeUser(user, lovers, haters) {
                 point.priseType
               )}" alt="logo" />`
         }
-        
+       
         <br>
         <h3>${point.eventName ? point.eventName : point.pointName}</h3>
         <p>${
@@ -500,6 +576,8 @@ function switchLikeUser(user, lovers, haters) {
             ? point.pointDescription
             : ""
         }</p>
+       ${animationEvent()}
+       
         ${
           point.eventName
             ? `
@@ -524,7 +602,7 @@ function switchLikeUser(user, lovers, haters) {
             ? `<p>Créer par : ${point.createdBy}</p>`
             : `<p>Ajouté par : ${point.addedBy}</p>`
         }
-         ${ switchLikeUser(userId, point.lovers, point.haters)}
+         ${switchLikeUser(userId, point.lovers, point.haters)}
         <div style="
         display:flex;
         align-items:center;
@@ -535,19 +613,32 @@ function switchLikeUser(user, lovers, haters) {
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-eye" id="see-point" style="cursor:pointer; font-size:20px"></i>
-        ${isPointCreator(userMail, userPseudo,userId,userToken)}
-        ${isPointUserReport(userMail, userPseudo,userId,userToken,point.createdBy,point.addedBy,point._id)}
+        ${isPointCreator(userMail, userPseudo, userId, userToken)}
+        ${isEventCreator(userMail, userPseudo, userId, userToken)}
+        ${isPointUserReport(
+          userMail,
+          userPseudo,
+          userId,
+          userToken,
+          point.createdBy,
+          point.addedBy,
+          point._id
+        )}
          </div>
+         ${
+         RegistrationEvent()
+        }
+     
        `);
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
-            // typePrise = "Européenne"
-            oldType = "Européenne"
+              // typePrise = "Européenne"
+              oldType = "Européenne";
               return "eu-flag.png";
             case "Prise camping-car":
-            // typePrise = "Prise camping-car"
-            oldType = "Prise camping-car"
+              // typePrise = "Prise camping-car"
+              oldType = "Prise camping-car";
               return "cc-flag.png";
             default:
               return "";
@@ -593,7 +684,7 @@ function switchLikeUser(user, lovers, haters) {
             });
             trashIcon?.addEventListener("click", async () => {
               const userMail = localStorage.getItem("email");
-              if (userMail !== point.email) {
+              if (userId !== point.idUser) {
                 alert(
                   "Vous n'etes pas le createur de ce point, vous ne pouvez pas le supprimer"
                 );
@@ -604,105 +695,283 @@ function switchLikeUser(user, lovers, haters) {
               showConfirmDelete = true;
             });
           }
-
-          // const reportIcon = document.querySelector(".fa-triangle-exclamation");
-          // reportIcon?.addEventListener("click", async () => {
-          //   // alert("report");
-          // });
-     
-            const likeIcon = document.getElementById("likeIcone")
-          if (likeIcon) {
-          likeIcon.addEventListener("click", async () => {  
-           await axios.post(`${apiUrl}/api/data/like-point`, {
-              token : userToken,
-              idUser:  userId,
-              idPoint: selectedMarker,
-                      
-              }).then((data) => {
-               refreshPoints();
-              console.log(data)
-              })
-          })}
           
+          const deleteEvent = document.getElementById("delete-event")
+           deleteEvent?.addEventListener("click", async () => {
+          if (deleteEvent && userId === point.idUser) {
+             
+            map.closePopup();
+              showConfirmDeleteEvent = true;
+          }else{
+            alert(
+                  "Vous n'etes pas le createur de cette event, vous ne pouvez pas le supprimer"
+                );
+            map.closePopup();
+                return;
+          }
+          });
+          
+    const modifytestEvent = async () => {
+    closePopup();
+    var iframeString = iframeEventInput;
+    var srcRegex = /src="([^"]+)"/;
+    var matches = iframeString.match(srcRegex);
+    if (matches && matches.length > 1) {
+      var iframeLink = matches[1];
+    } else {
+      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
+    }
+    
+    function isValidDistance(distance) {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    }
+    const formatDate = (date) => {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
+    const isTimeAfterCurrentTime = (time) => {
+      const [hour, minute] = time.split(":");
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      return (
+        parseInt(hour, 10) > currentHour ||
+        (parseInt(hour, 10) === currentHour &&
+          parseInt(minute, 10) > currentMinute)
+      );
+    };
 
-      
-  const dislikeIcone = document.getElementById("dislikeIcone");
-  if (dislikeIcone) {
-    dislikeIcone.addEventListener("click", async () => { 
-      await axios.post(`${apiUrl}/api/data/dislike-point`, {
-        token: userToken, 
-        idUser: userId,
-        idPoint: selectedMarker,
-      }).then((data) => {
-           refreshPoints();
-        console.log(data);
+    const resetFields = () => {
+      const fieldsToReset = [
+        "nameEventInput",
+        "descriptionEventInput",
+        "distanceEventInput",
+        "participationFee",
+        "descriptionAnimation",
+        "startDateEventInput",
+        "endDateEventInput",
+        "startHourEventInput",
+        "iframeEventInput",
+        "descriptionPointInput",
+      ];
+
+      fieldsToReset.forEach((field) => {
+        window[field] = ""; // Réinitialise les champs à une chaîne vide
       });
-    });
-  }
+    };
+    closePopup();
 
-       
-          const approuveIcone = document.getElementById("approuveIcone")
-          if (approuveIcone){
-          approuveIcone.addEventListener("click", async () => {  
-          await axios.post(`${apiUrl}/api/auth/likeUser`, {
-              token : userToken,
-              idUser:  userId,
-              idPoint: selectedMarker,      
-              }).then((data) => {
-                  refreshPoints();
-              console.log(data)
-              })
-          })}
+    if (matches && matches.length > 1) {
+      iframeLink = matches[1];
+    } else {
+      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
+    }
+
+    try {
+      const distance = parseFloat(distanceEventInput);
+
+      if (!isValidDistance(distance)) {
+        alert("La distance doit être au format numérique");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        new Date(startDateEventInput).getDate() === new Date().getDate() &&
+        !isTimeAfterCurrentTime(startHourEventInput)
+      ) {
+        alert("La date de début doit être postérieure à la date actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (!isTimeAfterCurrentTime(startHourEventInput) && new Date(startDateEventInput).getDate() === new Date().getDate()) {
+        
+        alert("L'heure de début doit être postérieure à l'heure actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else {
+        const res = await axios
+          .post(`${apiUrl}/api/data/modify-event`, {
+            idEventToUpdate: point._id,
+            token: userToken,
+            idUser: userId,
+            createdBy: userPseudo,
+            email: userMail,
+            eventName: nameEventInput,
+            eventDescription: descriptionEventInput,
+            eventInformations: informationsEventInput,
+            participation: participationFee,
+            animationDescription: animationDescription,
+            coords: {
+              lat: coordsToAddPoint.lat,
+              lng: coordsToAddPoint.lng,
+            },
+            distance: distanceEventInput,
+            iframe: iframeLink,
+            startDate: formatDate(new Date(startDateEventInput)),
+            endDate: formatDate(new Date(endDateEventInput)),
+            startHour: startHourEventInput,
+            addedDate: new Date(),
+            needValiate: true,
+          })
+          .then((res) => {
+            if (res) {
+              alert("Événement créé avec succès");
+              nameEventInput = "";
+              hasAnimation = false;
+              hasInscription = false;
+              descriptionEventInput = "";
+              distanceEventInput = "";
+              participationFee = "";
+              animationDescription = "";
+              startDateEventInput = "";
+              endDateEventInput = "";
+              startHourEventInput = "";
+              iframeEventInput = "";
+              informationsEventInput = "";
+              refreshPoints();
+              closePopup();
+            }
+          });
+      }
+    } catch (err) {
+      console.error(err);
+      alert(
+        "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
+      );
+    }
+    }
+          const getModifyEvent = document.getElementById("modify-event")
           
-           const unapprouveIcone = document.getElementById("unapprouveIcone")
+            getModifyEvent?.addEventListener("click", () => {
+          if (getModifyEvent) {
+              idEventToUpdate = point._id;
+              nameEventInput = point.eventName;
+              descriptionEventInput = point.eventDescription;
+              informationsEventInput = point.eventInformations;
+              animationDescription = point.animationDescription;
+              participationFee = point.participation;
+              startDateEventInput = point.startDate;
+              endDateEventInput = point.endDate;
+              startHourEventInput = point.startHour;
+              iframeEventInput = point.iframe;
+              distanceEventInput = point.distance;
+              oldType = point.priseType;
+              showModalModifyInfoEvent = true;
+            }else{
+            alert(
+                  "Vous n'etes pas le createur de cet event, vous ne pouvez pas le modifier"
+                );
+                map.closePopup();
+                return;
+              }
+              })
+        
+        
+
+          const likeIcon = document.getElementById("likeIcone");
+          if (likeIcon) {
+            likeIcon.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/data/like-point`, {
+                  token: userToken,
+                  idUser: userId,
+                  idPoint: selectedMarker,
+                })
+                .then((data) => {
+                  refreshPoints();
+                  console.log(data);
+                });
+            });
+          }
+
+          const dislikeIcone = document.getElementById("dislikeIcone");
+          if (dislikeIcone) {
+            dislikeIcone.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/data/dislike-point`, {
+                  token: userToken,
+                  idUser: userId,
+                  idPoint: selectedMarker,
+                })
+                .then((data) => {
+                  refreshPoints();
+                  console.log(data);
+                });
+            });
+          }
+
+          const approuveIcone = document.getElementById("approuveIcone");
+          if (approuveIcone) {
+            approuveIcone.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/auth/likeUser`, {
+                  token: userToken,
+                  idUser: userId,
+                  idPoint: selectedMarker,
+                })
+                .then((data) => {
+                  refreshPoints();
+                  console.log(data);
+                });
+            });
+          }
+
+          const unapprouveIcone = document.getElementById("unapprouveIcone");
           if (unapprouveIcone) {
-          unapprouveIcone.addEventListener("click", async () => {  
-          await axios.post(`${apiUrl}/api/auth/unlikeUser`, {
-              token : userToken,
-              idUser:  userId,
-              idPoint: selectedMarker,        
-              }).then((data) => {
+            unapprouveIcone.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/auth/unlikeUser`, {
+                  token: userToken,
+                  idUser: userId,
+                  idPoint: selectedMarker,
+                })
+                .then((data) => {
                   refreshPoints();
-              console.log(data)
-              })
-          })
-      }
-          
-          const desapprouveIcone = document.getElementById("desapprouveIcone")
+                  console.log(data);
+                });
+            });
+          }
+
+          const desapprouveIcone = document.getElementById("desapprouveIcone");
           if (desapprouveIcone) {
-          desapprouveIcone.addEventListener("click", async () => {  
-          await axios.post(`${apiUrl}/api/auth/dislikeUser`, {
-              token : userToken,
-              idUser:  userId,
-              idPoint: selectedMarker,        
-              }).then((data) => {
-                 refreshPoints();
-              console.log(data)
-              })
-          })
-      }
-      
-        const undesapprouveIcone = document.getElementById("undesapprouveIcone")
+            desapprouveIcone.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/auth/dislikeUser`, {
+                  token: userToken,
+                  idUser: userId,
+                  idPoint: selectedMarker,
+                })
+                .then((data) => {
+                  refreshPoints();
+                  console.log(data);
+                });
+            });
+          }
+
+          const undesapprouveIcone =
+            document.getElementById("undesapprouveIcone");
           if (undesapprouveIcone) {
-          undesapprouveIcone.addEventListener("click", async () => {  
-          await axios.post(`${apiUrl}/api/auth/undislikeUser`, {
-              token : userToken,
-              idUser:  userId,
-              idPoint: selectedMarker,        
-              }).then((data) => {
-                refreshPoints();
-              console.log(data)
-              })
-          })
-      }
-       
-          const eyeIcon = document.getElementById("see-point");
-          eyeIcon?.addEventListener("click", () => {
+            undesapprouveIcone.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/auth/undislikeUser`, {
+                  token: userToken,
+                  idUser: userId,
+                  idPoint: selectedMarker,
+                })
+                .then((data) => {
+                  refreshPoints();
+                  console.log(data);
+                });
+            });
+          }
+            const getDetail = () => {
             if (point.eventName) {
               ({
                 eventName: selectedEventName,
                 eventDescription: selectedEventDescription,
                 eventInformations: selectedEventInformations,
+                animationDescription: selectedEventDescriptionAnimation,
+                participation: selectedEventParticipationFee,
+                registration : selectedEventRegistration,
                 iframe: selectedEventIframe,
                 distance: selectedEventDistance,
                 startDate: selectedEventStartDate,
@@ -712,8 +981,49 @@ function switchLikeUser(user, lovers, haters) {
                 createdBy: selectedEventCreatedBy,
               } = point);
               showModalEventDetails = true;
-            }
+            }}
+            
+              const detailAnimation = document.getElementById("inscription");
+          detailAnimation?.addEventListener("click", () => {
+            getDetail();
           });
+         
+          const eyeIcon = document.getElementById("see-point");
+          eyeIcon?.addEventListener("click", () => {
+          getDetail()
+          });
+          
+           const RegitrationEvent = document.getElementById("registrationevent");
+        if(RegitrationEvent){
+        RegitrationEvent?.addEventListener("click", async ()=>{
+        await axios.post(`${apiUrl}/api/data/registration-event`, {
+                  token: userToken,
+                  idUser: userId,
+                  idEvent : point._id,
+        }).then((data) => {
+                  console.log(data);
+                   refreshPoints();
+                });
+            });}
+            
+              const deRegitrationEvent = document.getElementById("deregistrationevent");
+        if(deRegitrationEvent){
+        deRegitrationEvent?.addEventListener("click", async ()=>{
+        await axios.post(`${apiUrl}/api/data/deregistration-event`, {
+                  token: userToken,
+                  idUser: userId,
+                  idEvent : point._id,
+        
+        }).then((data) => {
+                  refreshPoints();
+                  console.log(data);
+                });
+            })} ;
+
+           
+        
+          
+        
 
           const routeIcon = document.querySelector(".fa-route");
           routeIcon?.addEventListener("click", async () => {
@@ -729,51 +1039,55 @@ function switchLikeUser(user, lovers, haters) {
           });
 
           const reportIcon = document.getElementById("reportPoint");
-            reportIcon?.addEventListener("click", async () => {
+          reportIcon?.addEventListener("click", async () => {
             closePopup();
-            showModalReportPointFirstStep = true
+            showModalReportPointFirstStep = true;
           });
-          
-       });
-    });
+        });
+      });
     }
     createMarkerAndBindEvents(groupMarkersEvents, markersLayerEvents);
     createMarkerAndBindEvents(groupMarkersEuropeene, markersLayerEuropeene);
     createMarkerAndBindEvents(groupMarkersAmericaine, markersLayerAmericaine);
     createMarkerAndBindEvents(groupMarkersCampingCar, markersLayerCampingCar);
   };
+
+  const reportPointConfirm = async () => {
+    const commentTextarea = document.getElementById("commentReport");
+    commentReport = commentTextarea.value;
+    await axios
+      .post(`${apiUrl}/api/report/reportPoint`, {
+        idPoint: selectedMarker,
+        idUser: userId,
+        comment: commentReport,
+      })
+      .then((res, err) => {
+        if (res) {
+          showModalReportPointTwoStep = !showModalReportPointTwoStep;
+          commentReport = "";
+          showModalReportPointConfirm = true;
+          closePopUpTimer();
+        }
+      })
+      .catch((err) => {
+        closePopup();
+        showModalReportPointError = true;
+        closePopUpTimerError();
+        console.log(err);
+      });
+  };
   
-  const reportPointConfirm = async () =>{
-              const commentTextarea = document.getElementById("commentReport");
-              commentReport = commentTextarea.value
-              await axios.post(`${apiUrl}/api/report/reportPoint`, {
-              idPoint: selectedMarker,
-              idUser: userId,
-              comment : commentReport,
-              
-              }).then((res,err)=>{
-              if (res){
-              showModalReportPointTwoStep= !showModalReportPointTwoStep
-              commentReport = ""
-              showModalReportPointConfirm = true
-              closePopUpTimer()
-              }
-              })
-              .catch((err) => {
-               closePopup()
-              showModalReportPointError = true
-               closePopUpTimerError()
-                console.log(err);
-              });    
-    }
- 
-    
+  
+
+
   const closePopup = () => {
     map.closePopup();
     showModalAddPoint = false;
     showModalAskAction = false;
     showModalModifyInfo = false;
+    showModalModifyInfoEvent = false;
     showConfirmDelete = false;
+    showConfirmDeleteEvent = false;
     showModalFilter = false;
     showModalSettings = false;
     showModalEvents = false;
@@ -792,23 +1106,21 @@ function switchLikeUser(user, lovers, haters) {
     showModalAnimation = false;
   };
 
-  const closePopUpTimer = () =>{
-  setTimeout(()=>{
-  closePopup()
-  },2000)
-  }
+  const closePopUpTimer = () => {
+    setTimeout(() => {
+      closePopup();
+    }, 2000);
+  };
 
-  const closePopUpTimerError = () =>{
-  setTimeout(()=>{
-  closePopup()
-  },4000)
-  }
+  const closePopUpTimerError = () => {
+    setTimeout(() => {
+      closePopup();
+    }, 4000);
+  };
 
- const reopenModaleEvent = () =>{
- showModalCreateEvent = true
- 
- }
-
+  const reopenModaleEvent = () => {
+    showModalCreateEvent = true;
+  };
 
   const addPoint = () => {
     namePointInput = "";
@@ -829,7 +1141,6 @@ function switchLikeUser(user, lovers, haters) {
   };
 
   const createEvent = async () => {
-
     closePopup();
     var iframeString = iframeEventInput;
     var srcRegex = /src="([^"]+)"/;
@@ -839,11 +1150,11 @@ function switchLikeUser(user, lovers, haters) {
     } else {
       console.log("Aucune correspondance trouvée pour l'attribut 'src'");
     }
-    
+
     // function isValidDate(date) {
     //    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
     // return new Date(date).toLocaleDateString(undefined, options);
-  
+
     // }
     // function isValidTime(time) {
     //   const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -864,14 +1175,13 @@ function switchLikeUser(user, lovers, haters) {
     function isValidDistance(distance) {
       return !isNaN(parseFloat(distance)) && isFinite(distance);
     }
- 
+
     const formatDate = (date) => {
       const dd = String(date.getDate()).padStart(2, "0");
       const mm = String(date.getMonth() + 1).padStart(2, "0");
       const yyyy = date.getFullYear();
       return `${dd}/${mm}/${yyyy}`;
     };
-
 
     const isTimeAfterCurrentTime = (time) => {
       const [hour, minute] = time.split(":");
@@ -889,6 +1199,8 @@ function switchLikeUser(user, lovers, haters) {
         "nameEventInput",
         "descriptionEventInput",
         "distanceEventInput",
+        "participationFee",
+        "descriptionAnimation",
         "startDateEventInput",
         "endDateEventInput",
         "startHourEventInput",
@@ -915,7 +1227,6 @@ function switchLikeUser(user, lovers, haters) {
     }
 
     try {
-
       const distance = parseFloat(distanceEventInput);
 
       if (!isValidDistance(distance)) {
@@ -923,59 +1234,60 @@ function switchLikeUser(user, lovers, haters) {
         showIconPanel = false;
         showModalCreateEvent = true;
       } else if (
-          new Date(startDateEventInput).getDate() === new Date().getDate() &&
-          !isTimeAfterCurrentTime(startHourEventInput)
-
+        new Date(startDateEventInput).getDate() === new Date().getDate() &&
+        !isTimeAfterCurrentTime(startHourEventInput)
       ) {
         alert("La date de début doit être postérieure à la date actuelle");
         showIconPanel = false;
         showModalCreateEvent = true;
-      } else if (!isTimeAfterCurrentTime(startHourEventInput)) {
+      } else if (!isTimeAfterCurrentTime(startHourEventInput) && new Date(startDateEventInput).getDate() === new Date().getDate()) {
         alert("L'heure de début doit être postérieure à l'heure actuelle");
         showIconPanel = false;
         showModalCreateEvent = true;
       } else {
-        const res = await axios.post(`${apiUrl}/api/data/create-event`, {
-          token : userToken,
-          idUser : userId,
-          createdBy: userPseudo ,
-          email: userMail,
-          eventName: nameEventInput,
-          eventDescription: descriptionEventInput,
-          eventInformations: informationsEventInput,
-          participation: participationFee,
-          animationDescription : animationDescription,
-          coords: {
-            lat: coordsToAddPoint.lat,
-            lng: coordsToAddPoint.lng,
-          },
-          distance: distanceEventInput,
-          iframe: iframeLink,
-          startDate: formatDate(new Date(startDateEventInput)),
-          endDate: formatDate(new Date(endDateEventInput)),
-          startHour: startHourEventInput,
-          addedDate: new Date(),
-          needValiate: true,
-        }).then((res)=>{
-        if (res){
-        alert("Événement créé avec succès");
-        nameEventInput = "";
-        hasAnimation = false;
-        descriptionEventInput = "";
-        distanceEventInput = "";
-        participationFee = "";
-        animationDescription = "";
-        startDateEventInput = "";
-        endDateEventInput = "";
-        startHourEventInput = "";
-        iframeEventInput = "";
-        informationsEventInput = "";
-        refreshPoints();
-        closePopup();
-        }
-     })
+        const res = await axios
+          .post(`${apiUrl}/api/data/create-event`, {
+            token: userToken,
+            idUser: userId,
+            createdBy: userPseudo,
+            email: userMail,
+            eventName: nameEventInput,
+            eventDescription: descriptionEventInput,
+            eventInformations: informationsEventInput,
+            participation: participationFee,
+            animationDescription: animationDescription,
+            coords: {
+              lat: coordsToAddPoint.lat,
+              lng: coordsToAddPoint.lng,
+            },
+            distance: distanceEventInput,
+            iframe: iframeLink,
+            startDate: formatDate(new Date(startDateEventInput)),
+            endDate: formatDate(new Date(endDateEventInput)),
+            startHour: startHourEventInput,
+            addedDate: new Date(),
+            needValiate: true,
+          })
+          .then((res) => {
+            if (res) {
+              alert("Événement créé avec succès");
+              nameEventInput = "";
+              hasAnimation = false;
+              hasInscription = false;
+              descriptionEventInput = "";
+              distanceEventInput = "";
+              participationFee = "";
+              animationDescription = "";
+              startDateEventInput = "";
+              endDateEventInput = "";
+              startHourEventInput = "";
+              iframeEventInput = "";
+              informationsEventInput = "";
+              refreshPoints();
+              closePopup();
+            }
+          });
       }
-
     } catch (err) {
       console.error(err);
       alert(
@@ -1027,6 +1339,7 @@ function switchLikeUser(user, lovers, haters) {
     eventInformations,
     participationFee,
     descriptionAnimation,
+    registration,
     distance,
     iframe,
     coords,
@@ -1039,6 +1352,7 @@ function switchLikeUser(user, lovers, haters) {
     selectedEventInformations = eventInformations;
     selectedEventDescriptionAnimation = descriptionAnimation;
     selectedEventParticipationFee = participationFee;
+    selectedEventRegistration = registration;
     selectedEventCreatedBy = createdBy;
     selectedEventEmail = email;
     selectedEventDistance = distance;
@@ -1075,37 +1389,37 @@ function switchLikeUser(user, lovers, haters) {
     showIconPanel = false;
   };
 
- 
-
-
   const submitInfoPoint = async (lat, lng) => {
-    await axios.post(`${apiUrl}/api/data/add-point`, {
-      token: userToken,
-      idUser: userId ,
-      email: userMail,
-      pointName: namePointInput,
-      pointDescription: descriptionPointInput,
-      coords: {
-        lat: coordsToAddPoint.lat,
-        lng: coordsToAddPoint.lng,
-      },
-      addedBy: localStorage.getItem("username"),
-      priseType: typePrise,
-      addedDate: new Date(),
-      needValiate: true,
-    }).then(() => {
-    namePointInput = "";
-    descriptionPointInput = ""
-    typePrise = "";
-    // oldType = "";
-    refreshPoints();
-    closePopup();
-    enableToPlace = false;
-    }).catch((err) => {
-    closePopup();
-    showModalReportPointError = true;
-    closePopUpTimerError();
-    });
+    await axios
+      .post(`${apiUrl}/api/data/add-point`, {
+        token: userToken,
+        idUser: userId,
+        email: userMail,
+        pointName: namePointInput,
+        pointDescription: descriptionPointInput,
+        coords: {
+          lat: coordsToAddPoint.lat,
+          lng: coordsToAddPoint.lng,
+        },
+        addedBy: localStorage.getItem("username"),
+        priseType: typePrise,
+        addedDate: new Date(),
+        needValiate: true,
+      })
+      .then(() => {
+        namePointInput = "";
+        descriptionPointInput = "";
+        typePrise = "";
+        // oldType = "";
+        refreshPoints();
+        closePopup();
+        enableToPlace = false;
+      })
+      .catch((err) => {
+        closePopup();
+        showModalReportPointError = true;
+        closePopUpTimerError();
+      });
   };
 
   const confirmModify = async () => {
@@ -1119,16 +1433,17 @@ function switchLikeUser(user, lovers, haters) {
         priseType: typePrise,
       })
       .then(async (res) => {
-      typePrise = "";
-      // oldType = ""
+        typePrise = "";
+        // oldType = ""
         await refreshPoints();
         showModalModifyInfo = false;
       })
       .catch((err) => {
         console.log(err);
       });
-  };
-
+  }; 
+  
+ 
   const confirmDelete = async () => {
     await axios.post(`${apiUrl}/api/data/delete-point`, {
       token: userToken,
@@ -1138,6 +1453,18 @@ function switchLikeUser(user, lovers, haters) {
     await refreshPoints();
     showConfirmDelete = false;
   };
+  
+   const confirmDeleteEvent = async () => {
+    await axios.post(`${apiUrl}/api/data/delete-event`, {
+      token: userToken,
+      idUser: userId,
+      eventId: selectedMarker._id,
+    });
+    await refreshPoints();
+    showConfirmDeleteEvent = false;
+  };
+
+
 
   const showFilter = () => {
     showModalFilter = !showModalFilter;
@@ -1147,7 +1474,7 @@ function switchLikeUser(user, lovers, haters) {
   let isEndDateInput = false;
   let isStartHourInput = false;
   let activeInput = null;
-  
+
   function toggleStartDateInput() {
     isStartDateInput = true;
   }
@@ -1159,27 +1486,25 @@ function switchLikeUser(user, lovers, haters) {
   function toggleStartHourInput() {
     isStartHourInput = true;
   }
-  
-    function formatDate(dateString) {
+
+  function formatDate(dateString) {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Les mois sont indexés à partir de 0
     const year = date.getFullYear().toString();
     return `${day}/${month}/${year}`;
   }
-  
 
-function isDateValid(inputDate) {
-
+  function isDateValid(inputDate) {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    const inputDateObj = new Date(inputDate)
+    today.setHours(0, 0, 0, 0);
+    const inputDateObj = new Date(inputDate);
     if (inputDateObj < today) {
-        return false;
+      return false;
     } else {
-        return true;
+      return true;
     }
-}
+  }
 
   $: formattedStartDate = formatDate(startDateEventInput);
   $: formattedEndDate = formatDate(endDateEventInput);
@@ -1288,8 +1613,7 @@ function isDateValid(inputDate) {
       showEvents = showEventsLocalStorage === "true" ? true : false;
       showEventsLocalStorage === "true"
         ? markersLayerEvents.addTo(map)
-        : markersLayerEvents.removeFrom(map)
-
+        : markersLayerEvents.removeFrom(map);
     }
   });
 </script>
@@ -1380,6 +1704,47 @@ function isDateValid(inputDate) {
     <p style="max-width:90vw">
       Infos : {selectedEventInformations}
     </p>
+    {#if selectedEventParticipationFee !== undefined}
+      <div style="display: flex; flex-direction: column; align-items: center; ">
+        <h3 style="display: flex; align-items: center;color:red;">
+          <i
+            class="fa-solid fa-triangle-exclamation"
+            style="margin-right: 8px;"
+          />
+          <span>Evenement Payant</span>
+        </h3>
+        <p>Participation : {selectedEventParticipationFee} €</p>
+        <p>Animation : {selectedEventDescriptionAnimation}</p>
+        <p>
+          <span>Vous inscrire :</span>
+          <input
+            type="checkbox"
+            id="inscription"
+            name="inscription"
+            value="inscription"
+            bind:checked={hasInscription}
+          />
+          {#if hasInscription === true}
+            <div
+              class="animation-dropdown"
+              style="display: flex; flex-direction: column; align-items: center; "
+            >
+              <input
+                type="number"
+                min="0"
+                placeholder="Je participe à combien ?"
+                bind:value={userParticipationFee}
+              />
+              <textarea
+                placeholder="J'apporte quoi ?"
+                rows="4"
+                bind:value={giveDescription}
+              />
+            </div>
+          {/if}
+        </p>
+      </div>
+    {/if}
     {#if selectedEventIframe && selectedEventIframe.includes("https://www.google.com/maps/")}
       <iframe
         id="route-viewer"
@@ -1404,6 +1769,7 @@ function isDateValid(inputDate) {
     </p>
 
     <p>Créer par : {selectedEventCreatedBy}</p>
+    <!-- <button on:click={inscriptionEvent}>Je participe</button>  -->
   </div>
 {/if}
 <div id="filter" />
@@ -1434,20 +1800,23 @@ function isDateValid(inputDate) {
       <p>Veuillez recommencer dans un moment</p>
       <p>Si le probleme persiste contacter le support</p>
     </div>
-    
+
     <div />
   </div>
 {/if}
 
 {#if showModalReportPointFirstStep}
-
   <div id="container-remove-point">
     <div>
       <p>Voulez vous signaler ce point ?</p>
     </div>
     <div id="action-delete">
-      <button type="submit" id="confirm-delete" on:click={() => { closePopup(), showModalReportPointTwoStep = true}}
-        >Oui</button
+      <button
+        type="submit"
+        id="confirm-delete"
+        on:click={() => {
+          closePopup(), (showModalReportPointTwoStep = true);
+        }}>Oui</button
       >
       <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
       >
@@ -1459,24 +1828,23 @@ function isDateValid(inputDate) {
 {#if showModalReportPointTwoStep}
   <div id="container-remove-point">
     <div>
-      <p>Quel est la raison ? </p>
+      <p>Quel est la raison ?</p>
     </div>
     <div>
-    <textarea id="commentReport" maxlength="200" >
-    </textarea>
+      <textarea id="commentReport" maxlength="200" />
     </div>
-    
+
     <div id="action-delete">
       <button type="submit" id="confirm-delete" on:click={reportPointConfirm}
         >Confirmer</button
       >
-      <button type="submit" id="cancel-delete" on:click={closePopup}>Annuler</button
+      <button type="submit" id="cancel-delete" on:click={closePopup}
+        >Annuler</button
       >
     </div>
     <div />
   </div>
 {/if}
-
 
 {#if showModalReportPointConfirm}
   <div id="container-remove-point">
@@ -1522,7 +1890,7 @@ function isDateValid(inputDate) {
     <h2 style="color:white; ">Événements à venir :</h2>
 
     <div id="list-events">
-      {#each allEvents as { createdBy, email, eventName, eventInformations, eventDescription,  animationDescription,participation,distance, iframe, coords, startDate, endDate, startHour }, i}
+      {#each allEvents as { createdBy, email, eventName, eventInformations, eventDescription, animationDescription, participation, distance, iframe, coords, startDate, endDate, startHour }, i}
         <div
           on:click={showEventDetails(
             createdBy,
@@ -1546,11 +1914,10 @@ function isDateValid(inputDate) {
           <h3>{startDate} - {endDate}</h3>
           <h3>Départ : {startHour}</h3>
           <div>
-          attention event avec animation :
-          {animationDescription}
-          Prix: 
-          {participation}
-          
+            attention event avec animation :
+            {animationDescription}
+            Prix:
+            {participation}
           </div>
         </div>
       {/each}
@@ -1602,7 +1969,6 @@ function isDateValid(inputDate) {
 
 {#if showModalAccountSettings}
   <div id="container-account-settings">
-
     <i class="fa-solid fa-xmark" on:click={closePopup} />
     <div id="header-account-settings">
       <img
@@ -1612,7 +1978,6 @@ function isDateValid(inputDate) {
         srcset=""
       />
       <i class="fa-solid fa-pen" id="modify-image-settings" />
-
 
       <br />
       <div id="pseudo-account-settings">
@@ -1641,31 +2006,30 @@ function isDateValid(inputDate) {
     </div>
     <div id="footer-account-settings" />
     <p style="color:red ; margin:0; cursor:pointer;">Supprimer mon compte</p>
+  </div>
+  <i class="fa-solid fa-xmark" on:click={closePopup} />
 
-    </div>
-    <i class="fa-solid fa-xmark" on:click={closePopup} />
+  <div id="pseudo-account-settings">
+    <h2>{userPseudo}</h2>
+    <i
+      class="fa-solid fa-pen"
+      id="modify-pseudo-settings"
+      on:click={askNewUsername}
+    />
+  </div>
+  <div id="action-account-settings">
+    <p style="margin:0 cursor:pointer" on:click={contactSupport}>
+      Contacter le support
+    </p>
+    <p style="cursor:pointer" on:click={logout}>Déconnexion</p>
 
-    <div id="pseudo-account-settings">
-      <h2>{userPseudo}</h2>
-      <i
-        class="fa-solid fa-pen"
-        id="modify-pseudo-settings"
-        on:click={askNewUsername}
-      />
-    </div>
-    <div id="action-account-settings">
-      <p style="margin:0 cursor:pointer" on:click={contactSupport}>
-        Contacter le support
-      </p>
-      <p style="cursor:pointer" on:click={logout}>Déconnexion</p>
-
-      <p
-        style="color:red ; margin:0; cursor:pointer;"
-        on:click={confirmDeleteAccount}
-      >
-        Supprimer mon compte
-      </p>
-    </div>
+    <p
+      style="color:red ; margin:0; cursor:pointer;"
+      on:click={confirmDeleteAccount}
+    >
+      Supprimer mon compte
+    </p>
+  </div>
   <!-- </div> -->
 {/if}
 
@@ -1709,7 +2073,6 @@ function isDateValid(inputDate) {
       >
     </div>
     <div />
-
   </div>
 {/if}
 
@@ -1720,6 +2083,23 @@ function isDateValid(inputDate) {
     </div>
     <div id="action-delete">
       <button type="submit" id="confirm-delete" on:click={confirmDelete}
+        >Oui</button
+      >
+      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
+      >
+    </div>
+    <div />
+  </div>
+{/if}
+
+
+{#if showConfirmDeleteEvent}
+  <div id="container-remove-point">
+    <div>
+      <p>Voulez vous vraiment supprimer cet event ?</p>
+    </div>
+    <div id="action-delete">
+      <button type="submit" id="confirm-delete" on:click={confirmDeleteEvent}
         >Oui</button
       >
       <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
@@ -1753,14 +2133,10 @@ function isDateValid(inputDate) {
         bind:value={descriptionPointInput}
       />
       <select bind:value={typePrise} required id="type-prise">
-        <option
-          value=""
-          style="color:grey"
-          disabled
-          selected
-          hidden>{oldType}</option
+        <option value="" style="color:grey" disabled selected hidden
+          >{oldType}</option
         >
-        
+
         <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -1783,6 +2159,202 @@ function isDateValid(inputDate) {
     </div>
   </div>
 {/if}
+
+
+
+
+{#if showModalModifyInfoEvent}
+ <div id="container-create-event">
+    <i class="fa-solid fa-xmark" on:click={closePopup} />
+    <div id="champ-text-add-point">
+      <input
+        autocomplete="off"
+        placeholder="Nom"
+        type="text"
+        name="nameEvent"
+        id="nameEventInput"
+        required
+        bind:value={nameEventInput}
+      />
+      <input
+        autocomplete="off"
+        placeholder="Description (optionnel)"
+        type="text"
+        name="descriptionEvent"
+        id="descriptionEventInput"
+        bind:value={descriptionEventInput}
+      />
+      <label>
+        Animation :
+        <input type="checkbox" bind:checked={hasAnimation} />
+        {#if hasAnimation}
+          <div class="animation-dropdown">
+            <input
+              type="number"
+              placeholder="Frais de participation"
+              bind:value={participationFee}
+            />
+            <textarea
+              placeholder="Description de l'événement"
+              rows="4"
+              bind:value={animationDescription}
+            />
+          </div>
+        {/if}
+      </label>
+      <input
+        autocomplete="off"
+        placeholder="Distance (en Km)"
+        type="number"
+        name="distanceEvent"
+        id="distanceEventInput"
+        min="0"
+        bind:value={distanceEventInput}
+      />
+      {#if !isStartDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date début"
+          type="text"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:click={toggleStartDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:blur={() => {
+            isStartDateInput = false;
+            if (!isDateValid(startDateEventInput)) {
+              startDateEventInput = "";
+              alert("La date doit être supérieure à la date du jour");
+            }
+          }}
+        />
+      {/if}
+
+      {#if !isEndDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date fin"
+          type="text"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:click={toggleEndDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:blur={() => {
+            isEndDateInput = false;
+            if (!isDateValid(endDateEventInput)) {
+              endDateEventInput = "";
+              alert("La date doit être supérieure à la date du jour");
+            } else if (
+              new Date(endDateEventInput) < new Date(startDateEventInput)
+            ) {
+              endDateEventInput = "";
+              alert(
+                "La date de fin doit être supérieure ou égale à la date de début"
+              );
+            }
+          }}
+        />
+      {/if}
+
+      {#if !isStartHourInput}
+        <input
+          autocomplete="off"
+          placeholder="Heure du départ (hh:mm)"
+          type="text"
+          name="startHourEvent"
+          id="startHourEventInput"
+          bind:value={startHourEventInput}
+          on:click={toggleStartHourInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="time"
+          name="startHourEvent"
+          id="startHourEventInput"
+          bind:value={startHourEventInput}
+          on:blur={() => (isStartHourInput = false)}
+        />
+      {/if}
+      <div id="iframe-line">
+        <input
+          autocomplete="off"
+          placeholder="iframe itinéraire (optionnel)"
+          type="text"
+          name="iframeEvent"
+          id="iframeEventInput"
+          bind:value={iframeEventInput}
+        />
+        <p id="help-iframe" on:click={helpIframe}>(?)</p>
+      </div>
+      <textarea
+        placeholder="Informations (optionnel)"
+        id="more-info-event"
+        name="story"
+        rows="5"
+        cols="33"
+        bind:value={informationsEventInput}
+      />
+        </div>
+    <div id="form'action">
+      <button
+        type="submit"
+        id="add-point-btn"
+        style="color:black"
+        on:click={modifytestEvent}>Modifier</button
+      >
+      <button
+        type="submit"
+        id="cancel-add-point-btn"
+        style="background-color: var(--red-error); width: 100%;"
+        on:click={closePopup}>Annuler</button
+      >
+    </div>
+    </div>
+    <!-- <div id="form'action">
+      <button
+        type="submit"
+        id="add-point-btn"
+        style="color:black"
+        on:click={createEvent}>Créer l'évenement</button
+      >
+    </div> -->
+
+  
+{/if}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 {#if showModalAddPoint}
   <div id="container-add-info-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
@@ -1806,8 +2378,8 @@ function isDateValid(inputDate) {
       />
       <select bind:value={typePrise} required id="type-prise">
         <option value="" style="color:grey" disabled selected hidden
-           >Type de prise</option
-        > 
+          >Type de prise</option
+        >
         <option style="color : black" value="Européenne">Européenne</option>
         <option style="color : black" value="Prise camping-car"
           >Prise camping-car</option
@@ -1848,24 +2420,21 @@ function isDateValid(inputDate) {
       />
       <label>
         Animation :
-        <input
-          type="checkbox"
-          bind:checked={hasAnimation}
-        />
-      {#if hasAnimation}
-        <div class="animation-dropdown">
-          <input
-            type="number"
-            placeholder="Frais de participation"
-            bind:value={participationFee}
-          />
-          <textarea
-            placeholder="Description de l'événement"
-            rows="4"
-            bind:value={animationDescription}
-          />
-        </div>
-      {/if}
+        <input type="checkbox" bind:checked={hasAnimation} />
+        {#if hasAnimation}
+          <div class="animation-dropdown">
+            <input
+              type="number"
+              placeholder="Frais de participation"
+              bind:value={participationFee}
+            />
+            <textarea
+              placeholder="Description de l'événement"
+              rows="4"
+              bind:value={animationDescription}
+            />
+          </div>
+        {/if}
       </label>
       <input
         autocomplete="off"
@@ -1873,65 +2442,69 @@ function isDateValid(inputDate) {
         type="number"
         name="distanceEvent"
         id="distanceEventInput"
-        min="0" 
+        min="0"
         bind:value={distanceEventInput}
       />
-     {#if !isStartDateInput}
-  <input
-    autocomplete="off"
-    placeholder="Date début"
-    type="text"
-    name="startDateEvent"
-    id="startDateEventInput"
-    bind:value={startDateEventInput}
-    on:click={toggleStartDateInput}
-  />
-{:else}
-  <input
-    autocomplete="off"
-    type="date"
-    name="startDateEvent"
-    id="startDateEventInput"
-    bind:value={startDateEventInput}
-    on:blur={() => {
-      isStartDateInput = false;
-      if (!isDateValid(startDateEventInput)) {
-        startDateEventInput = '';
-        alert('La date doit être supérieure à la date du jour');
-      }
-    }}
-  />
-{/if}
+      {#if !isStartDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date début"
+          type="text"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:click={toggleStartDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="startDateEvent"
+          id="startDateEventInput"
+          bind:value={startDateEventInput}
+          on:blur={() => {
+            isStartDateInput = false;
+            if (!isDateValid(startDateEventInput)) {
+              startDateEventInput = "";
+              alert("La date doit être supérieure à la date du jour");
+            }
+          }}
+        />
+      {/if}
 
-{#if !isEndDateInput}
-  <input
-    autocomplete="off"
-    placeholder="Date fin"
-    type="text"
-    name="endDateEvent"
-    id="endDateEventInput"
-    bind:value={endDateEventInput}
-    on:click={toggleEndDateInput}
-  />
-{:else}
-  <input
-    autocomplete="off"
-    type="date"
-    name="endDateEvent"
-    id="endDateEventInput"
-    bind:value={endDateEventInput}
-    on:blur={() => {
-      isEndDateInput = false;
-      if (!isDateValid(endDateEventInput)) {
-        endDateEventInput = '';
-        alert('La date doit être supérieure à la date du jour');
-      } else if (new Date(endDateEventInput) < new Date(startDateEventInput)) {
-        endDateEventInput = '';
-        alert('La date de fin doit être supérieure ou égale à la date de début');
-      }
-    }}
-  />
-{/if}
+      {#if !isEndDateInput}
+        <input
+          autocomplete="off"
+          placeholder="Date fin"
+          type="text"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:click={toggleEndDateInput}
+        />
+      {:else}
+        <input
+          autocomplete="off"
+          type="date"
+          name="endDateEvent"
+          id="endDateEventInput"
+          bind:value={endDateEventInput}
+          on:blur={() => {
+            isEndDateInput = false;
+            if (!isDateValid(endDateEventInput)) {
+              endDateEventInput = "";
+              alert("La date doit être supérieure à la date du jour");
+            } else if (
+              new Date(endDateEventInput) < new Date(startDateEventInput)
+            ) {
+              endDateEventInput = "";
+              alert(
+                "La date de fin doit être supérieure ou égale à la date de début"
+              );
+            }
+          }}
+        />
+      {/if}
 
       {#if !isStartHourInput}
         <input
@@ -2016,36 +2589,7 @@ function isDateValid(inputDate) {
   </section>
 {/if}
 
-// <!-- {#if showModalAnimation}
-//   <div id="container-add-info-point">
 
-//     <i class="fa-solid fa-xmark" on:click={() => { closePopup(), showModalCreateEvent = true,hasAnimation = false}} />
-//     <p>Que souhaitez vous faire ?</p>
-
-//      <textarea
-//       bind:value={animationDescription}
-//       placeholder="Entrez une description (max 200 caractères)"
-//       rows="4"
-//       maxlength="200"
-//     />
-//      <input
-//           autocomplete="off"
-//           placeholder="Frais de particip"
-//           type="text"
-//           name="costDiner"
-//           id="costDiner"
-//           bind:value={participationFee}
-//         />
-//       <div id="action-delete">
-//       <button type="submit" id="confirm-delete" on:click={() => { closePopup(), showModalCreateEvent = true}}
-//         >Confirmer</button
-//       >
-//       <button type="submit" id="cancel-delete" on:click={() => { closePopup(), showModalCreateEvent = true , hasAnimation = false}}>Annuler</button
-//       >
-//     </div>
-     
-//   </div>
-// {/if} -->
 
 <style>
   #container-account-settings {

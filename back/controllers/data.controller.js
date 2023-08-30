@@ -456,6 +456,7 @@ module.exports.modifyEvent = async (req, res) => {
         return res.json({ msg: "User not found", status: false });
       } else {
         const {
+          idEventToUpdate,
           createdBy,
           email,
           idUser = user._id,
@@ -478,8 +479,8 @@ module.exports.modifyEvent = async (req, res) => {
         if (!checkUser) {
           return res.status(404).json({ message: "Utilisateur non trouvé" });
         } else {
-          const updatedEvent = await eventsModel.findOneAndUpdate(
-            { _id: idEventToUpdate }, 
+          const updatedEvent = await eventsModel.findByIdAndUpdate(
+           idEventToUpdate , 
             {
               createdBy,
               email,
@@ -534,14 +535,14 @@ module.exports.modifyEvent = async (req, res) => {
 
 module.exports.deleteEvent = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
-  const eventIdToDelete = req.params.eventId; // Assurez-vous de passer l'ID de l'événement dans les paramètres de l'URL
+  const eventIdToDelete = req.body.eventId; // Assurez-vous de passer l'ID de l'événement dans les paramètres de l'URL
 
   eventsModel.findOneAndDelete({ _id: eventIdToDelete })
     .then((deletedEvent) => {
       if (!deletedEvent) {
         return res.status(404).json({ message: "Événement non trouvé" });
       }
-      res.json({ message: "Événement supprimé avec succès", event: deletedEvent });
+      res.status(200).json({ message: "Événement supprimé avec succès"});
     })
     .catch((error) => res.status(500).json({ message: "Erreur lors de la suppression de l'événement", error: error.message }));
   }else{
@@ -588,6 +589,46 @@ module.exports.dislikePoint = async (req, res) => {
         });
       }
     });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};
+
+
+module.exports.registrationEvent = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") { 
+    eventsModel.findByIdAndUpdate(req.body.idEvent, { $push: { registration: req.body.idUser } }, (err, result) => {
+      if (!err) {
+       console.log(result);
+        res.status(200).json({ message: "Inscription à l'event réussi", result: result });
+      }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};
+
+
+module.exports.deregistrationEvent = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") {
+    eventsModel.findByIdAndUpdate(req.body.idEvent, { $pull: { registration: req.body.idUser } }, (err, result) => {
+     if(!err){
+       console.log(result);
+      res.status(200).json({ message: "Inscription à l'event réussi", result: result });
+     }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+
+};
+module.exports.registrationDetailEvent = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") { 
+  
+  
+  
+  
+  
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
