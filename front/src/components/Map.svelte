@@ -584,8 +584,9 @@
             ? point.pointDescription
             : ""
         }</p>
-       ${animationEvent()}
-       
+
+       ${point.eventName ? animationEvent() : ""}
+
         ${
           point.eventName
             ? `
@@ -2924,7 +2925,7 @@
     z-index: 99999;
     position: absolute;
     right: 10px;
-    top: 10px;
+    top: 80px;
     width: 30px;
     background-color: var(--dark-blue-color);
     padding: 1rem;
@@ -2933,7 +2934,6 @@
   }
 
   #settings-icon {
-    display: none;
     z-index: 99999;
     position: absolute;
     right: 10px;
