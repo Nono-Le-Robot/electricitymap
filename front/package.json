@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w --host --port 5000",
+    "dev": "rollup -c -w --host --port 8080",
     "start": "sirv public --no-clear",
     "deploy": "node deploy.js"
   },

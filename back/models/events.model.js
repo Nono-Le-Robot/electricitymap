@@ -5,7 +5,7 @@ const eventSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  idUser:{
+  idUser: {
     type: String,
     required: true,
   },
@@ -15,11 +15,25 @@ const eventSchema = new mongoose.Schema({
   },
   eventDescription: {
     type: String,
-    default: "",
   },
+  animationDescription : {
+      type: String,
+  },
+  participation: {
+      type: Number,
+  },
+  registration: [
+    String,
+  ],
+  participantsDetails: [{
+    Fee: { type: String, },
+    username: { type: String, },
+    userId: { type: String, },
+    comment: { type: String, },
+  }
+  ],
   eventInformations: {
     type: String,
-    default: "",
   },
   coords: {
     lat: {
@@ -66,10 +80,6 @@ const eventSchema = new mongoose.Schema({
     required: true,
 
     default: true,
-  },
-  reports: {
-    type: Number,
-    default: 0,
   },
 });
 

@@ -376,12 +376,16 @@ module.exports.createEvent = async (req, res) => {
         return res.json({ msg: "User not found", status: false });
       } else {
         const {
+          token,
+          idUser,
           createdBy,
           email,
-          idUser = user._id,
+          // idUser = user._id,
           eventName,
           eventDescription,
           eventInformations,
+          participation,
+          animationDescription,
           coords,
           distance,
           iframe,
@@ -404,6 +408,8 @@ module.exports.createEvent = async (req, res) => {
             eventName,
             eventDescription,
             eventInformations,
+            participation,
+            animationDescription,
             coords,
             distance,
             iframe,
@@ -422,6 +428,8 @@ module.exports.createEvent = async (req, res) => {
               eventName: newEvent.eventName,
               eventDescription: newEvent.eventDescription,
               eventInformations: newEvent.eventInformations,
+              participation : newEvent.participation,
+              animationDescription: newEvent.animationDescription,
               coords: newEvent.coords,
               distance: newEvent.distance,
               iframe: newEvent.iframe,
@@ -448,12 +456,15 @@ module.exports.modifyEvent = async (req, res) => {
         return res.json({ msg: "User not found", status: false });
       } else {
         const {
+          idEventToUpdate,
           createdBy,
           email,
           idUser = user._id,
           eventName,
           eventDescription,
           eventInformations,
+          participation,
+          animationDescription,
           coords,
           distance,
           iframe,
@@ -468,8 +479,8 @@ module.exports.modifyEvent = async (req, res) => {
         if (!checkUser) {
           return res.status(404).json({ message: "Utilisateur non trouvé" });
         } else {
-          const updatedEvent = await eventsModel.findOneAndUpdate(
-            { _id: idEventToUpdate }, 
+          const updatedEvent = await eventsModel.findByIdAndUpdate(
+           idEventToUpdate , 
             {
               createdBy,
               email,
@@ -477,7 +488,8 @@ module.exports.modifyEvent = async (req, res) => {
               eventName,
               eventDescription,
               eventInformations,
-              coords,
+              participation,
+              animationDescription,
               distance,
               iframe,
               startDate,
@@ -495,18 +507,20 @@ module.exports.modifyEvent = async (req, res) => {
           res.json({
             message: "Event créer avec succées",
             event: {
-              createdBy: newEvent.createdBy,
-              email: newEvent.email,
-              eventName: newEvent.eventName,
-              eventDescription: newEvent.eventDescription,
-              eventInformations: newEvent.eventInformations,
-              coords: newEvent.coords,
-              distance: newEvent.distance,
-              iframe: newEvent.iframe,
-              startDate: newEvent.startDate,
-              endDate: newEvent.endDate,
-              addedDate: newEvent.addedDate,
-              needValidate: newEvent.needValidate,
+              createdBy: updatedEvent.createdBy,
+              email: updatedEvent.email,
+              eventName: updatedEvent.eventName,
+              eventDescription: updatedEvent.eventDescription,
+              eventInformations: updatedEvent.eventInformations,
+              participation: updatedEvent.participation,
+              animationDescription: updatedEvent.animationDescription,
+              coords: updatedEvent.coords,
+              distance: updatedEvent.distance,
+              iframe: updatedEvent.iframe,
+              startDate: updatedEvent.startDate,
+              endDate: updatedEvent.endDate,
+              addedDate: updatedEvent.addedDate,
+              needValidate: updatedEvent.needValidate,
             },
           });
         }
@@ -521,17 +535,101 @@ module.exports.modifyEvent = async (req, res) => {
 
 module.exports.deleteEvent = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
-  const eventIdToDelete = req.params.eventId; // Assurez-vous de passer l'ID de l'événement dans les paramètres de l'URL
+  const eventIdToDelete = req.body.eventId; // Assurez-vous de passer l'ID de l'événement dans les paramètres de l'URL
 
   eventsModel.findOneAndDelete({ _id: eventIdToDelete })
     .then((deletedEvent) => {
       if (!deletedEvent) {
         return res.status(404).json({ message: "Événement non trouvé" });
       }
-      res.json({ message: "Événement supprimé avec succès", event: deletedEvent });
+      res.status(200).json({ message: "Événement supprimé avec succès"});
     })
     .catch((error) => res.status(500).json({ message: "Erreur lors de la suppression de l'événement", error: error.message }));
   }else{
   res.status(404).json("Erreur lors de la suppression de l'event")
+  }
+};
+
+
+
+module.exports.likePoint = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") {
+    const idPoint = req.body.idPoint._id;
+    pointsModel.findByIdAndUpdate(idPoint, { $inc: { likes: 1 } }, (err, result) => {
+      if (err) {
+        res.status(500).json({ error: "Erreur lors de l'ajout du like" });
+      } else {
+        pointsModel.findByIdAndUpdate(idPoint, { $push: { likers: req.user } }, (err, result) => {
+          if (!err) {
+            res.status(200).json('like enregistré avec succès.');
+          } else {
+            res.status(500).json({ error: "Erreur lors de l'ajout du dislike" });
+          }
+        });
+      }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};
+
+module.exports.dislikePoint = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") {
+    const idPoint = req.body.idPoint._id;
+    pointsModel.findByIdAndUpdate(idPoint, { $inc: { likes: - 1 } }, (err, result) => {
+      if (err) {
+        res.status(500).json({ error: "Erreur lors de l'ajout du dislike" });
+      } else {
+        pointsModel.findByIdAndUpdate(idPoint, { $pull: { likers: req.user } }, (err, result) => {
+          if (!err) {
+            res.status(200).json('disLike enregistré avec succès.');
+          } else {
+            res.status(500).json({ error: "Erreur lors de l'ajout du dislike" });
+          }
+        });
+      }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};
+
+
+module.exports.registrationEvent = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") { 
+    eventsModel.findByIdAndUpdate(req.body.idEvent, { $push: { registration: req.body.idUser } }, (err, result) => {
+      if (!err) {
+       console.log(result);
+        res.status(200).json({ message: "Inscription à l'event réussi", result: result });
+      }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+};
+
+
+module.exports.deregistrationEvent = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") {
+    eventsModel.findByIdAndUpdate(req.body.idEvent, { $pull: { registration: req.body.idUser } }, (err, result) => {
+     if(!err){
+       console.log(result);
+      res.status(200).json({ message: "Inscription à l'event réussi", result: result });
+     }
+    });
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
+  }
+
+};
+module.exports.registrationDetailEvent = async (req, res) => {
+  if (req.user === req.body.idUser || req.role === "admin") { 
+  
+  
+  
+  
+  
+  } else {
+    res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
 };

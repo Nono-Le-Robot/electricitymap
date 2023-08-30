@@ -10,12 +10,17 @@ router.get("/get-my-data", dataController.getMyData);
 router.post("/add-point", controlAuth.requireAuthAdmin, dataController.addPoint);
 router.post("/delete-point", controlAuth.requireAuthAdmin, dataController.deletePoint);
 router.post("/modify-point", controlAuth.requireAuthAdmin, dataController.modifyPoint);
+router.post("/like-point", controlAuth.requireAuthAdmin, dataController.likePoint);
+router.post("/dislike-point", controlAuth.requireAuthAdmin, dataController.dislikePoint);
 router.post("/update-point-coordinates", dataController.updatePointCoordinates);
 router.post("/update-event-coordinates", dataController.updateEventCoordinates);
 router.get("/get-events", dataController.getEvents);
 router.post("/create-event", controlAuth.requireAuthAdmin, dataController.createEvent);
 router.post("/modify-event", controlAuth.requireAuthAdmin, dataController.modifyEvent);
 router.post("/delete-event", controlAuth.requireAuthAdmin, dataController.deleteEvent);
+router.post("/registration-event", controlAuth.requireAuthAdmin, dataController.registrationEvent);
+router.post("/deregistration-event", controlAuth.requireAuthAdmin, dataController.deregistrationEvent);
+router.post("/registrationDetailEvent", controlAuth.requireAuthAdmin, dataController.registrationDetailEvent);
 
 
 module.exports = router;
