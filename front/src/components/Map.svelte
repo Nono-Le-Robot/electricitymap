@@ -416,7 +416,11 @@
         }
 
         function isPointCreator(email, username, userId, userToken) {
-          if (point.eventName === undefined && email === point.email && userId === point.idUser) {
+          if (
+            point.eventName === undefined &&
+            email === point.email &&
+            userId === point.idUser
+          ) {
             return `
         <i class="fa-solid fa-pen" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-trash-can" style="cursor:pointer; color:red; font-size:20px;"></i>
@@ -426,9 +430,13 @@
             return ``;
           }
         }
-        
-            function isEventCreator(email, username, userId, userToken) {
-          if ( point.eventName !== undefined && email === point.email && userId === point.idUser) {
+
+        function isEventCreator(email, username, userId, userToken) {
+          if (
+            point.eventName !== undefined &&
+            email === point.email &&
+            userId === point.idUser
+          ) {
             return `
         <i class="fa-solid fa-pen" id='modify-event'  style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-trash-can" id='delete-event' style="cursor:pointer; color:red; font-size:20px;"></i>
@@ -438,7 +446,7 @@
             return ``;
           }
         }
-        
+
         function isPointUserReport(
           email,
           username,
@@ -477,7 +485,7 @@
         }
 
         function animationEvent() {
-          if (point.participation !== undefined) {
+          if (point.participation !== null) {
             return `
  <div style="border:solid ;1px; blue;">
     <h4>Animation</h4>
@@ -504,27 +512,27 @@
             return ``;
           }
         }
-        
-        
-         function RegistrationEvent(user) {
-         console.log(point.registration);
-         if(point.registration !== undefined && point.registration.includes(userId)) {
+
+        function RegistrationEvent(user) {
+          console.log(point.registration);
+          if (
+            point.registration !== undefined &&
+            point.registration.includes(userId)
+          ) {
             return ` 
           <div style="display:flex;  align-items:center; justify-content:center;cursor:pointer">
          <button style="display:flex" id="deregistrationevent"> me desinscrire</button> 
          </div>`;
-          ;
           } else if (point.eventName) {
             return `
     <div  style="display:flex;  align-items:center; justify-content:center;cursor:pointer">
          <button style="display:flex" id="registrationevent"> Je participe</button> 
          </div>
-        `
+        `;
           } else {
             return ``;
           }
         }
-
 
         function switchLikeUser(user, lovers, haters) {
           if (
@@ -558,7 +566,7 @@
         }
 
         marker.bindPopup(`
-        ${switchLikePoint(userId, point.likers)}
+        ${point.likers ? switchLikePoint(userId, point.likers) : ""}
         ${
           point.eventName
             ? ``
@@ -625,9 +633,7 @@
           point._id
         )}
          </div>
-         ${
-         RegistrationEvent()
-        }
+         ${RegistrationEvent()}
      
        `);
         function getImageSource(priseType) {
@@ -695,154 +701,24 @@
               showConfirmDelete = true;
             });
           }
-          
-          const deleteEvent = document.getElementById("delete-event")
-           deleteEvent?.addEventListener("click", async () => {
-          if (deleteEvent && userId === point.idUser) {
-             
-            map.closePopup();
+
+          const deleteEvent = document.getElementById("delete-event");
+          deleteEvent?.addEventListener("click", async () => {
+            if (deleteEvent && userId === point.idUser) {
+              map.closePopup();
               showConfirmDeleteEvent = true;
-          }else{
-            alert(
-                  "Vous n'etes pas le createur de cette event, vous ne pouvez pas le supprimer"
-                );
-            map.closePopup();
-                return;
-          }
-          });
-          
-    const modifytestEvent = async () => {
-    closePopup();
-    var iframeString = iframeEventInput;
-    var srcRegex = /src="([^"]+)"/;
-    var matches = iframeString.match(srcRegex);
-    if (matches && matches.length > 1) {
-      var iframeLink = matches[1];
-    } else {
-      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
-    }
-    
-    function isValidDistance(distance) {
-      return !isNaN(parseFloat(distance)) && isFinite(distance);
-    }
-    const formatDate = (date) => {
-      const dd = String(date.getDate()).padStart(2, "0");
-      const mm = String(date.getMonth() + 1).padStart(2, "0");
-      const yyyy = date.getFullYear();
-      return `${dd}/${mm}/${yyyy}`;
-    };
-    const isTimeAfterCurrentTime = (time) => {
-      const [hour, minute] = time.split(":");
-      const currentHour = new Date().getHours();
-      const currentMinute = new Date().getMinutes();
-      return (
-        parseInt(hour, 10) > currentHour ||
-        (parseInt(hour, 10) === currentHour &&
-          parseInt(minute, 10) > currentMinute)
-      );
-    };
-
-    const resetFields = () => {
-      const fieldsToReset = [
-        "nameEventInput",
-        "descriptionEventInput",
-        "distanceEventInput",
-        "participationFee",
-        "descriptionAnimation",
-        "startDateEventInput",
-        "endDateEventInput",
-        "startHourEventInput",
-        "iframeEventInput",
-        "descriptionPointInput",
-      ];
-
-      fieldsToReset.forEach((field) => {
-        window[field] = ""; // Réinitialise les champs à une chaîne vide
-      });
-    };
-    closePopup();
-
-    if (matches && matches.length > 1) {
-      iframeLink = matches[1];
-    } else {
-      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
-    }
-
-    try {
-      const distance = parseFloat(distanceEventInput);
-
-      if (!isValidDistance(distance)) {
-        alert("La distance doit être au format numérique");
-        showIconPanel = false;
-        showModalCreateEvent = true;
-      } else if (
-        new Date(startDateEventInput).getDate() === new Date().getDate() &&
-        !isTimeAfterCurrentTime(startHourEventInput)
-      ) {
-        alert("La date de début doit être postérieure à la date actuelle");
-        showIconPanel = false;
-        showModalCreateEvent = true;
-      } else if (!isTimeAfterCurrentTime(startHourEventInput) && new Date(startDateEventInput).getDate() === new Date().getDate()) {
-        
-        alert("L'heure de début doit être postérieure à l'heure actuelle");
-        showIconPanel = false;
-        showModalCreateEvent = true;
-      } else {
-        const res = await axios
-          .post(`${apiUrl}/api/data/modify-event`, {
-            idEventToUpdate: point._id,
-            token: userToken,
-            idUser: userId,
-            createdBy: userPseudo,
-            email: userMail,
-            eventName: nameEventInput,
-            eventDescription: descriptionEventInput,
-            eventInformations: informationsEventInput,
-            participation: participationFee,
-            animationDescription: animationDescription,
-            coords: {
-              lat: coordsToAddPoint.lat,
-              lng: coordsToAddPoint.lng,
-            },
-            distance: distanceEventInput,
-            iframe: iframeLink,
-            startDate: formatDate(new Date(startDateEventInput)),
-            endDate: formatDate(new Date(endDateEventInput)),
-            startHour: startHourEventInput,
-            addedDate: new Date(),
-            needValiate: true,
-          })
-          .then((res) => {
-            if (res) {
-              alert("Événement créé avec succès");
-              nameEventInput = "";
-              hasAnimation = false;
-              hasInscription = false;
-              descriptionEventInput = "";
-              distanceEventInput = "";
-              participationFee = "";
-              animationDescription = "";
-              startDateEventInput = "";
-              endDateEventInput = "";
-              startHourEventInput = "";
-              iframeEventInput = "";
-              informationsEventInput = "";
-              refreshPoints();
-              closePopup();
+            } else {
+              alert(
+                "Vous n'etes pas le createur de cette event, vous ne pouvez pas le supprimer"
+              );
+              map.closePopup();
+              return;
             }
           });
-      }
-    } catch (err) {
-      console.error(err);
-      alert(
-        "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
-      );
-    }
-    }
-          const getModifyEvent = document.getElementById("modify-event")
-          
-            getModifyEvent?.addEventListener("click", () => {
-          if (getModifyEvent) {
+          const getModifyEvent = document.getElementById("modify-event");
+
+          getModifyEvent?.addEventListener("click", () => {
+            if (getModifyEvent) {
               idEventToUpdate = point._id;
               nameEventInput = point.eventName;
               descriptionEventInput = point.eventDescription;
@@ -856,16 +732,14 @@
               distanceEventInput = point.distance;
               oldType = point.priseType;
               showModalModifyInfoEvent = true;
-            }else{
-            alert(
-                  "Vous n'etes pas le createur de cet event, vous ne pouvez pas le modifier"
-                );
-                map.closePopup();
-                return;
-              }
-              })
-        
-        
+            } else {
+              alert(
+                "Vous n'etes pas le createur de cet event, vous ne pouvez pas le modifier"
+              );
+              map.closePopup();
+              return;
+            }
+          });
 
           const likeIcon = document.getElementById("likeIcone");
           if (likeIcon) {
@@ -963,7 +837,7 @@
                 });
             });
           }
-            const getDetail = () => {
+          const getDetail = () => {
             if (point.eventName) {
               ({
                 eventName: selectedEventName,
@@ -971,7 +845,7 @@
                 eventInformations: selectedEventInformations,
                 animationDescription: selectedEventDescriptionAnimation,
                 participation: selectedEventParticipationFee,
-                registration : selectedEventRegistration,
+                registration: selectedEventRegistration,
                 iframe: selectedEventIframe,
                 distance: selectedEventDistance,
                 startDate: selectedEventStartDate,
@@ -981,49 +855,52 @@
                 createdBy: selectedEventCreatedBy,
               } = point);
               showModalEventDetails = true;
-            }}
-            
-              const detailAnimation = document.getElementById("inscription");
+            }
+          };
+
+          const detailAnimation = document.getElementById("inscription");
           detailAnimation?.addEventListener("click", () => {
             getDetail();
           });
-         
+
           const eyeIcon = document.getElementById("see-point");
           eyeIcon?.addEventListener("click", () => {
-          getDetail()
+            getDetail();
           });
-          
-           const RegitrationEvent = document.getElementById("registrationevent");
-        if(RegitrationEvent){
-        RegitrationEvent?.addEventListener("click", async ()=>{
-        await axios.post(`${apiUrl}/api/data/registration-event`, {
+
+          const RegitrationEvent = document.getElementById("registrationevent");
+          if (RegitrationEvent) {
+            RegitrationEvent?.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/data/registration-event`, {
                   token: userToken,
                   idUser: userId,
-                  idEvent : point._id,
-        }).then((data) => {
+                  idEvent: point._id,
+                })
+                .then((data) => {
                   console.log(data);
-                   refreshPoints();
+                  refreshPoints();
                 });
-            });}
-            
-              const deRegitrationEvent = document.getElementById("deregistrationevent");
-        if(deRegitrationEvent){
-        deRegitrationEvent?.addEventListener("click", async ()=>{
-        await axios.post(`${apiUrl}/api/data/deregistration-event`, {
+            });
+          }
+
+          const deRegitrationEvent = document.getElementById(
+            "deregistrationevent"
+          );
+          if (deRegitrationEvent) {
+            deRegitrationEvent?.addEventListener("click", async () => {
+              await axios
+                .post(`${apiUrl}/api/data/deregistration-event`, {
                   token: userToken,
                   idUser: userId,
-                  idEvent : point._id,
-        
-        }).then((data) => {
+                  idEvent: point._id,
+                })
+                .then((data) => {
                   refreshPoints();
                   console.log(data);
                 });
-            })} ;
-
-           
-        
-          
-        
+            });
+          }
 
           const routeIcon = document.querySelector(".fa-route");
           routeIcon?.addEventListener("click", async () => {
@@ -1076,9 +953,149 @@
         console.log(err);
       });
   };
-  
-  
 
+  const modifyEvent = async () => {
+    closePopup();
+    if(iframeEventInput !== ''){
+      var iframeString = iframeEventInput;
+      const iframeRegex =
+      /<iframe\s+src="https:\/\/www\.google\.com\/maps\/embed[^\n]*<\/iframe>/i;
+      if (!iframeRegex.test(iframeString)) {
+        alert(
+          "Veuillez entrer une balise iframe avec une source Google Maps valide."
+          );
+          showIconPanel = false;
+          showModalCreateEvent = true;
+          return;
+        }
+        var srcMatch = iframeString.match(/src="([^"]+)"/);
+        if (srcMatch) var iframeLink = srcMatch[1];
+        function isValidDistance(distance) {
+          return !isNaN(parseFloat(distance)) && isFinite(distance);
+        }
+        
+      }
+    function isValidDistance(distance) {
+      return !isNaN(parseFloat(distance)) && isFinite(distance);
+    }
+    const formatDate = (date) => {
+      const dd = String(date.getDate()).padStart(2, "0");
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
+    const isTimeAfterCurrentTime = (time) => {
+      const [hour, minute] = time.split(":");
+      const currentHour = new Date().getHours();
+      const currentMinute = new Date().getMinutes();
+      return (
+        parseInt(hour, 10) > currentHour ||
+        (parseInt(hour, 10) === currentHour &&
+          parseInt(minute, 10) > currentMinute)
+      );
+    };
+
+    const resetFields = () => {
+      const fieldsToReset = [
+        "nameEventInput",
+        "descriptionEventInput",
+        "distanceEventInput",
+        "participationFee",
+        "descriptionAnimation",
+        "startDateEventInput",
+        "endDateEventInput",
+        "startHourEventInput",
+        "iframeEventInput",
+        "descriptionPointInput",
+      ];
+
+      fieldsToReset.forEach((field) => {
+        window[field] = ""; // Réinitialise les champs à une chaîne vide
+      });
+    };
+    closePopup();
+
+    // if (matches && matches.length > 1) {
+    //   iframeLink = matches[1];
+    // } else {
+    //   console.log(
+    //     "Aucune correspondance trouvée pour l'attribut 'src'"
+    //   );
+    // }
+
+    try {
+      const distance = parseFloat(distanceEventInput);
+
+      if (!isValidDistance(distance)) {
+        alert("La distance doit être au format numérique");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        new Date(startDateEventInput).getDate() === new Date().getDate() &&
+        !isTimeAfterCurrentTime(startHourEventInput)
+      ) {
+        alert("La date de début doit être postérieure à la date actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else if (
+        !isTimeAfterCurrentTime(startHourEventInput) &&
+        new Date(startDateEventInput).getDate() === new Date().getDate()
+      ) {
+        alert("L'heure de début doit être postérieure à l'heure actuelle");
+        showIconPanel = false;
+        showModalCreateEvent = true;
+      } else {
+        const res = await axios
+          .post(`${apiUrl}/api/data/modify-event`, {
+            idEventToUpdate: selectedMarker._id,
+            token: userToken,
+            idUser: userId,
+            createdBy: userPseudo,
+            email: userMail,
+            eventName: nameEventInput,
+            eventDescription: descriptionEventInput,
+            eventInformations: informationsEventInput,
+            participation: participationFee,
+            animationDescription: animationDescription,
+            coords: {
+              lat: coordsToAddPoint.lat,
+              lng: coordsToAddPoint.lng,
+            },
+            distance: distanceEventInput,
+            iframe: iframeLink,
+            startDate: formatDate(new Date(startDateEventInput)),
+            endDate: formatDate(new Date(endDateEventInput)),
+            startHour: startHourEventInput,
+            addedDate: new Date(),
+            needValiate: true,
+          })
+          .then((res) => {
+            if (res) {
+              alert("Événement créé avec succès");
+              refreshPoints();
+              closePopup();
+            }
+          });
+      }
+    } catch (err) {
+      console.error(err);
+      alert(
+        "Une erreur s'est produite lors de la création de l'événement. Veuillez réessayer plus tard."
+      );
+    }
+    nameEventInput = "";
+    hasAnimation = false;
+    hasInscription = false;
+    descriptionEventInput = "";
+    distanceEventInput = "";
+    participationFee = "";
+    animationDescription = "";
+    startDateEventInput = "";
+    endDateEventInput = "";
+    startHourEventInput = "";
+    iframeEventInput = "";
+    informationsEventInput = "";
+  };
 
   const closePopup = () => {
     map.closePopup();
@@ -1142,36 +1159,22 @@
 
   const createEvent = async () => {
     closePopup();
-    var iframeString = iframeEventInput;
-    var srcRegex = /src="([^"]+)"/;
-    var matches = iframeString.match(srcRegex);
-    if (matches && matches.length > 1) {
-      var iframeLink = matches[1];
-    } else {
-      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
+    if(iframeEventInput !==''){
+
+      var iframeString = iframeEventInput;
+      const iframeRegex =
+        /<iframe\s+src="https:\/\/www\.google\.com\/maps\/embed[^\n]*<\/iframe>/i;
+      if (!iframeRegex.test(iframeString)) {
+        alert(
+          "Veuillez entrer une balise iframe avec une source Google Maps valide."
+        );
+        showIconPanel = false;
+        showModalCreateEvent = true;
+        return;
+      }
+      var srcMatch = iframeString.match(/src="([^"]+)"/);
+      if (srcMatch) var iframeLink = srcMatch[1];
     }
-
-    // function isValidDate(date) {
-    //    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    // return new Date(date).toLocaleDateString(undefined, options);
-
-    // }
-    // function isValidTime(time) {
-    //   const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
-    //   if (!timePattern.test(time)) {
-    //     return "Le format de l'heure doit être HH:mm (24 heures)";
-    //   }
-    //   return null;
-    // }
-    // function isAfterCurrentDate(date) {
-    //   const currentDate = new Date();
-    //   const parts = date.split("/");
-    //   const day = parseInt(parts[0], 10);
-    //   const month = parseInt(parts[1], 10) - 1;
-    //   const year = parseInt(parts[2], 10);
-    //   const newDate = new Date(year, month, day);
-    //   return newDate > currentDate;
-    // }
     function isValidDistance(distance) {
       return !isNaN(parseFloat(distance)) && isFinite(distance);
     }
@@ -1220,11 +1223,11 @@
     // const matches = iframeString.match(srcRegex);
     // let iframeLink = "";
 
-    if (matches && matches.length > 1) {
-      iframeLink = matches[1];
-    } else {
-      console.log("Aucune correspondance trouvée pour l'attribut 'src'");
-    }
+    // if (matches && matches.length > 1) {
+    //   iframeLink = matches[1];
+    // } else {
+    //   console.log("Aucune correspondance trouvée pour l'attribut 'src'");
+    // }
 
     try {
       const distance = parseFloat(distanceEventInput);
@@ -1240,7 +1243,10 @@
         alert("La date de début doit être postérieure à la date actuelle");
         showIconPanel = false;
         showModalCreateEvent = true;
-      } else if (!isTimeAfterCurrentTime(startHourEventInput) && new Date(startDateEventInput).getDate() === new Date().getDate()) {
+      } else if (
+        !isTimeAfterCurrentTime(startHourEventInput) &&
+        new Date(startDateEventInput).getDate() === new Date().getDate()
+      ) {
         alert("L'heure de début doit être postérieure à l'heure actuelle");
         showIconPanel = false;
         showModalCreateEvent = true;
@@ -1441,9 +1447,8 @@
       .catch((err) => {
         console.log(err);
       });
-  }; 
-  
- 
+  };
+
   const confirmDelete = async () => {
     await axios.post(`${apiUrl}/api/data/delete-point`, {
       token: userToken,
@@ -1453,8 +1458,8 @@
     await refreshPoints();
     showConfirmDelete = false;
   };
-  
-   const confirmDeleteEvent = async () => {
+
+  const confirmDeleteEvent = async () => {
     await axios.post(`${apiUrl}/api/data/delete-event`, {
       token: userToken,
       idUser: userId,
@@ -1463,8 +1468,6 @@
     await refreshPoints();
     showConfirmDeleteEvent = false;
   };
-
-
 
   const showFilter = () => {
     showModalFilter = !showModalFilter;
@@ -1616,6 +1619,9 @@
         : markersLayerEvents.removeFrom(map);
     }
   });
+  const confirmEventParticipation = () => {
+    alert("gerg");
+  };
 </script>
 
 {#if !lockView && navigationInProgress}
@@ -1740,6 +1746,18 @@
                 rows="4"
                 bind:value={giveDescription}
               />
+              <button
+                type="submit"
+                id="add-point-btn"
+                style="color:black"
+                on:click={confirmEventParticipation}>Valider</button
+              >
+              <button
+                type="submit"
+                id="cancel-add-point-btn"
+                style="background-color: var(--red-error); width: 100%;"
+                on:click={() => (hasInscription = false)}>Annuler</button
+              >
             </div>
           {/if}
         </p>
@@ -2092,7 +2110,6 @@
   </div>
 {/if}
 
-
 {#if showConfirmDeleteEvent}
   <div id="container-remove-point">
     <div>
@@ -2160,11 +2177,8 @@
   </div>
 {/if}
 
-
-
-
 {#if showModalModifyInfoEvent}
- <div id="container-create-event">
+  <div id="container-create-event">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
     <div id="champ-text-add-point">
       <input
@@ -2311,13 +2325,13 @@
         cols="33"
         bind:value={informationsEventInput}
       />
-        </div>
+    </div>
     <div id="form'action">
       <button
         type="submit"
         id="add-point-btn"
         style="color:black"
-        on:click={modifytestEvent}>Modifier</button
+        on:click={modifyEvent}>Modifier</button
       >
       <button
         type="submit"
@@ -2326,8 +2340,8 @@
         on:click={closePopup}>Annuler</button
       >
     </div>
-    </div>
-    <!-- <div id="form'action">
+  </div>
+  <!-- <div id="form'action">
       <button
         type="submit"
         id="add-point-btn"
@@ -2335,25 +2349,7 @@
         on:click={createEvent}>Créer l'évenement</button
       >
     </div> -->
-
-  
 {/if}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 {#if showModalAddPoint}
   <div id="container-add-info-point">
@@ -2588,8 +2584,6 @@
     <div id="map" />
   </section>
 {/if}
-
-
 
 <style>
   #container-account-settings {
