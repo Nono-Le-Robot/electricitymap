@@ -116,9 +116,12 @@
       popupAnchor,
     });
   }
+  
 
-  const customIcon = createCustomIcon(
-    "./assets/elecSpot2.png",
+
+
+const customIcon = createCustomIcon(
+  "./assets/elecSpot2.png",
     [50, 50],
     [25, 50],
     [50, 64],
@@ -1549,6 +1552,77 @@
   };
 
   onMount(async () => {
+
+    let deferredPrompt;
+if(window.innerWidth < 768){ 
+
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+
+    deferredPrompt = event;
+    
+    // Vérifier si l'application est déjà installée
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      showIconPanel = false
+      showInstallPrompt();
+    } else {
+      // L'application est déjà installée, vous pouvez vérifier une mise à jour ici
+      showInstallPrompt();
+    }
+  });
+  
+  function showInstallPrompt() {
+    if (!document.querySelector('#install-button')) {
+      const divPopupInstall = document.createElement('div');
+      divPopupInstall.classList.add('div-install');
+      divPopupInstall.innerHTML = `
+      <p>Pour une expérience optimale, installez l'application :</p>
+      `;
+
+    const installButton = document.createElement('button');
+    installButton.classList.add('install-btn');
+    installButton.textContent = "Installer";
+    installButton.id = 'install-button';
+    divPopupInstall.appendChild(installButton);
+    
+    installButton.addEventListener('click', () => {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          // L'utilisateur a accepté l'installation
+        } else {
+          // L'utilisateur a refusé l'installation
+        }
+        deferredPrompt = null;
+        divPopupInstall.remove();
+        showIconPanel = true
+      });
+    });
+    
+    const cancelInstallButton = document.createElement('button');
+    cancelInstallButton.classList.add('cancel-install-btn');
+    cancelInstallButton.textContent = "Plus tard";
+    cancelInstallButton.id = 'cancel-install-button';
+    divPopupInstall.appendChild(cancelInstallButton);
+    
+    cancelInstallButton.addEventListener('click', () => {
+      divPopupInstall.remove();
+      showIconPanel = true
+
+    });
+    
+    document.body.appendChild(divPopupInstall);
+  }
+}
+
+function checkForUpdate() {
+  // Vous pouvez implémenter ici la logique de vérification de mise à jour
+  // Si une mise à jour est disponible, affichez un message approprié
+  // sinon, vous pouvez masquer la bannière d'installation
+}
+}
+
+
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showCcLocalStorage = localStorage.getItem("showCC");
     let showEventsLocalStorage = localStorage.getItem("showEvents");
@@ -2001,11 +2075,11 @@
 
       <div class="sub-action-account-settings">
         <h3 style="margin:5px 0">Aide</h3>
-        <p style="margin:0" on:click={contactSupport}>Contacter le support</p>
+        <p style="margin:0; cursor: pointer" on:click={contactSupport}>Contacter le support</p>
       </div>
     </div>
     <div id="footer-account-settings" />
-    <p style="margin:0" on:click={logout}>Déconnexion</p>
+    <p style="margin:0; cursor: pointer" on:click={logout}>Déconnexion</p>
 
     <!-- <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p> -->
   </div>

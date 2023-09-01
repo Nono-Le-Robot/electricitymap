@@ -202,6 +202,7 @@
   }
 
   .btn-settings {
+  
     background-color: var(--dark-blue-color);
     width: 50%;
     box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
@@ -591,17 +592,36 @@
       left: 50vw;
       transform: translateX(-50%);
     }
-
-    #stop-icon {
-      width: 50px;
-      background-color: var(--dark-blue-color);
-      padding: 1rem;
-      border-radius: 100%;
-      cursor: pointer;
-      position: absolute;
-      bottom: 180px;
-      z-index: 999;
-      left: 50vw;
-      transform: translateX(-50%);
-    }
+  
   }
+  .install-btn{
+    background-color: var(--green-validate);
+    color: black;
+    min-height: 50px;
+
+  }
+  .cancel-install-btn{
+    background-color: var(--red-error);
+    color: black;
+    min-height: 50px;
+
+  }
+
+  .div-install{
+    background-color: var(--dark-blue-color);
+    border-radius: 0.5rem;
+    font-size: 2rem;
+    padding: 2rem;
+    width: 65vw;
+    position: absolute;
+    z-index: 99999;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%,-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: white;
+  }
+  

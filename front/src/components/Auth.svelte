@@ -32,6 +32,7 @@
             dispatch("Connected", { logged: true });
           }
         }
+        window.location.reload();
       },
     });
   };
