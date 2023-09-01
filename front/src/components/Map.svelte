@@ -540,7 +540,6 @@
         }
 
         function RegistrationEvent(user) {
-          console.log(point.registration);
           if (
             point.registration !== undefined &&
             point.registration.includes(userId)
@@ -561,6 +560,7 @@
         }
 
         function switchLikeUser(user, lovers, haters) {
+        console.log(point.haters)
           if (
             (point.lovers === undefined && point.haters === undefined) ||
             (point.lovers.includes(!user) && point.haters.includes(!user))
@@ -689,10 +689,16 @@
         });
 
         marker.on("dragend", (event) => {
+        console.log(event)
+        console.log(point)
           selectedMarker = point;
           const newCoords = event.target.getLatLng();
+          if (point.pointName !== undefined && point.pointName!== null ){
           updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
-          updateEventCoordinates(pointId, newCoords.lat, newCoords.lng);
+          }
+          if(point.eventName !== undefined && point.eventName !== null ){
+            updateEventCoordinates(pointId, newCoords.lat, newCoords.lng);
+          }
         });
 
         marker.on("popupopen", (event) => {
@@ -2007,7 +2013,7 @@
     <div id="footer-account-settings" />
     <p style="margin:0" on:click={logout}>Déconnexion</p>
 
-    <!-- <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p> -->
+    <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p>
   </div>
   <i class="fa-solid fa-xmark" on:click={closePopup} />
 {/if}
@@ -2019,7 +2025,18 @@
       <p style="color:red">Cette action est irréversible.</p>
     </div>
     <div id="action-delete">
-      <button type="submit" id="confirm-delete">Oui</button>
+      <button type="submit" id="confirm-delete"      
+       on:click={ async ()=> {    
+          await axios.post(`${apiUrl}/api/auth/delete`, {
+      token: userToken,
+      idUser: userId,
+    }).then((data) => {
+    console.log(data)
+     closePopup()
+      logout()
+      
+      })}}>Oui</button>
+      
       <button type="submit" id="cancel-delete" on:click={()=> {closePopup(); showIconPanel = false; showModalAccountSettings = true}}>Non</button
       >
     </div>

@@ -78,11 +78,14 @@ module.exports.login = async (req, res) => {
 module.exports.deleteUser = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
     const UserToDelete = req.user;
-    eventsModel.findOneAndDelete({ _id: UserToDelete })
+    console.log(UserToDelete);
+    
+    userModel.findByIdAndUpdate(UserToDelete, { email: `deletedUser_${UserToDelete}`, username: `deletedUser_${UserToDelete}`, password: `deletedUser_${UserToDelete}`, picture : "https://electricitymap.fr/backend/images/default/default-profile-picture.jpg", likedUsers : [], likers : [], dislikedUsers : [], dislikers : []}, { new: true })  
       .then((userDelete) => {
         if (!userDelete) {
           return res.status(404).json({ message: "Événement non trouvé" });
         }
+        
         res.json({ message: "utilisateur supprimé avec succès", user: userDelete });
       })
       .catch((error) => res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur", error: error.message }));
