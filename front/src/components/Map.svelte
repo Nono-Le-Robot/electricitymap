@@ -1,9 +1,6 @@
 <script>
   import { onMount } from "svelte";
   import L from "leaflet";
-  import "leaflet-routing-machine";
-  import "leaflet-control-geocoder";
-  import "lrm-graphhopper";
   import axios from "axios";
   export let isLogged;
 
@@ -18,6 +15,7 @@
   let userPseudo = localStorage.getItem("username");
   let userId = localStorage.getItem("userId");
   let userToken = localStorage.getItem("token");
+  let userProfilPicture = localStorage.getItem('profile-picture')
   let allPoints = [];
   let myPoints = [];
   let allEvents = [];
@@ -195,6 +193,8 @@
     try {
       await axios.post(`${apiUrl}/api/data/modify-username`, {
         username: userPseudo,
+        token: userToken,
+        idUser: userId,
         newUsername: newUsernameInput,
       });
       localStorage.removeItem("username");
@@ -214,6 +214,32 @@
     showIconPanel = false;
     showModalEvents = true;
   };
+  const modifyPictureProfil = () => {
+ 
+      const formData = new FormData();
+      const imageInput = document.getElementById('imageInput');
+      formData.append('file', imageInput.files[0]);
+      formData.append('idUser', userId);
+      formData.append('token', userToken);
+      formData.append('username', userPseudo);
+      axios.post(`${apiUrl}/api/data/upload-profil-picture`, formData,{
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+        
+      })
+      .then(response => {
+        const pictureImg = document.getElementById("profil-picture-settings")
+        userProfilPicture = response.data.user.picture 
+        localStorage.setItem('profile-picture', response.data.user.picture)
+        pictureImg.src = userProfilPicture
+      })
+      .catch(error => {
+
+        console.error(error);
+      });
+
+  }
 
   const confirmDeleteAccount = () => {
     closePopup();
@@ -640,11 +666,9 @@
         function getImageSource(priseType) {
           switch (priseType) {
             case "Européenne":
-              // typePrise = "Européenne"
               oldType = "Européenne";
               return "eu-flag.png";
             case "Prise camping-car":
-              // typePrise = "Prise camping-car"
               oldType = "Prise camping-car";
               return "cc-flag.png";
             default:
@@ -971,6 +995,7 @@
         }
         var srcMatch = iframeString.match(/src="([^"]+)"/);
         if (srcMatch) var iframeLink = srcMatch[1];
+        else iframeLink = ''
         function isValidDistance(distance) {
           return !isNaN(parseFloat(distance)) && isFinite(distance);
         }
@@ -995,34 +1020,7 @@
           parseInt(minute, 10) > currentMinute)
       );
     };
-
-    const resetFields = () => {
-      const fieldsToReset = [
-        "nameEventInput",
-        "descriptionEventInput",
-        "distanceEventInput",
-        "participationFee",
-        "descriptionAnimation",
-        "startDateEventInput",
-        "endDateEventInput",
-        "startHourEventInput",
-        "iframeEventInput",
-        "descriptionPointInput",
-      ];
-
-      fieldsToReset.forEach((field) => {
-        window[field] = ""; // Réinitialise les champs à une chaîne vide
-      });
-    };
     closePopup();
-
-    // if (matches && matches.length > 1) {
-    //   iframeLink = matches[1];
-    // } else {
-    //   console.log(
-    //     "Aucune correspondance trouvée pour l'attribut 'src'"
-    //   );
-    // }
 
     try {
       const distance = parseFloat(distanceEventInput);
@@ -1175,6 +1173,7 @@
       }
       var srcMatch = iframeString.match(/src="([^"]+)"/);
       if (srcMatch) var iframeLink = srcMatch[1];
+      else iframeLink = ''
     }
     function isValidDistance(distance) {
       return !isNaN(parseFloat(distance)) && isFinite(distance);
@@ -1218,18 +1217,6 @@
     };
 
     closePopup();
-
-    // const iframeString = iframeEventInput;
-    // const srcRegex = /src="([^"]+)"/;
-    // const matches = iframeString.match(srcRegex);
-    // let iframeLink = "";
-
-    // if (matches && matches.length > 1) {
-    //   iframeLink = matches[1];
-    // } else {
-    //   console.log("Aucune correspondance trouvée pour l'attribut 'src'");
-    // }
-
     try {
       const distance = parseFloat(distanceEventInput);
 
@@ -1344,8 +1331,8 @@
     eventName,
     eventDescription,
     eventInformations,
-    participationFee,
     descriptionAnimation,
+    participationFee,
     registration,
     distance,
     iframe,
@@ -1354,14 +1341,14 @@
     endDate,
     startHour
   ) => {
+    selectedEventCreatedBy = createdBy;
+    selectedEventEmail = email;
     selectedEventName = eventName;
     selectedEventDescription = eventDescription;
     selectedEventInformations = eventInformations;
     selectedEventDescriptionAnimation = descriptionAnimation;
     selectedEventParticipationFee = participationFee;
     selectedEventRegistration = registration;
-    selectedEventCreatedBy = createdBy;
-    selectedEventEmail = email;
     selectedEventDistance = distance;
     selectedEventIframe = iframe;
     selectedEventCoords = coords;
@@ -1370,6 +1357,7 @@
     selectedEventStartHour = startHour;
     showModalEvents = false;
     showModalEventDetails = true;
+    console.log(selectedEventIframe)
   };
 
   const events = () => {
@@ -1417,7 +1405,6 @@
         namePointInput = "";
         descriptionPointInput = "";
         typePrise = "";
-        // oldType = "";
         refreshPoints();
         closePopup();
         enableToPlace = false;
@@ -1441,7 +1428,6 @@
       })
       .then(async (res) => {
         typePrise = "";
-        // oldType = ""
         await refreshPoints();
         showModalModifyInfo = false;
       })
@@ -1637,6 +1623,7 @@
   </div>
 {/if}
 
+
 {#if showStartRoute}
   <div id="resume-route">
     <img
@@ -1749,13 +1736,13 @@
               />
               <button
                 type="submit"
-                id="add-point-btn"
+                class="confirm-btn"
                 style="color:black"
                 on:click={confirmEventParticipation}>Valider</button
               >
               <button
                 type="submit"
-                id="cancel-add-point-btn"
+               class="cancel-btn"
                 style="background-color: var(--red-error); width: 100%;"
                 on:click={() => (hasInscription = false)}>Annuler</button
               >
@@ -1764,7 +1751,7 @@
         </p>
       </div>
     {/if}
-    {#if selectedEventIframe && selectedEventIframe.includes("https://www.google.com/maps/")}
+    {#if selectedEventIframe}
       <iframe
         id="route-viewer"
         src={selectedEventIframe}
@@ -1832,13 +1819,12 @@
     <div id="action-delete">
       <button
         type="submit"
-        id="confirm-delete"
+        class="confirm-btn"
         on:click={() => {
           closePopup(), (showModalReportPointTwoStep = true);
         }}>Oui</button
       >
-      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
-      >
+      <button type="submit" class="cancel-btn" on:click={closePopup}>Non</button>
     </div>
     <div />
   </div>
@@ -1882,14 +1868,14 @@
       <div>
         <img
           id="profil-picture-settings"
-          src="./assets/photo.jpg"
+          src={userProfilPicture}
           alt=""
           srcset=""
         />
       </div>
     </div>
     <div id="action-settings">
-      <div class="btn-settings">Social</div>
+      <!-- <div class="btn-settings">Social</div> -->
       <div class="btn-settings" on:click={goToSettings}>Paramètres</div>
     </div>
     <div id="footer-settings">
@@ -1909,7 +1895,7 @@
     <h2 style="color:white; ">Événements à venir :</h2>
 
     <div id="list-events">
-      {#each allEvents as { createdBy, email, eventName, eventInformations, eventDescription, animationDescription, participation, distance, iframe, coords, startDate, endDate, startHour }, i}
+      {#each allEvents as { createdBy, email, eventName, eventDescription, eventInformations, descriptionAnimation, participation,registration, distance, iframe, coords, startDate, endDate, startHour }, i}
         <div
           on:click={showEventDetails(
             createdBy,
@@ -1917,8 +1903,9 @@
             eventName,
             eventDescription,
             eventInformations,
-            animationDescription,
-            participation,
+            descriptionAnimation,
+            participationFee,
+            registration,
             distance,
             iframe,
             coords,
@@ -1990,66 +1977,39 @@
   <div id="container-account-settings">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
     <div id="header-account-settings">
-      <img
+      <div id='photo-container-settings'>
+        <img
         id="profil-picture-account-settings"
-        src="./assets/photo.jpg"
-        alt=""
-        srcset=""
-      />
-      <i class="fa-solid fa-pen" id="modify-image-settings" />
+        src={userProfilPicture}
+        />
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <input on:change={modifyPictureProfil} style='display:none' type="file" name="image" id="imageInput">
+          <label for="imageInput">
+            <i class="fa-solid fa-pen" id="modify-image-settings" />
+          </label>
+        </form>
+      </div>
+      <!-- <button type="button" on:click={modifyPictureProfil}>Envoyer</button> -->
 
       <br />
       <div id="pseudo-account-settings">
-        <h2>NonoLeRobot</h2>
-        <i class="fa-solid fa-pen" id="modify-pseudo-settings" />
+        <h2>{userPseudo}</h2>
+        <i class="fa-solid fa-pen" id="modify-pseudo-settings" on:click={() => {closePopup(); showIconPanel = false; showModalEnterNewUsername = true}}/>
       </div>
     </div>
     <div id="action-account-settings">
-      <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Localisation</h3>
-        <p style="margin:0">Partager ma position : - slider</p>
-        <p style="margin:0">Gérer ma visibilité</p>
-      </div>
-
-      <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Evenements</h3>
-        <p style="margin:0">A venir</p>
-        <p style="margin:0">Voir tout les événements</p>
-      </div>
 
       <div class="sub-action-account-settings">
         <h3 style="margin:5px 0">Aide</h3>
-        <p style="margin:0">Contacter le support</p>
-        <p style="margin:0">boite à idées</p>
+        <p style="margin:0" on:click={contactSupport}>Contacter le support</p>
       </div>
     </div>
     <div id="footer-account-settings" />
-    <p style="color:red ; margin:0; cursor:pointer;">Supprimer mon compte</p>
+    <p style="margin:0" on:click={logout}>Déconnexion</p>
+
+    <!-- <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p> -->
   </div>
   <i class="fa-solid fa-xmark" on:click={closePopup} />
-
-  <div id="pseudo-account-settings">
-    <h2>{userPseudo}</h2>
-    <i
-      class="fa-solid fa-pen"
-      id="modify-pseudo-settings"
-      on:click={askNewUsername}
-    />
-  </div>
-  <div id="action-account-settings">
-    <p style="margin:0 cursor:pointer" on:click={contactSupport}>
-      Contacter le support
-    </p>
-    <p style="cursor:pointer" on:click={logout}>Déconnexion</p>
-
-    <p
-      style="color:red ; margin:0; cursor:pointer;"
-      on:click={confirmDeleteAccount}
-    >
-      Supprimer mon compte
-    </p>
-  </div>
-  <!-- </div> -->
 {/if}
 
 {#if showModalConfirmDeleteAccount}
@@ -2060,7 +2020,7 @@
     </div>
     <div id="action-delete">
       <button type="submit" id="confirm-delete">Oui</button>
-      <button type="submit" id="cancel-delete" on:click={closePopup}>Non</button
+      <button type="submit" id="cancel-delete" on:click={()=> {closePopup(); showIconPanel = false; showModalAccountSettings = true}}>Non</button
       >
     </div>
     <div />
@@ -2164,13 +2124,13 @@
     <div id="form'action">
       <button
         type="submit"
-        id="add-point-btn"
+        class="confirm-btn"
         style="color:black"
         on:click={confirmModify}>Modifier</button
       >
       <button
         type="submit"
-        id="cancel-add-point-btn"
+       class="cancel-btn"
         style="background-color: var(--red-error); width: 100%;"
         on:click={closePopup}>Annuler</button
       >
@@ -2330,14 +2290,13 @@
     <div id="form'action">
       <button
         type="submit"
-        id="add-point-btn"
+        class="confirm-btn"
         style="color:black"
         on:click={modifyEvent}>Modifier</button
       >
       <button
         type="submit"
-        id="cancel-add-point-btn"
-        style="background-color: var(--red-error); width: 100%;"
+       class="cancel-btn"
         on:click={closePopup}>Annuler</button
       >
     </div>
@@ -2355,6 +2314,7 @@
 {#if showModalAddPoint}
   <div id="container-add-info-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
+
     <div id="champ-text-add-point">
       <input
         autocomplete="off"
@@ -2386,7 +2346,7 @@
     <div id="form'action">
       <button
         type="submit"
-        id="add-point-btn"
+        class="confirm-btn"
         style="color:black"
         on:click={submitInfoPoint}>Ajouter</button
       >
@@ -2554,6 +2514,7 @@
   </div>
 {/if}
 
+
 {#if showModalAskAction}
   <div id="container-add-info-point">
     <i class="fa-solid fa-xmark" on:click={closePopup} />
@@ -2562,13 +2523,13 @@
     <div id="form'action">
       <button
         type="submit"
-        id="add-point-btn"
+        class="confirm-btn"
         style="color:black"
         on:click={addPoint}>Ajouter un point de charge</button
       >
       <button
         type="submit"
-        id="add-point-btn"
+        class="confirm-btn"
         style="color:black"
         on:click={addEvent}>Créer un événement</button
       >
@@ -2587,598 +2548,5 @@
 {/if}
 
 <style>
-  #container-account-settings {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    width: 90vw;
-    height: 95vh;
-    overflow-y: visible;
-    position: absolute;
-    top: 50vh;
-    left: 50vw;
-    z-index: 9999;
-    color: white;
-    border-radius: 0.5rem;
-
-    transform: translate(-50%, -50%);
-    background-color: var(--dark-blue-color);
-  }
-  #profil-picture-account-settings {
-    margin-top: 25px;
-    height: 20vh;
-    width: 20vh;
-    background-color: rgba(21, 20, 37, 0.849);
-    border-radius: 50%;
-    object-fit: cover;
-    filter: grayscale(80%);
-  }
-  #header-account-settings {
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    flex-direction: column;
-  }
-  #pseudo-account-settings {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-  }
-  #action-account-settings {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 2rem;
-    justify-content: center;
-  }
-  .sub-action-account-settings {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  #modify-pseudo-settings {
-    padding: 0.5rem;
-    background-color: var(--main-color);
-    border-radius: 0.5rem;
-    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
-    color: black;
-    cursor: pointer;
-  }
-  #modify-image-settings {
-    padding: 1rem;
-    background-color: rgba(181, 198, 255, 0.7);
-    border-radius: 100%;
-    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
-    color: black;
-    cursor: pointer;
-    position: relative;
-    top: -50%;
-    left: 0;
-    transform: translateY(25%);
-    font-size: 1rem;
-  }
-  #help-iframe {
-    right: 1rem;
-    cursor: pointer;
-    transform: translateY(5px);
-    margin-left: 10px;
-  }
-  #profil-picture-settings {
-    margin-top: 2rem;
-    height: 25vh;
-    width: 25vh;
-    background-color: rgba(21, 20, 37, 0.849);
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  #iframe-line {
-    transform: translateX(17px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #route-viewer {
-    width: 95%;
-    height: 40vh;
-    border-radius: 0.5rem;
-  }
-  #container-event-details {
-    padding: 1rem;
-    background-color: var(--dark-blue-color);
-    width: 90vw;
-    height: 95vh;
-    position: absolute;
-    top: 50vh;
-    left: 50vw;
-    transform: translate(-50%, -50%);
-    z-index: 99999;
-    border-radius: 0.5rem;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    justify-content: space-evenly;
-    flex-direction: column;
-  }
-  #container-event-details p {
-    margin: 0;
-  }
-  #container-place-point {
-    position: absolute;
-    background-color: var(--dark-blue-color);
-    top: 50vh;
-    left: 50vw;
-    z-index: 99999;
-    transform: translate(-50%, -50%);
-    padding: 3rem;
-    color: white;
-    border-radius: 0.5rem;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-  }
-  #type-prise,
-  #descriptionPointInput,
-  #namePointInput,
-  #more-info-event,
-  #type-prise {
-    width: 200px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  #container-settings {
-    background-color: var(--dark-blue-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-evenly;
-    flex-direction: column;
-    width: 90vw;
-    height: 90vh;
-    position: absolute;
-    z-index: 9999;
-    left: 50vw;
-    top: 50vh;
-    transform: translate(-50%, -50%);
-    border-radius: 0.5rem;
-  }
-
-  #header-settings {
-    display: flex;
-    gap: 2vh;
-    flex-direction: column;
-    width: 100%;
-    height: 40vh;
-    border-radius: 0.5rem;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #action-settings {
-    width: 90%;
-    height: 10vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-  }
-
-  .btn-settings {
-    background-color: var(--dark-blue-color);
-    width: 50%;
-    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
-    padding: 1rem;
-    border-radius: 0.5rem;
-
-    text-align: center;
-    cursor: pointer;
-    background-color: white;
-  }
-
-  #footer-settings {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    width: 99.5%;
-    height: 40vh;
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    flex-direction: column;
-    border-bottom-right-radius: 1rem;
-    border-bottom-left-radius: 1rem;
-    overflow-y: scroll;
-  }
-
-  #container-events {
-    background-color: var(--dark-blue-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    flex-direction: column;
-    width: 80vw;
-    height: 90vh;
-    position: absolute;
-    z-index: 9999;
-    left: 50vw;
-    top: 50vh;
-    transform: translate(-50%, -50%);
-    border-radius: 0.5rem;
-
-    padding: 2rem;
-  }
-
-  #list-events {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    width: 99.5%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    border-bottom-right-radius: 1rem;
-    border-bottom-left-radius: 1rem;
-    overflow-y: scroll;
-  }
-
-  .posted-events {
-    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.267);
-    text-align: center;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-    cursor: pointer;
-    background: var(--main-color);
-    padding: 1rem;
-    border-radius: 0.5rem;
-
-    margin-left: auto;
-    margin-right: auto;
-    width: 300px;
-    height: 300px;
-
-    margin: 0 1rem;
-  }
-
-  .posted-point {
-    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.438);
-    cursor: pointer;
-    margin-top: 1rem;
-    background: var(--main-color);
-    width: 90%;
-    border-radius: 0.5rem;
-
-    height: 400px;
-    text-align: center;
-
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .posted-point p {
-    margin: 1rem 0;
-  }
-
-  #lock-view {
-    cursor: pointer;
-    width: 40px;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    opacity: 0.8;
-    position: absolute;
-    top: 50vh;
-    left: 50vw;
-    z-index: 999;
-    transform: translateX(-50%) translateY(-50%);
-  }
-
-  #start-icon {
-    width: 50px;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-    position: absolute;
-    bottom: 400px;
-    z-index: 999;
-    right: 180px;
-    transform: translateX(-50%);
-  }
-
-  #stop-icon {
-    width: 50px;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-    position: absolute;
-    bottom: 400px;
-    z-index: 999;
-    right: 180px;
-    transform: translateX(-50%);
-  }
-
-  #icons-interface {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    z-index: 999;
-  }
-
-  #events-icon {
-    z-index: 99999;
-    position: absolute;
-    right: 10px;
-    top: 80px;
-    width: 30px;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
-  #settings-icon {
-    z-index: 99999;
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    width: 30px;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
-  #plus-icon {
-    width: 30px;
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
-  #eye-icon {
-    width: 30px;
-
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
-  #location-icon {
-    width: 30px;
-
-    background-color: var(--dark-blue-color);
-    padding: 1rem;
-    border-radius: 100%;
-    cursor: pointer;
-  }
-
-  #container-filter {
-    padding: 4rem;
-    font-size: 20px;
-    color: white;
-    border-radius: 0.5rem;
-
-    position: absolute;
-    top: 50vh;
-    left: 50vw;
-    transform: translate(-50%, -50%);
-    background-color: var(--dark-blue-color);
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: space-evenly;
-    z-index: 9999;
-  }
-
-  #EU-filter,
-  #CC-filter,
-  #Event-filter {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    justify-content: space-between;
-  }
-
-  #action-delete {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .fa-xmark {
-    position: absolute;
-    font-size: 2rem;
-    right: 20px;
-    top: 16px;
-    color: var(--red-error);
-    cursor: pointer;
-  }
-
-  p {
-    text-align: center;
-    font-size: 1rem;
-  }
-
-  select:required:invalid {
-    color: gray;
-  }
-
-  button {
-    font-size: 1rem;
-    width: 150px;
-    border: none;
-    border-radius: 0.5rem;
-
-    background-color: white;
-    color: black;
-    padding: 1rem;
-    margin-top: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  input,
-  textarea,
-  select {
-    font-weight: bold;
-    font-size: 17px;
-    width: 225px;
-    border: none;
-    border-radius: 0.5rem;
-
-    background-color: white;
-    padding: 1rem;
-    margin-top: 1rem;
-  }
-
-  #container-remove-point {
-    position: fixed;
-    z-index: 1000;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--dark-blue-color);
-    padding: 2rem;
-    border-radius: 0.5rem;
-
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    color: white;
-    width: 260px;
-  }
-
-  #confirm-delete {
-    background-color: var(--main-color);
-  }
-
-  #cancel-delete {
-    background-color: var(--red-error);
-  }
-
-  #container-add-info-point {
-    padding: 3rem;
-    position: fixed;
-    z-index: 1000;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--dark-blue-color);
-    border-radius: 0.5rem;
-
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    color: white;
-    width: 240px;
-  }
-
-  #container-create-event {
-    padding: 3rem;
-    position: fixed;
-    z-index: 9999999;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--dark-blue-color);
-    border-radius: 0.5rem;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    color: white;
-    width: 70vw;
-    height: 80vh;
-    max-height: 850px;
-    max-width: 400px;
-    overflow-y: scroll;
-    overflow-x: hidden;
-  }
-
-  #champ-text-add-point {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  #add-point-btn {
-    background-color: var(--main-color);
-    border: none;
-    border-radius: 0.5rem;
-
-    padding: 1rem;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-  }
-
-  #map-section-logged,
-  #map-section {
-    height: 100vh;
-    width: 100vw;
-  }
-
-  #map {
-    width: 100vw;
-    height: 100vh;
-  }
-
-  @media screen and (max-width: 1280px) {
-    #start-icon {
-      width: 50px;
-      background-color: var(--dark-blue-color);
-      padding: 1rem;
-      border-radius: 100%;
-      cursor: pointer;
-      position: absolute;
-      bottom: 180px;
-      z-index: 999;
-      left: 50vw;
-      transform: translateX(-50%);
-    }
-
-    #stop-icon {
-      width: 50px;
-      background-color: var(--dark-blue-color);
-      padding: 1rem;
-      border-radius: 100%;
-      cursor: pointer;
-      position: absolute;
-      bottom: 180px;
-      z-index: 999;
-      left: 50vw;
-      transform: translateX(-50%);
-    }
-  }
+  /* voir fichier dans public/css/app.css */
 </style>

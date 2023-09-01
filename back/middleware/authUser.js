@@ -3,6 +3,7 @@ const UserModel = require("../models/auth.model.js");
 
 
 exports.requireAuthUser = (req, res, next) => {
+    console.log(req.body)
     const token = req.body.token;
     const userId = req.body.idUser;
     if (token) {

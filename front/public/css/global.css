@@ -16,6 +16,29 @@ body {
   font-family: "Tilt Neon", cursive;
 }
 
+.fa-xmark {
+  position: absolute;
+  font-size: 2rem;
+  right: 20px;
+  top: 16px;
+  color: var(--red-error);
+  cursor: pointer;
+}
+
+.confirm-btn {
+  background-color: var(--main-color);
+  border: none;
+  border-radius: 0.5rem;
+  
+  padding: 1rem;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
 /* a trier */
 .leaflet-popup,
 .leaflet-popup-pane,

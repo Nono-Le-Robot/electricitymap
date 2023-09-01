@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const dataController = require("../controllers/data.controller");
-const controlAuth = require("../middleware/authUser")
+const controlAuth = require("../middleware/authUser");
+const multerProfil = require("../middleware/multerProfil");
 
 //route data
 router.post("/app-version", dataController.appVersion);
@@ -21,6 +22,9 @@ router.post("/delete-event", controlAuth.requireAuthAdmin, dataController.delete
 router.post("/registration-event", controlAuth.requireAuthAdmin, dataController.registrationEvent);
 router.post("/deregistration-event", controlAuth.requireAuthAdmin, dataController.deregistrationEvent);
 router.post("/registrationDetailEvent", controlAuth.requireAuthAdmin, dataController.registrationDetailEvent);
+router.post('/modify-username', controlAuth.requireAuthAdmin, dataController.modifyUsername)
+router.post("/upload-profil-picture",multerProfil, controlAuth.requireAuthAdmin, dataController.uploadProfilPicture)
+
 
 
 module.exports = router;

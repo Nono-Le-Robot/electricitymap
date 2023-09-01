@@ -84,6 +84,7 @@
           localStorage.setItem("userId", res.data.userId);
           localStorage.setItem("username", res.data.username);
           localStorage.setItem("email", res.data.email);
+          localStorage.setItem('profile-picture', res.data.picture)
           showToast("Connexion réussie", "Redirection...", "success");
         })
         .catch((err) => {

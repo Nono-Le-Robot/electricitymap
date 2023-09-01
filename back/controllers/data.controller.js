@@ -2,6 +2,7 @@ const e = require("express");
 const userModel = require("../models/auth.model.js");
 const pointsModel = require("../models/points.model.js");
 const eventsModel = require("../models/events.model.js");
+const authModel = require("../models/auth.model.js");
 
 module.exports.appVersion = async (req, res) => {
   const appVersion = "v1.3";
@@ -91,7 +92,6 @@ module.exports.modifyPoint = async (req, res) => {
   if (req.user === idUser ){
   try {
     const existingPoint = await pointsModel.findById(pointId);
-    console.log(existingPoint);
     if (!existingPoint) {
       return res.status(404).json({ message: "Point not found" });
     }
@@ -213,32 +213,6 @@ module.exports.updateEventCoordinates = async (req, res) => {
 };
 
 module.exports.getAllPoints = async (req, res) => {
-  // try {
-  //   const points = await pointsModel.find().exec();
-  //   const users = await userModel.find().exec();
-
-  //   const emailToUserIdMap = {};
-  //   users.forEach(user => {
-  //     emailToUserIdMap[user.email] = user._id;
-  //   });
-
-  //   const updatePromises = points.map(async (point) => {
-  //     const userId = emailToUserIdMap[point.email];
-  //     console.log(userId);
-  //     const objectIdString = userId.toHexString();
-  //     console.log(objectIdString);
-  //     if (objectIdString) {
-  //     console.log('lala');
-  //       await pointsModel.updateOne({ _id: point._id }, { idUser: objectIdString });
-  //     }
-  //   });
-
-  //   await Promise.all(updatePromises);
-
-  //   res.status(200).send("Points mis à jour avec succès.");
-  // } catch (err) {
-  //   res.status(500).send(err.message);
-  // }
   pointsModel.find().exec(function (err, events) {
     if (err) {
       res.status(500).send(err.message);
@@ -248,35 +222,6 @@ module.exports.getAllPoints = async (req, res) => {
   });
 };
 module.exports.getAllEvents = async (req, res) => {
-  // try {
-  //   const points = await eventsModel.find().exec();
-  //   const users = await userModel.find().exec();
-
-  //   const emailToUserIdMap = {};
-  //   users.forEach(user => {
-  //     emailToUserIdMap[user.email] = user._id;
-  //   });
-
-  //   const updatePromises = points.map(async (point) => {
-  //     const userId = emailToUserIdMap[point.email];
-  //     console.log(userId);
-  //     const objectIdString = userId.toHexString();
-  //     console.log(objectIdString);
-  //     if (objectIdString) {
-  //       console.log('lala');
-  //       await eventsModel.updateOne({ _id: point._id }, { idUser: objectIdString });
-  //     }
-  //   });
-  //   await Promise.all(updatePromises);
-
-  //   res.status(200).send("Points mis à jour avec succès.");
-  // } catch (err) {
-  //   res.status(500).send(err.message);
-  // }
-
-
-
-
   eventsModel.find().exec(function (err, events) {
     if (err) {
       res.status(500).send(err.message);
@@ -285,6 +230,7 @@ module.exports.getAllEvents = async (req, res) => {
     }
   });
 };
+
 module.exports.getEvents = async (req, res) => {
   eventsModel.find().exec(function (err, events) {
     if (err) {
@@ -297,8 +243,6 @@ module.exports.getEvents = async (req, res) => {
 
 module.exports.deletePoint = async (req, res) => {
 if(req.user === req.body.idUser || req.role === "admin") {
-
-
   pointsModel.deleteOne({ _id: req.body.pointId }).exec(function (err, point) {
     if (err) {
       res.status(500).send(err.message);
@@ -624,12 +568,42 @@ module.exports.deregistrationEvent = async (req, res) => {
 };
 module.exports.registrationDetailEvent = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") { 
-  
-  
-  
-  
-  
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
 };
+
+module.exports.uploadProfilPicture = async (req,res) => {
+
+  const { username, picture } = req.body;
+  try {
+    const user = await userModel.findOne({ username: username });
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+    user.picture = `https://electricitymap.fr/backend/images/profil/${req.file.filename}`;
+    await user.save();
+    // await pointsModel.updateMany(
+    //   { addedBy: username },
+    //   { $set: { addedBy: newUsername } }
+    // );
+    // await eventsModel.updateMany(
+    //   { createdBy: username },
+    //   { $set: { createdBy: newUsername } }
+    // );
+
+    res.json({
+      message: "Données utilisateur mises à jour avec succès",
+      user: {
+        picture: `https://electricitymap.fr/backend/images/profil/${req.file.filename}`,
+        username: username,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erreur lors de la mise à jour des données utilisateur",
+      error: error,
+    });
+  }
+}

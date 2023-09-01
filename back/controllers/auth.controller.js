@@ -65,7 +65,8 @@ module.exports.login = async (req, res) => {
             userId: user._id,
             username: user.username,
             email: req.body.email,
-            token : accessToken
+            token : accessToken,
+            picture : user.picture
           });
         })
         .catch((err) => res.status(401).send(err.message));
