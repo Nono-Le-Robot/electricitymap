@@ -49,6 +49,7 @@ const eventSchema = new mongoose.Schema({
   },
   iframe: {
     type: String,
+    default:""
   },
   startDate: {
     type: String,
@@ -78,7 +79,6 @@ const eventSchema = new mongoose.Schema({
   needValidate: {
     type: Boolean,
     required: true,
-
     default: true,
   },
 });

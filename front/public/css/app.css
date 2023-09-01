@@ -1,0 +1,607 @@
+#container-account-settings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 90vw;
+    height: 95vh;
+    overflow-y: visible;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    z-index: 9999;
+    color: white;
+    border-radius: 0.5rem;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+  }
+
+  #profil-picture-account-settings {
+    margin-top: 25px;
+    height: 20vh;
+    width: 20vh;
+    background-color: rgba(21, 20, 37, 0.849);
+    border-radius: 50%;
+    object-fit: cover;
+    filter: grayscale(80%);
+  }
+
+  #header-account-settings {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+  }
+
+  #pseudo-account-settings {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  #action-account-settings {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .sub-action-account-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  #modify-pseudo-settings {
+    padding: 0.5rem;
+    background-color: var(--main-color);
+    border-radius: 0.5rem;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
+    color: black;
+    cursor: pointer;
+  }
+  #photo-container-settings{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+  }
+  #modify-image-settings {
+    padding: 2rem;
+    background-color: rgba(158, 179, 250, 0.8);
+    border-radius: 100%;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
+    color: black;
+    cursor: pointer;
+    position: absolute;
+    left: 50%;
+    transform: translate(-44px, -31px);
+    z-index: 999999;
+    font-size: 1.5rem;
+  }
+
+  #help-iframe {
+    right: 1rem;
+    cursor: pointer;
+    transform: translateY(5px);
+    margin-left: 10px;
+  }
+
+  #profil-picture-settings {
+    margin-top: 2rem;
+    height: 25vh;
+    width: 25vh;
+    background-color: rgba(21, 20, 37, 0.849);
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  #iframe-line {
+    transform: translateX(17px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #route-viewer {
+    width: 95%;
+    height: 40vh;
+    border-radius: 0.5rem;
+  }
+
+  #container-event-details {
+    padding: 1rem;
+    background-color: var(--dark-blue-color);
+    width: 90vw;
+    height: 95vh;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    z-index: 99999;
+    border-radius: 0.5rem;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-evenly;
+    flex-direction: column;
+  }
+
+  #container-event-details p {
+    margin: 0;
+  }
+
+  #container-place-point {
+    position: absolute;
+    background-color: var(--dark-blue-color);
+    top: 50vh;
+    left: 50vw;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    padding: 3rem;
+    color: white;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #type-prise,
+  #descriptionPointInput,
+  #namePointInput,
+  #more-info-event,
+  #type-prise {
+    width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #container-settings {
+    background-color: var(--dark-blue-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-direction: column;
+    width: 90vw;
+    height: 90vh;
+    position: absolute;
+    z-index: 9999;
+    left: 50vw;
+    top: 50vh;
+    transform: translate(-50%, -50%);
+    border-radius: 0.5rem;
+  }
+
+  #header-settings {
+    display: flex;
+    gap: 2vh;
+    flex-direction: column;
+    width: 100%;
+    height: 40vh;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #action-settings {
+    width: 90%;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .btn-settings {
+    background-color: var(--dark-blue-color);
+    width: 50%;
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    background-color: white;
+  }
+
+  #footer-settings {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    width: 99.5%;
+    height: 40vh;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-direction: column;
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+    overflow-y: scroll;
+  }
+
+  #container-events {
+    background-color: var(--dark-blue-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-direction: column;
+    width: 80vw;
+    height: 90vh;
+    position: absolute;
+    z-index: 9999;
+    left: 50vw;
+    top: 50vh;
+    transform: translate(-50%, -50%);
+    border-radius: 0.5rem;
+    padding: 2rem;
+  }
+
+  #list-events {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    width: 99.5%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    border-bottom-right-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+    overflow-y: scroll;
+  }
+
+  .posted-events {
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.267);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    cursor: pointer;
+    background: var(--main-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 300px;
+    height: 300px;
+    margin: 0 1rem;
+  }
+
+  .posted-point {
+    box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.438);
+    cursor: pointer;
+    margin-top: 1rem;
+    background: var(--main-color);
+    width: 90%;
+    border-radius: 0.5rem;
+    height: 400px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .posted-point p {
+    margin: 1rem 0;
+  }
+
+  #lock-view {
+    cursor: pointer;
+    width: 40px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    opacity: 0.8;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    z-index: 999;
+    transform: translateX(-50%) translateY(-50%);
+  }
+
+  #start-icon {
+    width: 50px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+    position: absolute;
+    bottom: 400px;
+    z-index: 999;
+    right: 180px;
+    transform: translateX(-50%);
+  }
+
+  #stop-icon {
+    width: 50px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+    position: absolute;
+    bottom: 400px;
+    z-index: 999;
+    right: 180px;
+    transform: translateX(-50%);
+  }
+
+  #icons-interface {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 999;
+  }
+
+  #events-icon {
+    z-index: 99999;
+    position: absolute;
+    right: 10px;
+    top: 80px;
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #settings-icon {
+    z-index: 99999;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #plus-icon {
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #eye-icon {
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #location-icon {
+    width: 30px;
+    background-color: var(--dark-blue-color);
+    padding: 1rem;
+    border-radius: 100%;
+    cursor: pointer;
+  }
+
+  #container-filter {
+    padding: 4rem;
+    font-size: 20px;
+    color: white;
+    border-radius: 0.5rem;
+    position: absolute;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-evenly;
+    z-index: 9999;
+  }
+
+  #EU-filter,
+  #CC-filter,
+  #Event-filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    justify-content: space-between;
+  }
+
+  #action-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .fa-xmark {
+    position: absolute;
+    font-size: 2rem;
+    right: 20px;
+    top: 16px;
+    color: var(--red-error);
+    cursor: pointer;
+  }
+
+  p {
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  select:required:invalid {
+    color: gray;
+  }
+
+  button {
+    font-size: 1rem;
+    width: 150px;
+    border: none;
+    border-radius: 0.5rem;
+
+    background-color: white;
+    color: black;
+    padding: 1rem;
+    margin-top: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  input,
+  textarea,
+  select {
+    font-weight: bold;
+    font-size: 17px;
+    width: 225px;
+    border: none;
+    border-radius: 0.5rem;
+
+    background-color: white;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  #container-remove-point {
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+    padding: 2rem;
+    border-radius: 0.5rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: white;
+    width: 260px;
+  }
+
+  #confirm-delete {
+    background-color: var(--main-color);
+  }
+
+  #cancel-delete {
+    background-color: var(--red-error);
+  }
+
+  #container-add-info-point {
+    padding: 3rem;
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+    border-radius: 0.5rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: white;
+    width: 240px;
+  }
+
+  #container-create-event {
+    padding: 3rem;
+    position: fixed;
+    z-index: 9999999;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--dark-blue-color);
+    border-radius: 0.5rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+    width: 70vw;
+    height: 80vh;
+    max-height: 850px;
+    max-width: 400px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+
+  #champ-text-add-point {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .confirm-btn {
+    background-color: var(--main-color);
+    border: none;
+    border-radius: 0.5rem;
+
+    padding: 1rem;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+
+  .cancel-btn{
+    background-color: var(--red-error); 
+    width: 100%;
+  }
+
+  #map-section-logged,
+  #map-section {
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #map {
+    width: 100vw;
+    height: 100vh;
+  }
+
+  @media screen and (max-width: 1280px) {
+    #start-icon {
+      width: 50px;
+      background-color: var(--dark-blue-color);
+      padding: 1rem;
+      border-radius: 100%;
+      cursor: pointer;
+      position: absolute;
+      bottom: 180px;
+      z-index: 999;
+      left: 50vw;
+      transform: translateX(-50%);
+    }
+
+    #stop-icon {
+      width: 50px;
+      background-color: var(--dark-blue-color);
+      padding: 1rem;
+      border-radius: 100%;
+      cursor: pointer;
+      position: absolute;
+      bottom: 180px;
+      z-index: 999;
+      left: 50vw;
+      transform: translateX(-50%);
+    }
+  }

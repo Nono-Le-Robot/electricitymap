@@ -25,6 +25,10 @@ const userModel = new mongoose.Schema({
     required: true,
     min: 8,
   },
+  picture : {
+    type : String, 
+    default : "https://electricitymap.fr/backend/images/default/default-profile-picture.jpg"
+},
   createdAt: {
     type: Date,
     default: Date.now,
