@@ -1867,22 +1867,21 @@ function checkForUpdate() {
     <p>{selectedEventStartDate === selectedEventEndDate ? `Date : ${selectedEventStartDate}` : ` Dates : ${selectedEventStartDate} -> ${selectedEventEndDate}`}</p>
     <p>Départ : {selectedEventStartHour}</p>
     <p>Nombre de participants : {selectedEventRegistration.length}</p>
-    <p>
-      Point de rassemblement :<i
-        style="cursor: pointer; margin-left: 10px"
-        class="fa-solid fa-eye"
-        on:click={showSelectedEvent}
-      />
-    </p>
     {#if (selectedEventDescriptionAnimation !== "")}
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content:center; gap:1rem; border:solid ;1px; border-radius:0.5rem;  var(--main-color); padding: 1rem 1rem 0rem 1rem;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content:center; gap:0.5rem; border:solid ;1px; border-radius:0.5rem;  var(--main-color); padding: 0.5rem 0.5rem 0rem 0.5rem;">
       <p style='font-weight: bold;'>Événement organisé</p>
       <p>Participation / personne : {selectedEventParticipationFee} €</p>
       <p>infos : {selectedEventDescriptionAnimation}</p>
       <p>
       </div>
   {/if}
-
+  <p>
+    Point de rassemblement :<i
+      style="cursor: pointer; margin-left: 10px"
+      class="fa-solid fa-eye"
+      on:click={showSelectedEvent}
+    />
+  </p>
     <p>Créer par : {selectedEventCreatedBy}</p>
     {#if showParticipationBtn === true }
     <button on:click={addParticipationToEvent} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
