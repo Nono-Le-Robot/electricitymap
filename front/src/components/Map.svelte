@@ -17,10 +17,12 @@
   let userToken = localStorage.getItem("token");
   let userProfilPicture = localStorage.getItem('profile-picture')
   let allPoints = [];
+  let allParticipants = []
   let myPoints = [];
   let allEvents = [];
   let circles = [];
   let userCoords = [];
+  let newCoords;
   let groupMarkersEvents = [];
   let groupMarkersEuropeene = [];
   let groupMarkersAmericaine = [];
@@ -85,6 +87,8 @@
   let showModalReportPointError = false;
   let showModalEnterNewUsername = false;
   let showModalConfirmDeleteAccount = false;
+  let showConfirmChangePosition = false;
+  let showModalAllParticipants = false;
   let showModalAnimation = false;
   let showModalCreateEvent;
   let coordsToAddPoint = { lat: null, lng: null };
@@ -139,7 +143,7 @@ const customIcon = createCustomIcon(
   );
 
   const customIconError = createCustomIcon(
-    "./assets/elecSpot2-red.png",
+    "./assets/elecSpot-orange.png",
     [50, 50],
     [25, 50],
     [50, 64],
@@ -559,7 +563,6 @@ const customIcon = createCustomIcon(
         }
 
         function switchLikeUser(user, lovers, haters) {
-        console.log(point.haters)
           if (
             (point.lovers === undefined && point.haters === undefined) ||
             (point.lovers.includes(!user) && point.haters.includes(!user))
@@ -683,21 +686,14 @@ const customIcon = createCustomIcon(
           selectedMarker = point;
           circles.forEach((circle) => circle.removeFrom(map));
           circles = [];
-          const newCoords = event.target.getLatLng();
+           newCoords = event.target.getLatLng();
           circleMinSpaceBetweenPoint.setLatLng(newCoords);
         });
 
         marker.on("dragend", (event) => {
-        console.log(event)
-        console.log(point)
+        showConfirmChangePosition = true;
           selectedMarker = point;
-          const newCoords = event.target.getLatLng();
-          if (point.pointName !== undefined && point.pointName!== null ){
-          updatePointCoordinates(pointId, newCoords.lat, newCoords.lng);
-          }
-          if(point.eventName !== undefined && point.eventName !== null ){
-            updateEventCoordinates(pointId, newCoords.lat, newCoords.lng);
-          }
+          newCoords = event.target.getLatLng();
         });
 
         marker.on("popupopen", (event) => {
@@ -1130,6 +1126,9 @@ const customIcon = createCustomIcon(
     showModalEnterNewUsername = false;
     showIconPanel = true;
     showModalAnimation = false;
+    showConfirmChangePosition = false
+  showModalAllParticipants = false;
+
   };
 
   const closePopUpTimer = () => {
@@ -1335,7 +1334,7 @@ const customIcon = createCustomIcon(
     }, 2000);
   };
 
-  const showEventDetails = (
+  const showEventDetails = async (
     createdBy,
     email,
     eventName,
@@ -1367,7 +1366,16 @@ const customIcon = createCustomIcon(
     selectedEventStartHour = startHour;
     showModalEvents = false;
     showModalEventDetails = true;
-    console.log(selectedEventIframe)
+    selectedEventRegistration.forEach(async (id) => {
+    await axios
+      .post(`${apiUrl}/api/data/get-user-by-id`, {
+        userId: id,
+      })
+      .then((data) => {
+       allParticipants.push(data.data.user)
+        console.log(allParticipants)
+      });
+  });
     if(selectedEventRegistration.includes(userId)){
       showParticipationBtn = false;
     }
@@ -1564,7 +1572,6 @@ const customIcon = createCustomIcon(
 
   const goToMyAddedPoint = (coords) => {
     closePopup();
-    console.log(coords);
     map.setView([coords.lat, coords.lng], 20);
   };
   let deferredPrompt;
@@ -1589,12 +1596,30 @@ const customIcon = createCustomIcon(
 
     
 };
+
+const showAllParticipants = () =>  {
+  closePopup()
+  showIconPanel = false;
+  console.log(selectedEventRegistration)
+  showModalAllParticipants = true;
+  //get user pseudo with id present in selectedEventRegistration
+  //get user mail with id present in selectedEventRegistration
+}
+
+const changePointPosition = () => {
+  if (selectedMarker.pointName !== undefined && selectedMarker.pointName!== null ){
+          updatePointCoordinates(selectedMarker._id, newCoords.lat, newCoords.lng);
+          }
+          if(selectedMarker.eventName !== undefined && selectedMarker.eventName !== null ){
+            updateEventCoordinates(selectedMarker._id, newCoords.lat, newCoords.lng);
+          }
+          closePopup()
+          refreshPoints()
+}
   
 const addParticipationToEvent = async () => {
-
   allEvents.forEach(async (point) => {
     if (point.eventName === selectedEventName) {
-      console.log(point._id);
     }
   await axios.post(`${apiUrl}/api/data/registration-event`, {
                   token: userToken,
@@ -1616,7 +1641,6 @@ const removeParticipationToEvent = async () => {
 
       allEvents.forEach(async (point) => {
         if (point.eventName === selectedEventName) {
-          console.log(point._id);
         }
         await axios
           .post(`${apiUrl}/api/data/deregistration-event`, {
@@ -1626,7 +1650,7 @@ const removeParticipationToEvent = async () => {
           })
           .then((data) => {
             refreshPoints();
-            console.log(data);
+
           });
       });
       selectedEventRegistration.length--;
@@ -1781,6 +1805,22 @@ function checkForUpdate() {
   </div>
 {/if}
 
+{#if showConfirmChangePosition}
+<div id="container-remove-point">
+  <div>
+    <p>Etes vous sur de vouloir déplacer le point ?</p>
+  </div>
+  <div id="action-delete">
+    <button type="submit" id="confirm-delete" on:click={changePointPosition}
+      >Confirmer</button
+    >
+    <button type="submit" id="cancel-delete" on:click={() => {closePopup(); refreshPoints()}}
+      >Annuler</button
+    >
+  </div>
+  <div />
+</div>
+{/if}
 
 {#if showStartRoute}
   <div id="resume-route">
@@ -1892,7 +1932,14 @@ function checkForUpdate() {
         on:click={showSelectedEvent}
       />
     </p>
-    <p>Nombre de participants : {selectedEventRegistration.length}</p>
+    <p>
+      Nombre de participants : {selectedEventRegistration.length}<i
+        style="cursor: pointer; margin-left: 10px"
+        class="fa-solid fa-eye"
+        on:click={showAllParticipants}
+      />
+    </p>
+
     {#if showParticipationBtn === true }
     <button on:click={addParticipationToEvent} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
     {:else}
@@ -1902,6 +1949,29 @@ function checkForUpdate() {
   </div>
 {/if}
 <div id="filter" />
+
+{#if showModalAllParticipants}
+  <div id="container-place-point">
+    <i class="fa-solid fa-xmark" on:click={() => {closePopup(); showIconPanel = false; showModalEventDetails= true}} />
+    <div>
+      <h2 style='color:white; font-weight: bold; text-align:center;'>Participants</h2>
+      {#each allParticipants as participant}
+      <div style='display:flex; justify-content:space-between; align-items:center; gap:1rem;'>
+        <img
+          id="profil-picture-settings"
+          src={participant.picture}
+          alt=""
+          srcset=""
+          style='width:50px; height:50px; border-radius:50%; margin-top:0;'
+        />
+        <p style='color:white; font-weight: bold; text-align:center;'>{participant.username}</p>
+      </div>
+    {/each}
+    
+
+  </div>
+  </div>
+{/if}
 
 {#if showModalPlacePoint}
   <div id="container-place-point">
@@ -2008,7 +2078,7 @@ function checkForUpdate() {
         <div on:click={(e) => goToMyAddedPoint(coords)} class="posted-point">
           <p>{pointName}</p>
         </div>
-      {/each}s
+      {/each}
     </div>
   </div>
 {/if}
@@ -2128,7 +2198,7 @@ function checkForUpdate() {
     <p style="margin:0; cursor: pointer" on:click={installApp}>Installer l'application</p>
     
     <div id="footer-account-settings" />
-    <p style="margin:0 cursor:pointer" on:click={logout}>Déconnexion</p>
+    <p style="margin:0; cursor:pointer;" on:click={logout}>Déconnexion</p>
 
     <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p>
   </div>
@@ -2147,7 +2217,6 @@ function checkForUpdate() {
       token: userToken,
       idUser: userId,
     }).then((data) => {
-    console.log(data)
      closePopup()
       logout()
       

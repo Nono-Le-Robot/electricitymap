@@ -24,6 +24,7 @@ router.post("/deregistration-event", controlAuth.requireAuthAdmin, dataControlle
 router.post("/registrationDetailEvent", controlAuth.requireAuthAdmin, dataController.registrationDetailEvent);
 router.post('/modify-username', controlAuth.requireAuthAdmin, dataController.modifyUsername)
 router.post("/upload-profil-picture",multerProfil, controlAuth.requireAuthAdmin, dataController.uploadProfilPicture)
+router.post('/get-user-by-id', dataController.getUserById)
 
 
 

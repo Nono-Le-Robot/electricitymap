@@ -498,9 +498,7 @@ module.exports.deleteEvent = async (req, res) => {
 
 module.exports.likePoint = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
-    console.log(req.body);
     const idPoint = req.body.idPoint._id;
-    console.log(req.body.idPoint.eventName);
     const event = req.body.idPoint.eventName;
     if (event !== null && event !== undefined) {
       eventsModel.findByIdAndUpdate(idPoint, { $inc: { likes: 1 } }, (err, result) => {
@@ -583,7 +581,6 @@ module.exports.registrationEvent = async (req, res) => {
       if(!result.registration.includes(req.body.idUser)){
         eventsModel.findByIdAndUpdate(req.body.idEvent, { $push: { registration: req.body.idUser } }, (err, result) => {
           if (!err) {
-            console.log(result);
             res.status(200).json({ message: "Inscription à l'event réussi", result: result });
           }
         })
@@ -599,7 +596,6 @@ module.exports.deregistrationEvent = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
     eventsModel.findByIdAndUpdate(req.body.idEvent, { $pull: { registration: req.body.idUser } }, (err, result) => {
       if (!err) {
-        console.log(result);
         res.status(200).json({ message: "Inscription à l'event réussi", result: result });
       }
     });
@@ -643,6 +639,30 @@ module.exports.uploadProfilPicture = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erreur lors de la mise à jour des données utilisateur",
+      error: error,
+    });
+  }
+}
+
+module.exports.getUserById = async (req, res) => {
+  const userId = req.body.userId;
+  try {
+    const user = await authModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+    res.json({
+      message: "Données utilisateur mises à jour avec succès",
+      user: {
+        picture: user.picture,
+        username: user.username,
+      },
+    });
+  }
+  catch (error) {
     console.log(error);
     res.status(500).json({
       message: "Erreur lors de la mise à jour des données utilisateur",

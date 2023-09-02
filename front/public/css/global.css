@@ -3,7 +3,7 @@
 
 /* Colors variables */
 body {
-  /* user-select: none; */
+   user-select: none; 
 }
 :root {
   --main-color: rgb(181, 198, 255);
