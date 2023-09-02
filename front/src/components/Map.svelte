@@ -2115,10 +2115,10 @@ function checkForUpdate() {
     <p style="margin:0; cursor: pointer" on:click={installApp}>Installer l'application</p>
     
     <div id="footer-account-settings" />
-    <p style="margin:0" on:click={logout}>Déconnexion</p>
+    <p style="margin:0 cursor:pointer" on:click={logout}>Déconnexion</p>
 
     <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p>
-  </div>fa-solid fa-xmark" on:click={closePopup} />
+  </div>
 {/if}
 
 {#if showModalConfirmDeleteAccount}

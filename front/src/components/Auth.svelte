@@ -27,7 +27,6 @@
       onRemove: () => {
         if (type === "success") {
           if (register) {
-            register = false;
           } else {
             dispatch("Connected", { logged: true });
           }
@@ -50,7 +49,31 @@
             username: userData.username,
             password: userData.password,
           })
-          .then((res) => {
+          .then(async () => {
+            const res = await axios
+        .post(`${apiUrl}/api/auth/login`, {
+          email: userData.email,
+          password: userData.password,
+        })
+        .then((res) => {
+          userData = {
+            email: "",
+            username: "",
+            password: "",
+            repeatPassword: "",
+            date: null,
+          };
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("userId", res.data.userId);
+          localStorage.setItem("username", res.data.username);
+          localStorage.setItem("email", res.data.email);
+          localStorage.setItem('profile-picture', res.data.picture)
+          // showToast("Connexion réussie", "Redirection...", "success");
+        })
+        .catch((err) => {
+          console.log(err);
+          showToast("Oups...", err.response.data.message, "error");
+        });
             userData = {
               email: "",
               username: "",
