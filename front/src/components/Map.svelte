@@ -1550,10 +1550,34 @@ const customIcon = createCustomIcon(
     console.log(coords);
     map.setView([coords.lat, coords.lng], 20);
   };
+  let deferredPrompt;
+
+  const installApp = () => {
+    // Vérifie si l'événement beforeinstallprompt est disponible dans le navigateur
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        // L'utilisateur a accepté l'installation
+        
+      } else {
+        // L'utilisateur a refusé l'installation
+        closePopup()
+        
+        
+      }
+      deferredPrompt = null;
+
+
+      });
+
+    
+};
+  
+    
+
 
   onMount(async () => {
 
-    let deferredPrompt;
 if(window.innerWidth < 768){ 
 
 
@@ -1567,7 +1591,7 @@ if(window.innerWidth < 768){
       showInstallPrompt();
     } else {
       // L'application est déjà installée, vous pouvez vérifier une mise à jour ici
-      showInstallPrompt();
+   
     }
   });
   
@@ -1592,6 +1616,8 @@ if(window.innerWidth < 768){
           // L'utilisateur a accepté l'installation
         } else {
           // L'utilisateur a refusé l'installation
+          
+    
         }
         deferredPrompt = null;
         divPopupInstall.remove();
@@ -1612,6 +1638,7 @@ if(window.innerWidth < 768){
     });
     
     document.body.appendChild(divPopupInstall);
+    
   }
 }
 
@@ -2075,15 +2102,18 @@ function checkForUpdate() {
     <div id="action-account-settings">
 
       <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Aide</h3>
+        <h3 style="margin:5px 0"></h3>
         <p style="margin:0; cursor: pointer" on:click={contactSupport}>Contacter le support</p>
       </div>
     </div>
+    <p style="margin:0; cursor: pointer" on:click={installApp}>Installer l'application</p>
+    
     <div id="footer-account-settings" />
+    
     <p style="margin:0; cursor: pointer" on:click={logout}>Déconnexion</p>
-
     <!-- <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p> -->
   </div>
+
   <i class="fa-solid fa-xmark" on:click={closePopup} />
 {/if}
 
