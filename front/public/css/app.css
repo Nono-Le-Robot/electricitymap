@@ -620,6 +620,7 @@
     font-size: 2rem;
     padding: 2rem;
     width: 65vw;
+    max-width: 400px;
     position: absolute;
     z-index: 99999;
     top: 50vh;
