@@ -327,6 +327,8 @@ const customIcon = createCustomIcon(
   };
 
   const showSelectedEvent = () => {
+    closePopup();
+    showIconPanel = false
     map.setView(selectedEventCoords, 17);
     showModalEventDetails = false;
     showIconPanel = true;
@@ -522,7 +524,7 @@ const customIcon = createCustomIcon(
      <p> Prix:  ${
        point.participation ? point.participation : point.participation
      }€</p>
-       <p>${
+       <p style='margin-left:1rem;margin-right:1rem;'>${
          point.animationDescription
            ? point.animationDescription
            : point.animationDescription
@@ -895,7 +897,10 @@ const customIcon = createCustomIcon(
 
           const eyeIcon = document.getElementById("see-point");
           eyeIcon?.addEventListener("click", () => {
+            closePopup()
+            showIconPanel = false;
             getDetail();
+
           });
 
           const RegitrationEvent = document.getElementById("registrationevent");
@@ -1531,6 +1536,8 @@ const customIcon = createCustomIcon(
   };
 
   const toggleEvent = () => {
+    closePopup()
+    showIconPanel = false;
     showEvents = !showEvents;
     if (showEvents) {
       markersLayerEvents.addTo(map);
@@ -1807,14 +1814,18 @@ function checkForUpdate() {
     srcset=""
     on:click={settings}
   />
-  <img
+  <div>
+
+    <img
     id="events-icon"
     src="./assets/icons/list.png"
     alt=""
     srcset=""
     on:click={events}
-  />
-
+    />
+    <p id='pastille-events'>{allEvents.length}</p>
+  </div>
+    
   <div id="icons-interface">
     <img
       id="plus-icon"
@@ -1837,18 +1848,19 @@ function checkForUpdate() {
       alt=""
       srcset=""
       on:click={goToUserLocation}
-    />
-  </div>
-{/if}
+      />
+    </div>
+    {/if}
 
-{#if showModalEventDetails}
-  <div id="container-event-details">
-    <i class="fa-solid fa-xmark" on:click={closePopup} />
+    {#if showModalEventDetails}
+    <div id="container-event-details">
+      <i class="fa-solid fa-xmark" on:click={closePopup} />
     <h3>{selectedEventName}</h3>
     <p>{selectedEventDescription}</p>
     <p style="max-width:90vw">
       Infos : {selectedEventInformations}
     </p>
+    <p>Distance : {selectedEventDistance} km</p>
    
 
     {#if selectedEventIframe}
@@ -1863,10 +1875,6 @@ function checkForUpdate() {
         referrerpolicy="no-referrer-when-downgrade"
       />
     {/if}
-    <p>Distance : {selectedEventDistance} km</p>
-    <p>{selectedEventStartDate === selectedEventEndDate ? `Date : ${selectedEventStartDate}` : ` Dates : ${selectedEventStartDate} -> ${selectedEventEndDate}`}</p>
-    <p>Départ : {selectedEventStartHour}</p>
-    <p>Nombre de participants : {selectedEventRegistration.length}</p>
     {#if (selectedEventDescriptionAnimation !== "")}
     <div style="display: flex; flex-direction: column; align-items: center; justify-content:center; gap:0.5rem; border:solid ;1px; border-radius:0.5rem;  var(--main-color); padding: 0.5rem 0.5rem 0rem 0.5rem;">
       <p style='font-weight: bold;'>Événement organisé</p>
@@ -1875,19 +1883,22 @@ function checkForUpdate() {
       <p>
       </div>
   {/if}
-  <p>
-    Point de rassemblement :<i
-      style="cursor: pointer; margin-left: 10px"
-      class="fa-solid fa-eye"
-      on:click={showSelectedEvent}
-    />
-  </p>
-    <p>Créer par : {selectedEventCreatedBy}</p>
+    <p>{selectedEventStartDate === selectedEventEndDate ? `Date : ${selectedEventStartDate}` : ` Dates : ${selectedEventStartDate} -> ${selectedEventEndDate}`}</p>
+    <p>Départ : {selectedEventStartHour}</p>
+    <p>
+      Point de rassemblement :<i
+        style="cursor: pointer; margin-left: 10px"
+        class="fa-solid fa-eye"
+        on:click={showSelectedEvent}
+      />
+    </p>
+    <p>Nombre de participants : {selectedEventRegistration.length}</p>
     {#if showParticipationBtn === true }
     <button on:click={addParticipationToEvent} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
     {:else}
     <button on:click={removeParticipationToEvent} style='background-color:var(--main-color); min-width:200px;'>Je ne participe plus</button> 
     {/if}
+    <p>Créer par : {selectedEventCreatedBy}</p>
   </div>
 {/if}
 <div id="filter" />
@@ -2028,16 +2039,13 @@ function checkForUpdate() {
           )}
           class="posted-events"
         >
-          <h2>{eventName}</h2>
-          <h3>{eventDescription}</h3>
-          <h3>{startDate} - {endDate}</h3>
-          <h3>Départ : {startHour}</h3>
-          <div>
-            attention event avec animation :
-            {animationDescription}
-            Prix:
-            {participation}
-          </div>
+          <h2 style="margin: 0.5rem">{eventName}</h2>
+          <h3 style="margin: 0.5rem">{eventDescription}</h3>
+          <h3 style="margin: 0.5rem">{startDate} - {endDate}</h3>
+          <h3 style="margin: 0.5rem">Départ : {startHour}</h3>
+          <h3 style="margin: 0.5rem">Distance : {distance} km</h3>
+          <h3 style="margin: 0.5rem">nombres de participants : {registration.length}</h3>
+
         </div>
       {/each}
     </div>
