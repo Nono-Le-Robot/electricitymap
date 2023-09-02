@@ -205,7 +205,6 @@
   }
 
   .btn-settings {
-  
     background-color: var(--dark-blue-color);
     width: 50%;
     box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.068);
@@ -240,7 +239,6 @@
     width: 80vw;
      height: 90vh;
     padding: 2rem;
-
     position: absolute;
     z-index: 9999;
     left: 50vw;
@@ -542,7 +540,6 @@
     width: 80vw;
      height: 90vh;
     padding: 2rem;
-
     max-height: 850px;
     max-width: 400px;
     overflow-y: scroll;
