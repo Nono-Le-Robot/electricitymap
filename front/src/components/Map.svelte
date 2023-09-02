@@ -63,6 +63,7 @@
   let lockView = true;
   let latPointToAdd;
   let lngPointToAdd;
+  let showParticipationBtn = true;
   let showIconPanel = true;
   let showModalAskAction = false;
   let showModalAddPoint = false;
@@ -516,25 +517,18 @@ const customIcon = createCustomIcon(
         function animationEvent() {
           if (point.participation !== null) {
             return `
- <div style="border:solid ;1px; blue;">
-    <h4>Animation</h4>
-     <span> Prix:  ${
+ <div style="border:solid ;1px; border-radius:0.5rem;  var(--main-color);">
+    <p style='font-weight:bold;'>Animation</p>
+     <p> Prix:  ${
        point.participation ? point.participation : point.participation
-     }€</span>
-      <p> Description :</p>
-       ${
+     }€</p>
+       <p>${
          point.animationDescription
            ? point.animationDescription
            : point.animationDescription
-       }</span>
+       }
         </p> 
-         <label for="inscription">Voir détails</label>
-        <input
-            type="checkbox"
-            id="inscription"
-            name="inscription"
-            value="inscription"
-          />
+         <p id='inscription' style='text-decoration:underline;'>Voir détails</p>
         </div>
         `;
           } else {
@@ -549,12 +543,12 @@ const customIcon = createCustomIcon(
           ) {
             return ` 
           <div style="display:flex;  align-items:center; justify-content:center;cursor:pointer">
-         <button style="display:flex" id="deregistrationevent"> me desinscrire</button> 
+         <button style="display:flex; align-items:center; justify-content:center;cursor:pointer; background-color:var(--main-color); min-width:200px;" id="deregistrationevent">Je ne participe plus</button> 
          </div>`;
           } else if (point.eventName) {
             return `
     <div  style="display:flex;  align-items:center; justify-content:center;cursor:pointer">
-         <button style="display:flex" id="registrationevent"> Je participe</button> 
+         <button style="display:flex; align-items:center; justify-content:center;cursor:pointer; background-color:var(--main-color); min-width:200px;" id="registrationevent">Je participe</button> 
          </div>
         `;
           } else {
@@ -569,84 +563,83 @@ const customIcon = createCustomIcon(
             (point.lovers.includes(!user) && point.haters.includes(!user))
           ) {
             return `
-      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
-      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red; margin-right:0.5rem;"></i>
+      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green; margin-left:0.5rem;"></i>
     `;
           } else if (
             point.lovers.includes(user) ||
             point.haters === undefined
           ) {
             return `
-      <i class="fa-solid fa-thumbs-up" id="unapprouveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+      <i class="fa-solid fa-thumbs-up" id="unapprouveIcone" style="cursor:pointer; font-size:15px; color:green; margin-left:0.5rem;"></i>
     `;
           } else if (
             point.haters.includes(user) ||
             point.lovers === undefined
           ) {
             return `
-      <i class="fa-solid fa-thumbs-down" id="undesapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
+      <i class="fa-solid fa-thumbs-down" id="undesapprouveIcone" style="cursor:pointer; font-size:15px; color:red; margin-right:0.5rem;"></i>
     `;
           } else {
             return `
-      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red"></i>
-      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green"></i>
+      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red; margin-right:0.5rem;"></i>
+      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green; margin-left:0.5rem;"></i>
     `;
           }
         }
 
         marker.bindPopup(`
-        ${point.likers ? switchLikePoint(userId, point.likers) : ""}
-        ${
+        <div>
+          ${point.likers ? switchLikePoint(userId, point.likers) : ""}
+          ${
           point.eventName
-            ? ``
-            : `<img style="width:50px; height:50px; padding-bottom:10px;" class="flag" src="assets/${getImageSource(
-                point.priseType
-              )}" alt="logo" />`
-        }
+          ? ``
+          : `<img style="width:50px; height:50px; padding-bottom:10px;" class="flag" src="assets/${getImageSource(
+            point.priseType
+            )}" alt="logo" />`
+          }
        
-        <br>
-        <h3>${point.eventName ? point.eventName : point.pointName}</h3>
-        <p>${
-          point.eventDescription
+          <br>
+          <h3>${point.eventName ? point.eventName : point.pointName}</h3>
+          <p>${
+            point.eventDescription
             ? point.eventDescription
             : point.pointDescription
             ? point.pointDescription
             : ""
-        }</p>
-
-       ${point.eventName ? animationEvent() : ""}
-
+          }</p>
+          
+          ${point.eventName ? animationEvent() : ""}
+          
         ${
           point.eventName
             ? `
           <p>Distance : ${point.distance} Km</p>
           `
-            : ``
+          : ``
         }
+        
+        ${point.eventName ? point.startDate === point.endDate ? `<p>${point.startDate}</p> ` : `<p>${point.startDate} - ${point.endDate}</p>` : ``}
+        
         ${
           point.eventName
-            ? `
-          <p>${point.startDate} - ${point.endDate}</p>
-          `
-            : ``
+          ? `<p>Départ : ${point.startHour}</p> `
+          : `<p>Type : ${point.priseType}</p>`
         }
+        ${point.eventName ? `<p>Nombre de participants : ${point.registration.length}</p>` : ``}
         ${
           point.eventName
-            ? `Départ : ${point.startHour} `
-            : `<p>Type : ${point.priseType}</p>`
+          ? `<p>Créer par : ${point.createdBy}</p>`
+          : `<p>Ajouté par : ${point.addedBy}</p>`
         }
-        ${
-          point.eventName
-            ? `<p>Créer par : ${point.createdBy}</p>`
-            : `<p>Ajouté par : ${point.addedBy}</p>`
-        }
-         ${switchLikeUser(userId, point.lovers, point.haters)}
+        ${switchLikeUser(userId, point.lovers, point.haters)}
+        ${RegistrationEvent()}
         <div style="
         display:flex;
         align-items:center;
         justify-content:space-evenly;
         gap:1rem;
-        margin-top:1rem;
+        margin-top:1.5rem;
         margin-bottom:1.5rem;
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
@@ -661,24 +654,25 @@ const customIcon = createCustomIcon(
           point.createdBy,
           point.addedBy,
           point._id
-        )}
-         </div>
-         ${RegistrationEvent()}
-     
-       `);
-        function getImageSource(priseType) {
-          switch (priseType) {
-            case "Européenne":
-              oldType = "Européenne";
-              return "eu-flag.png";
-            case "Prise camping-car":
-              oldType = "Prise camping-car";
-              return "cc-flag.png";
-            default:
-              return "";
-          }
-        }
+          )}
+          </div>
 
+          
+          </div>
+         `);
+         function getImageSource(priseType) {
+           switch (priseType) {
+             case "Européenne":
+               oldType = "Européenne";
+               return "eu-flag.png";
+               case "Prise camping-car":
+                 oldType = "Prise camping-car";
+                 return "cc-flag.png";
+                 default:
+              return "";
+            }
+        }
+        
         marker.on("click", () => {
           selectedMarker = point;
         });
@@ -894,6 +888,8 @@ const customIcon = createCustomIcon(
 
           const detailAnimation = document.getElementById("inscription");
           detailAnimation?.addEventListener("click", () => {
+            closePopup()
+            showIconPanel = false;
             getDetail();
           });
 
@@ -1340,8 +1336,8 @@ const customIcon = createCustomIcon(
     eventName,
     eventDescription,
     eventInformations,
-    descriptionAnimation,
-    participationFee,
+    animationDescription,
+    participation,
     registration,
     distance,
     iframe,
@@ -1355,8 +1351,8 @@ const customIcon = createCustomIcon(
     selectedEventName = eventName;
     selectedEventDescription = eventDescription;
     selectedEventInformations = eventInformations;
-    selectedEventDescriptionAnimation = descriptionAnimation;
-    selectedEventParticipationFee = participationFee;
+    selectedEventDescriptionAnimation = animationDescription;
+    selectedEventParticipationFee = participation;
     selectedEventRegistration = registration;
     selectedEventDistance = distance;
     selectedEventIframe = iframe;
@@ -1367,6 +1363,12 @@ const customIcon = createCustomIcon(
     showModalEvents = false;
     showModalEventDetails = true;
     console.log(selectedEventIframe)
+    if(selectedEventRegistration.includes(userId)){
+      showParticipationBtn = false;
+    }
+    else{
+      showParticipationBtn = true;
+    }
   };
 
   const events = () => {
@@ -1543,8 +1545,10 @@ const customIcon = createCustomIcon(
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
         userCoords = [position.coords.latitude, position.coords.longitude];
-        currentCoords = userCoords;
-        userLocationMarker.setLatLng(userCoords);
+        if(currentCoords){
+          currentCoords = userCoords;
+          userLocationMarker.setLatLng(userCoords);
+        }
       });
     } else {
       console.error("Geolocation is not available in this browser.");
@@ -1579,7 +1583,47 @@ const customIcon = createCustomIcon(
     
 };
   
-    
+const addParticipationToEvent = async () => {
+
+  allEvents.forEach(async (point) => {
+    if (point.eventName === selectedEventName) {
+      console.log(point._id);
+    }
+  await axios.post(`${apiUrl}/api/data/registration-event`, {
+                  token: userToken,
+                  idUser: userId,
+                  idEvent: point._id,
+                })
+                .then(async (data) => {
+                  await refreshPoints();
+
+                });
+              })
+      selectedEventRegistration.length++
+      showParticipationBtn = false;
+
+}
+  
+const removeParticipationToEvent = async () => {
+  showParticipationBtn = true;
+
+      allEvents.forEach(async (point) => {
+        if (point.eventName === selectedEventName) {
+          console.log(point._id);
+        }
+        await axios
+          .post(`${apiUrl}/api/data/deregistration-event`, {
+            token: userToken,
+            idUser: userId,
+            idEvent: point._id,
+          })
+          .then((data) => {
+            refreshPoints();
+            console.log(data);
+          });
+      });
+      selectedEventRegistration.length--;
+    };
 
 
   onMount(async () => {
@@ -1805,59 +1849,8 @@ function checkForUpdate() {
     <p style="max-width:90vw">
       Infos : {selectedEventInformations}
     </p>
-    {#if selectedEventParticipationFee !== undefined}
-      <div style="display: flex; flex-direction: column; align-items: center; ">
-        <h3 style="display: flex; align-items: center;color:red;">
-          <i
-            class="fa-solid fa-triangle-exclamation"
-            style="margin-right: 8px;"
-          />
-          <span>Evenement Payant</span>
-        </h3>
-        <p>Participation : {selectedEventParticipationFee} €</p>
-        <p>Animation : {selectedEventDescriptionAnimation}</p>
-        <p>
-          <span>Vous inscrire :</span>
-          <input
-            type="checkbox"
-            id="inscription"
-            name="inscription"
-            value="inscription"
-            bind:checked={hasInscription}
-          />
-          {#if hasInscription === true}
-            <div
-              class="animation-dropdown"
-              style="display: flex; flex-direction: column; align-items: center; "
-            >
-              <input
-                type="number"
-                min="0"
-                placeholder="Je participe à combien ?"
-                bind:value={userParticipationFee}
-              />
-              <textarea
-                placeholder="J'apporte quoi ?"
-                rows="4"
-                bind:value={giveDescription}
-              />
-              <button
-                type="submit"
-                class="confirm-btn"
-                style="color:black"
-                on:click={confirmEventParticipation}>Valider</button
-              >
-              <button
-                type="submit"
-               class="cancel-btn"
-                style="background-color: var(--red-error); width: 100%;"
-                on:click={() => (hasInscription = false)}>Annuler</button
-              >
-            </div>
-          {/if}
-        </p>
-      </div>
-    {/if}
+   
+
     {#if selectedEventIframe}
       <iframe
         id="route-viewer"
@@ -1871,8 +1864,9 @@ function checkForUpdate() {
       />
     {/if}
     <p>Distance : {selectedEventDistance} km</p>
+    <p>{selectedEventStartDate === selectedEventEndDate ? `Date : ${selectedEventStartDate}` : ` Dates : ${selectedEventStartDate} -> ${selectedEventEndDate}`}</p>
     <p>Départ : {selectedEventStartHour}</p>
-    <p>Dates : {selectedEventStartDate} - {selectedEventEndDate}</p>
+    <p>Nombre de participants : {selectedEventRegistration.length}</p>
     <p>
       Point de rassemblement :<i
         style="cursor: pointer; margin-left: 10px"
@@ -1880,9 +1874,21 @@ function checkForUpdate() {
         on:click={showSelectedEvent}
       />
     </p>
+    {#if (selectedEventDescriptionAnimation !== "")}
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content:center; gap:1rem; border:solid ;1px; border-radius:0.5rem;  var(--main-color); padding: 1rem 1rem 0rem 1rem;">
+      <p style='font-weight: bold;'>Événement organisé</p>
+      <p>Participation / personne : {selectedEventParticipationFee} €</p>
+      <p>infos : {selectedEventDescriptionAnimation}</p>
+      <p>
+      </div>
+  {/if}
 
     <p>Créer par : {selectedEventCreatedBy}</p>
-    <!-- <button on:click={inscriptionEvent}>Je participe</button>  -->
+    {#if showParticipationBtn === true }
+    <button on:click={() => {addParticipationToEvent; confirmEventParticipation}} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
+    {:else}
+    <button on:click={removeParticipationToEvent} style='background-color:var(--main-color); min-width:200px;'>Je ne participe plus</button> 
+    {/if}
   </div>
 {/if}
 <div id="filter" />
@@ -2003,7 +2009,7 @@ function checkForUpdate() {
     <h2 style="color:white; ">Événements à venir :</h2>
 
     <div id="list-events">
-      {#each allEvents as { createdBy, email, eventName, eventDescription, eventInformations, descriptionAnimation, participation,registration, distance, iframe, coords, startDate, endDate, startHour }, i}
+      {#each allEvents as { createdBy, email, eventName, eventDescription, eventInformations, animationDescription, participation,registration, distance, iframe, coords, startDate, endDate, startHour }, i}
         <div
           on:click={showEventDetails(
             createdBy,
@@ -2011,8 +2017,8 @@ function checkForUpdate() {
             eventName,
             eventDescription,
             eventInformations,
-            descriptionAnimation,
-            participationFee,
+            animationDescription,
+            participation,
             registration,
             distance,
             iframe,

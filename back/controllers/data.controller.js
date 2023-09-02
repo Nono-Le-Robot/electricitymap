@@ -579,12 +579,16 @@ module.exports.dislikePoint = async (req, res) => {
 
 module.exports.registrationEvent = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
-    eventsModel.findByIdAndUpdate(req.body.idEvent, { $push: { registration: req.body.idUser } }, (err, result) => {
-      if (!err) {
-        console.log(result);
-        res.status(200).json({ message: "Inscription à l'event réussi", result: result });
-      }
-    });
+    eventsModel.findById(req.body.idEvent, (err, result) => {
+      if(!result.registration.includes(req.body.idUser)){
+        eventsModel.findByIdAndUpdate(req.body.idEvent, { $push: { registration: req.body.idUser } }, (err, result) => {
+          if (!err) {
+            console.log(result);
+            res.status(200).json({ message: "Inscription à l'event réussi", result: result });
+          }
+        })
+      };
+    })
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
