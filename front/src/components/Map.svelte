@@ -1863,7 +1863,7 @@ function checkForUpdate() {
     srcset=""
     on:click={events}
     />
-    <p id='pastille-events'>{allEvents.length}</p>
+    <p id='pastille-events' style='font-weight : bold'>{allEvents.length}</p>
   </div>
     
   <div id="icons-interface">
