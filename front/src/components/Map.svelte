@@ -1584,7 +1584,7 @@ const customIcon = createCustomIcon(
 
   onMount(async () => {
 
-if(window.innerWidth < 768){ 
+
 
 
   window.addEventListener('beforeinstallprompt', (event) => {
@@ -1653,7 +1653,7 @@ function checkForUpdate() {
   // Si une mise à jour est disponible, affichez un message approprié
   // sinon, vous pouvez masquer la bannière d'installation
 }
-}
+
 
 
     let showEuLocalStorage = localStorage.getItem("showEU");
