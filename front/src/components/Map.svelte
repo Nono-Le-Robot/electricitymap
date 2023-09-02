@@ -116,9 +116,12 @@
       popupAnchor,
     });
   }
+  
 
-  const customIcon = createCustomIcon(
-    "./assets/elecSpot2.png",
+
+
+const customIcon = createCustomIcon(
+  "./assets/elecSpot2.png",
     [50, 50],
     [25, 50],
     [50, 64],
@@ -1553,8 +1556,106 @@
     console.log(coords);
     map.setView([coords.lat, coords.lng], 20);
   };
+  let deferredPrompt;
+
+  const installApp = () => {
+    // Vérifie si l'événement beforeinstallprompt est disponible dans le navigateur
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        // L'utilisateur a accepté l'installation
+        
+      } else {
+        // L'utilisateur a refusé l'installation
+        closePopup()
+        
+        
+      }
+      deferredPrompt = null;
+
+
+      });
+
+    
+};
+  
+    
+
 
   onMount(async () => {
+
+if(window.innerWidth < 768){ 
+
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+
+    deferredPrompt = event;
+    
+    // Vérifier si l'application est déjà installée
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      showIconPanel = false
+      showInstallPrompt();
+    } else {
+      // L'application est déjà installée, vous pouvez vérifier une mise à jour ici
+   
+    }
+  });
+  
+  function showInstallPrompt() {
+    if (!document.querySelector('#install-button')) {
+      const divPopupInstall = document.createElement('div');
+      divPopupInstall.classList.add('div-install');
+      divPopupInstall.innerHTML = `
+      <p>Pour une expérience optimale, installez l'application :</p>
+      `;
+
+    const installButton = document.createElement('button');
+    installButton.classList.add('install-btn');
+    installButton.textContent = "Installer";
+    installButton.id = 'install-button';
+    divPopupInstall.appendChild(installButton);
+    
+    installButton.addEventListener('click', () => {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          // L'utilisateur a accepté l'installation
+        } else {
+          // L'utilisateur a refusé l'installation
+          
+    
+        }
+        deferredPrompt = null;
+        divPopupInstall.remove();
+        showIconPanel = true
+      });
+    });
+    
+    const cancelInstallButton = document.createElement('button');
+    cancelInstallButton.classList.add('cancel-install-btn');
+    cancelInstallButton.textContent = "Plus tard";
+    cancelInstallButton.id = 'cancel-install-button';
+    divPopupInstall.appendChild(cancelInstallButton);
+    
+    cancelInstallButton.addEventListener('click', () => {
+      divPopupInstall.remove();
+      showIconPanel = true
+
+    });
+    
+    document.body.appendChild(divPopupInstall);
+    
+  }
+}
+
+function checkForUpdate() {
+  // Vous pouvez implémenter ici la logique de vérification de mise à jour
+  // Si une mise à jour est disponible, affichez un message approprié
+  // sinon, vous pouvez masquer la bannière d'installation
+}
+}
+
+
     let showEuLocalStorage = localStorage.getItem("showEU");
     let showCcLocalStorage = localStorage.getItem("showCC");
     let showEventsLocalStorage = localStorage.getItem("showEvents");
@@ -1878,6 +1979,7 @@
           alt=""
           srcset=""
         />
+        <h2 style='color:white; font-weight: bold; text-align:center;'>{userPseudo}</h2>
       </div>
     </div>
     <div id="action-settings">
@@ -2006,16 +2108,17 @@
     <div id="action-account-settings">
 
       <div class="sub-action-account-settings">
-        <h3 style="margin:5px 0">Aide</h3>
-        <p style="margin:0" on:click={contactSupport}>Contacter le support</p>
+        <h3 style="margin:5px 0"></h3>
+        <p style="margin:0; cursor: pointer" on:click={contactSupport}>Contacter le support</p>
       </div>
     </div>
+    <p style="margin:0; cursor: pointer" on:click={installApp}>Installer l'application</p>
+    
     <div id="footer-account-settings" />
     <p style="margin:0" on:click={logout}>Déconnexion</p>
 
     <p style="color:red ; margin:0; cursor:pointer;"on:click={() => {closePopup(); showIconPanel = false; showModalConfirmDeleteAccount = true}}>Supprimer mon compte</p>
-  </div>
-  <i class="fa-solid fa-xmark" on:click={closePopup} />
+  </div>fa-solid fa-xmark" on:click={closePopup} />
 {/if}
 
 {#if showModalConfirmDeleteAccount}

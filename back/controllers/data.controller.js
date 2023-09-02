@@ -613,6 +613,7 @@ module.exports.registrationDetailEvent = async (req, res) => {
 
 module.exports.uploadProfilPicture = async (req, res) => {
 
+
   const { username, picture } = req.body;
   try {
     const user = await userModel.findOne({ username: username });
