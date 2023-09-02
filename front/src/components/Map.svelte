@@ -1885,7 +1885,7 @@ function checkForUpdate() {
 
     <p>Créer par : {selectedEventCreatedBy}</p>
     {#if showParticipationBtn === true }
-    <button on:click={() => {addParticipationToEvent; confirmEventParticipation}} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
+    <button on:click={addParticipationToEvent()} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
     {:else}
     <button on:click={removeParticipationToEvent} style='background-color:var(--main-color); min-width:200px;'>Je ne participe plus</button> 
     {/if}
