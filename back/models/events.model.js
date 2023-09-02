@@ -16,11 +16,11 @@ const eventSchema = new mongoose.Schema({
   eventDescription: {
     type: String,
   },
-  animationDescription : {
-      type: String,
+  animationDescription: {
+    type: String,
   },
   participation: {
-      type: Number,
+    type: Number,
   },
   registration: [
     String,
@@ -49,7 +49,7 @@ const eventSchema = new mongoose.Schema({
   },
   iframe: {
     type: String,
-    default:""
+    default: ""
   },
   startDate: {
     type: String,
@@ -81,6 +81,29 @@ const eventSchema = new mongoose.Schema({
     required: true,
     default: true,
   },
+  likes: {
+    type: Number,
+    default: 0,
+    },
+  likers: [
+    String
+  ],
+  haters: [
+    String
+  ],
+  lovers: [
+    String
+  ],
+  reports: {
+    type: Number,
+    default: 0,
+  },
+  reportdetail: [{
+    reportId: { type: String, },
+    username: { type: String, },
+    comment: { type: String, },
+  }],
+
 });
 
 module.exports = mongoose.model("Event", eventSchema);

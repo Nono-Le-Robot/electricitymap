@@ -1,4 +1,5 @@
 const userModel = require("../models/auth.model.js");
+const eventsModel = require("../models/events.model.js");
 const pointModel = require("../models/points.model.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -78,11 +79,14 @@ module.exports.login = async (req, res) => {
 module.exports.deleteUser = async (req, res) => {
   if (req.user === req.body.idUser || req.role === "admin") {
     const UserToDelete = req.user;
-    eventsModel.findOneAndDelete({ _id: UserToDelete })
+    console.log(UserToDelete);
+    
+    userModel.findByIdAndUpdate(UserToDelete, { email: `deletedUser_${UserToDelete}`, username: `deletedUser_${UserToDelete}`, password: `deletedUser_${UserToDelete}`, picture : "https://electricitymap.fr/backend/images/default/default-profile-picture.jpg", likedUsers : [], likers : [], dislikedUsers : [], dislikers : []}, { new: true })  
       .then((userDelete) => {
         if (!userDelete) {
           return res.status(404).json({ message: "Événement non trouvé" });
         }
+        
         res.json({ message: "utilisateur supprimé avec succès", user: userDelete });
       })
       .catch((error) => res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur", error: error.message }));
@@ -97,6 +101,28 @@ module.exports.likeUser = async (req, res) => {
     const UserLike = req.body.idUser;
     const UserToLike = req.body.idPoint.idUser;
     const idPoint = req.body.idPoint._id;
+    const event = req.body.idPoint.eventName;
+    if (event !== null && event !== undefined) {
+      userModel.findByIdAndUpdate(UserToLike, { $push: { likers: UserLike } }, (err, result) => {
+        if (err) {
+          res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
+        } else {
+          userModel.findByIdAndUpdate(UserLike, { $push: { likedUsers: UserToLike } }, (err, result) => {
+            if (err) {
+              res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+            } else {
+              eventsModel.findByIdAndUpdate(idPoint, { $push: { lovers: UserLike } }, (err, result) => {
+                if (err) {
+                  res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+                } else {
+                  res.status(200).json('like User enregistré avec succèes.');
+                }
+              })
+            }
+          });
+        }
+      });
+    }else{
     userModel.findByIdAndUpdate(UserToLike, { $push: { likers: UserLike } }, (err, result) => {
       if (err) {
         res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
@@ -116,6 +142,7 @@ module.exports.likeUser = async (req, res) => {
         });
       }
     });
+    }
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
@@ -126,6 +153,8 @@ module.exports.unlikeUser = async (req, res) => {
     const UserDislike = req.body.idUser;
     const UserToDislike = req.body.idPoint.idUser;
     const idPoint = req.body.idPoint._id;
+    const event = req.body.idPoint.eventName;
+    if (event !== null && event !== undefined) {
     userModel.findByIdAndUpdate(UserToDislike, { $pull: { likers: UserDislike } }, (err, result) => {
       if (err) {
         res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
@@ -134,7 +163,7 @@ module.exports.unlikeUser = async (req, res) => {
           if (err) {
             res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
           } else {
-            pointModel.findByIdAndUpdate(idPoint, { $pull: { lovers: UserDislike } }, (err, result) => {if (err) {
+            eventsModel.findByIdAndUpdate(idPoint, { $pull: { lovers: UserDislike } }, (err, result) => {if (err) {
               res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
             } else {
               res.status(200).json('unlike User enregistré avec succèes.');
@@ -146,6 +175,29 @@ module.exports.unlikeUser = async (req, res) => {
         });
       }
     });
+  }else{
+      userModel.findByIdAndUpdate(UserToDislike, { $pull: { likers: UserDislike } }, (err, result) => {
+        if (err) {
+          res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
+        } else {
+          userModel.findByIdAndUpdate(UserDislike, { $pull: { likedUsers: UserToDislike } }, (err, result) => {
+            if (err) {
+              res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+            } else {
+              pointModel.findByIdAndUpdate(idPoint, { $pull: { lovers: UserDislike } }, (err, result) => {
+                if (err) {
+                  res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+                } else {
+                  res.status(200).json('unlike User enregistré avec succèes.');
+                }
+
+              })
+
+            }
+          });
+        }
+      });
+  }
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
@@ -156,6 +208,8 @@ module.exports.dislikeUser = async (req, res) => {
     const UserHater = req.body.idUser;
     const UserToHate = req.body.idPoint.idUser;
     const idPoint = req.body.idPoint._id;
+    const event = req.body.idPoint.eventName;
+    if (event !== null && event !== undefined) {
     userModel.findByIdAndUpdate(UserToHate, { $push: { dislikers: UserHater } }, (err, result) => {
       if (err) {
         res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
@@ -164,7 +218,7 @@ module.exports.dislikeUser = async (req, res) => {
           if (err) {
             res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
           } else {
-            pointModel.findByIdAndUpdate(idPoint, { $push: { haters: UserHater } }, (err, result) => {
+            eventsModel.findByIdAndUpdate(idPoint, { $push: { haters: UserHater } }, (err, result) => {
               if (err) {
                 res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
               } else {
@@ -175,6 +229,30 @@ module.exports.dislikeUser = async (req, res) => {
         });
       }
     });
+    } else { 
+      userModel.findByIdAndUpdate(UserToHate, { $push: { dislikers: UserHater } }, (err, result) => {
+        if (err) {
+          res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
+        } else {
+          userModel.findByIdAndUpdate(UserHater, { $push: { dislikedUsers: UserToHate } }, (err, result) => {
+            if (err) {
+              res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+            } else {
+              pointModel.findByIdAndUpdate(idPoint, { $push: { haters: UserHater } }, (err, result) => {
+                if (err) {
+                  res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+                } else {
+                  res.status(200).json('hate User enregistré avec succèes.');
+                }
+              })
+            }
+          });
+        }
+      });
+    
+    
+    
+    }
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }
@@ -185,6 +263,8 @@ module.exports.undislikeUser = async (req, res) => {
     const UserUnHate = req.body.idUser;
     const UserToUnHate = req.body.idPoint.idUser;
     const idPoint = req.body.idPoint._id;
+    const event = req.body.idPoint.eventName;
+    if (event !== null && event !== undefined) {
     userModel.findByIdAndUpdate(UserToUnHate, { $pull: { dislikers: UserUnHate } }, (err, result) => {
       if (err) {
         res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
@@ -193,7 +273,7 @@ module.exports.undislikeUser = async (req, res) => {
           if (err) {
             res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
           } else {
-            pointModel.findByIdAndUpdate(idPoint, { $pull: { haters: UserUnHate } }, (err, result) => {
+            eventsModel.findByIdAndUpdate(idPoint, { $pull: { haters: UserUnHate } }, (err, result) => {
               if (err) {
                 res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
               } else {
@@ -204,6 +284,27 @@ module.exports.undislikeUser = async (req, res) => {
         });
       }
     });
+    } else { 
+      userModel.findByIdAndUpdate(UserToUnHate, { $pull: { dislikers: UserUnHate } }, (err, result) => {
+        if (err) {
+          res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur." });
+        } else {
+          userModel.findByIdAndUpdate(UserUnHate, { $pull: { dislikedUsers: UserToUnHate } }, (err, result) => {
+            if (err) {
+              res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+            } else {
+              pointModel.findByIdAndUpdate(idPoint, { $pull: { haters: UserUnHate } }, (err, result) => {
+                if (err) {
+                  res.status(500).json({ error: "Erreur lors de la mise à jour de l'utilisateur qui a effectué le like." });
+                } else {
+                  res.status(200).json('unHate User enregistré avec succèes.');
+                }
+              })
+            }
+          });
+        }
+      });
+}
   } else {
     res.status(403).json({ error: "Non autorisé à effectuer cette action." });
   }

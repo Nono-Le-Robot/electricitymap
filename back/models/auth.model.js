@@ -49,6 +49,10 @@ const userModel = new mongoose.Schema({
     [
       String
     ],
+    likeEvent:
+    [
+      String
+    ],
 });
 
 module.exports = mongoose.model("User", userModel);
