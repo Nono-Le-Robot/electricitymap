@@ -4,12 +4,13 @@
     align-items: center;
     justify-content: center;
     gap: 2rem;
-    width: 90vw;
-    height: 95vh;
+    width: 80vw;
+     height: 90vh;
     overflow-y: visible;
     position: absolute;
     top: 50vh;
     left: 50vw;
+    padding: 2rem;
     z-index: 9999;
     color: white;
     border-radius: 0.5rem;
@@ -40,6 +41,7 @@
     align-items: center;
     justify-content: center;
     gap: 1rem;
+    transform: translateX(12.5%);
   }
 
   #action-account-settings {
@@ -116,10 +118,10 @@
   }
 
   #container-event-details {
-    padding: 1rem;
+    padding: 2rem;
     background-color: var(--dark-blue-color);
-    width: 90vw;
-    height: 95vh;
+    width: 80vw;
+     height: 90vh;
     position: absolute;
     top: 50vh;
     left: 50vw;
@@ -165,13 +167,14 @@
   }
 
   #container-settings {
+    padding: 2rem;
     background-color: var(--dark-blue-color);
     display: flex;
     align-items: center;
     justify-content: space-evenly;
     flex-direction: column;
-    width: 90vw;
-    height: 90vh;
+    width: 80vw;
+     height: 90vh;
     position: absolute;
     z-index: 9999;
     left: 50vw;
@@ -235,7 +238,9 @@
     gap: 2rem;
     flex-direction: column;
     width: 80vw;
-    height: 90vh;
+     height: 90vh;
+    padding: 2rem;
+
     position: absolute;
     z-index: 9999;
     left: 50vw;
@@ -534,8 +539,10 @@
     align-items: center;
     gap: 1rem;
     color: white;
-    width: 70vw;
-    height: 80vh;
+    width: 80vw;
+     height: 90vh;
+    padding: 2rem;
+
     max-height: 850px;
     max-width: 400px;
     overflow-y: scroll;

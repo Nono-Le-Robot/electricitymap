@@ -1946,6 +1946,7 @@ function checkForUpdate() {
           alt=""
           srcset=""
         />
+        <h2 style='color:white; font-weight: bold; text-align:center;'>{userPseudo}</h2>
       </div>
     </div>
     <div id="action-settings">
