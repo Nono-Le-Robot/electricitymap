@@ -1926,19 +1926,20 @@ function checkForUpdate() {
     <p>{selectedEventStartDate === selectedEventEndDate ? `Date : ${selectedEventStartDate}` : ` Dates : ${selectedEventStartDate} -> ${selectedEventEndDate}`}</p>
     <p>Départ : {selectedEventStartHour}</p>
     <p>
-      Point de rassemblement :<i
-        style="cursor: pointer; margin-left: 10px"
-        class="fa-solid fa-eye"
-        on:click={showSelectedEvent}
-      />
-    </p>
-    <p>
       Nombre de participants : {selectedEventRegistration.length}<i
         style="cursor: pointer; margin-left: 10px"
         class="fa-solid fa-eye"
         on:click={showAllParticipants}
       />
     </p>
+    <p>
+      Point de rassemblement :<i
+        style="cursor: pointer; margin-left: 10px"
+        class="fa-solid fa-eye"
+        on:click={showSelectedEvent}
+      />
+    </p>
+    
 
     {#if showParticipationBtn === true }
     <button on:click={addParticipationToEvent} style='background-color:var(--main-color);min-width:200px; '>Je participe</button> 
