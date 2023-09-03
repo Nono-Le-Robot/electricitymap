@@ -1372,6 +1372,7 @@ const customIcon = createCustomIcon(
         userId: id,
       })
       .then((data) => {
+        allParticipants = []
        allParticipants.push(data.data.user)
         console.log(allParticipants)
       });
@@ -1953,7 +1954,7 @@ function checkForUpdate() {
 
 {#if showModalAllParticipants}
   <div id="container-place-point">
-    <i class="fa-solid fa-xmark" on:click={() => {closePopup(); showIconPanel = false; showModalEventDetails= true}} />
+    <i class="fa-solid fa-xmark" on:click={() => {closePopup(); showIconPanel = false; showModalEventDetails= true; }} />
     <div>
       <h2 style='color:white; font-weight: bold; text-align:center;'>Participants</h2>
       {#each allParticipants as participant}
