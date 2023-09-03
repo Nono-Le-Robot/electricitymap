@@ -1954,12 +1954,12 @@ function checkForUpdate() {
 <div id="filter" />
 
 {#if showModalAllParticipants}
-  <div id="container-place-point">
+  <div id="container-place-point" >
     <i class="fa-solid fa-xmark" on:click={() => {closePopup(); showIconPanel = false; showModalEventDetails= true; }} />
-    <div>
-      <h2 style='color:white; font-weight: bold; text-align:center;'>Participants</h2>
+    <div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center; gap:1rem;'>
+      <h2 style=' color:white; font-weight: bold; text-align:center;'>Participants</h2>
       {#each allParticipants as participant}
-      <div style='display:flex; justify-content:space-between; align-items:center; gap:1rem;'>
+      <div style=' width:60vw; display:flex; justify-content:start; align-items:center; gap:2em;'>
         <img
           id="profil-picture-settings"
           src={participant.picture}
