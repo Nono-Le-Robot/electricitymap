@@ -1366,13 +1366,14 @@ const customIcon = createCustomIcon(
     selectedEventStartHour = startHour;
     showModalEvents = false;
     showModalEventDetails = true;
+    allParticipants = []
     selectedEventRegistration.forEach(async (id) => {
     await axios
       .post(`${apiUrl}/api/data/get-user-by-id`, {
         userId: id,
       })
       .then((data) => {
-        allParticipants = []
+      
        allParticipants.push(data.data.user)
         console.log(allParticipants)
       });
