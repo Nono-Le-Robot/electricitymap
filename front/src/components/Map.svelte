@@ -372,11 +372,14 @@ const customIcon = createCustomIcon(
     markersLayerEuropeene.clearLayers();
     markersLayerAmericaine.clearLayers();
     markersLayerCampingCar.clearLayers();
+    myPoints = [];
     groupMarkersEvents = [];
     groupMarkersEuropeene = [];
     groupMarkersAmericaine = [];
     groupMarkersCampingCar = [];
     allPoints.forEach((point, index) => {
+      if(point.likes >= 3) point.needValidate = false;
+      else point.needValidate = true;
       if (point.addedBy === userPseudo) {
         myPoints.push(point);
       }
@@ -504,18 +507,39 @@ const customIcon = createCustomIcon(
         function switchLikePoint(user, like) {
           if (point.likers !== undefined) {
             if (point.likers.includes(user)) {
-              return `
-      <div style="display: flex; align-items: flex-start;">
-       <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
-   
-      </div>
-    `;
+              if(point.likes >= 3){
+
+                return `
+                <div style="display: flex; align-items: flex-start; gap:10px">
+                  <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+                  </div>
+                  `;
+                }
+                else{
+                  return `
+                <div style="display: flex; align-items: flex-start; gap:10px">
+                  <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+                  
+                  </div>
+
+                  `;
+                
+                }
             } else {
+              if(point.likes >=3){
               return `
       <div style="display: flex; align-items: flex-start;">
-            <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink"></i>
+            <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
       </div>
     `;
+  }
+  else{
+    return `
+      <div style="display: flex; align-items: flex-start;">
+            <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+      </div>
+    `;
+  }
             }
           }
         }
@@ -567,10 +591,7 @@ const customIcon = createCustomIcon(
             (point.lovers === undefined && point.haters === undefined) ||
             (point.lovers.includes(!user) && point.haters.includes(!user))
           ) {
-            return `
-      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red; margin-right:0.5rem;"></i>
-      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green; margin-left:0.5rem;"></i>
-    `;
+            return ``;
           } else if (
             point.lovers.includes(user) ||
             point.haters === undefined
@@ -587,8 +608,6 @@ const customIcon = createCustomIcon(
     `;
           } else {
             return `
-      <i class="fa-regular fa-thumbs-down" id="desapprouveIcone" style="cursor:pointer; font-size:15px; color:red; margin-right:0.5rem;"></i>
-      <i class="fa-regular fa-thumbs-up" id="approuveIcone" style="cursor:pointer; font-size:15px; color:green; margin-left:0.5rem;"></i>
     `;
           }
         }
@@ -649,6 +668,7 @@ const customIcon = createCustomIcon(
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
         <i class="fa-solid fa-eye" id="see-point" style="cursor:pointer; font-size:20px"></i>
+    
         ${isPointCreator(userMail, userPseudo, userId, userToken)}
         ${isEventCreator(userMail, userPseudo, userId, userToken)}
         ${isPointUserReport(
@@ -661,7 +681,9 @@ const customIcon = createCustomIcon(
           point._id
           )}
           </div>
-
+          <p style="font-size:10px;">Point non validé.</p>
+    <p style="font-size:10px;">Il faut un minimum de 3 likes pour valider le point</p>
+    <p style="font-size:10px;">(point vert)</p>
           
           </div>
          `);
@@ -1072,7 +1094,7 @@ const customIcon = createCustomIcon(
             endDate: formatDate(new Date(endDateEventInput)),
             startHour: startHourEventInput,
             addedDate: new Date(),
-            needValiate: true,
+            needValidate: true,
           })
           .then((res) => {
             if (res) {
@@ -1269,7 +1291,7 @@ const customIcon = createCustomIcon(
             endDate: formatDate(new Date(endDateEventInput)),
             startHour: startHourEventInput,
             addedDate: new Date(),
-            needValiate: true,
+            needValidate: true,
           })
           .then((res) => {
             if (res) {
@@ -1425,7 +1447,7 @@ const customIcon = createCustomIcon(
         addedBy: localStorage.getItem("username"),
         priseType: typePrise,
         addedDate: new Date(),
-        needValiate: true,
+        needValidate: true,
       })
       .then(() => {
         namePointInput = "";
@@ -1856,17 +1878,17 @@ function checkForUpdate() {
     srcset=""
     on:click={settings}
   />
-  <div>
+  <!-- <div> -->
 
-    <img
+    <!-- <img
     id="events-icon"
     src="./assets/icons/list.png"
     alt=""
     srcset=""
     on:click={events}
-    />
-    <p id='pastille-events' style='font-weight : bold'>{allEvents.length}</p>
-  </div>
+    /> -->
+    <!-- <p id='pastille-events' style='font-weight : bold'>{allEvents.length}</p>
+  </div> -->
     
   <div id="icons-interface">
     <img
@@ -1959,7 +1981,7 @@ function checkForUpdate() {
     <div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center; gap:1rem;'>
       <h2 style=' color:white; font-weight: bold; text-align:center;'>Participants</h2>
       {#each allParticipants as participant}
-      <div style=' width:60vw; display:flex; justify-content:start; align-items:center; gap:2em;'>
+      <div style=' width:200px; display:flex; justify-content:start; align-items:center; gap:2em;'>
         <img
           id="profil-picture-settings"
           src={participant.picture}
@@ -2151,7 +2173,7 @@ function checkForUpdate() {
         <i class="fa-solid fa-eye-slash" on:click={toggleCC} />
       {/if}
     </div>
-    <div id="Event-filter">
+    <!-- <div id="Event-filter">
       <img src="./assets/event-flag.png" style="width:25px" alt="" srcset="" />
 
       <p>
@@ -2162,7 +2184,7 @@ function checkForUpdate() {
       {:else}
         <i class="fa-solid fa-eye-slash" on:click={toggleEvent} />
       {/if}
-    </div>
+    </div> -->
     <div />
   </div>
 {/if}
