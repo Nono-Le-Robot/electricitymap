@@ -379,7 +379,7 @@ const customIcon = createCustomIcon(
     groupMarkersAmericaine = [];
     groupMarkersCampingCar = [];
     allPoints.forEach((point, index) => {
-      if(point.likes >= 3) point.needValidate = false;
+      if(point.likes >= 5) point.needValidate = false;
       else point.needValidate = true;
       if (point.addedBy === userPseudo) {
         myPoints.push(point);
@@ -684,7 +684,7 @@ const customIcon = createCustomIcon(
           )}
           </div>
           ${point.needValidate ? `  <p style="font-size:10px;">Point non validé.</p>
-    <p style="font-size:10px;">Il faut un minimum de 3 likes pour valider le point</p>
+    <p style="font-size:10px;">Il faut un minimum de 5 likes pour valider le point</p>
     <p style="font-size:10px;">(point vert)</p>` : ``}
         
           
