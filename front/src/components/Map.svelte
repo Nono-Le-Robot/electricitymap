@@ -5,6 +5,7 @@
   export let isLogged;
 
   let map;
+  let actionInProgess = false;
   let markersLayerEvents;
   let markersLayerEuropeene;
   let markersLayerAmericaine;
@@ -504,45 +505,45 @@ const customIcon = createCustomIcon(
           }
         }
 
-        function switchLikePoint(user, like) {
-          if (point.likers !== undefined) {
-            if (point.likers.includes(user)) {
-              if(point.likes >= 3){
+        // function switchLikePoint(user, like) {
+        //   if (point.likers !== undefined) {
+    //         if (point.likers.includes(user)) {
+    //           if(point.likes >= 3){
 
-                return `
-                <div style="display: flex; align-items: flex-start; gap:10px">
-                  <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
-                  </div>
-                  `;
-                }
-                else{
-                  return `
-                <div style="display: flex; align-items: flex-start; gap:10px">
-                  <i class="fa-solid fa-heart" id="dislikeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+    //             return `
+    //             <div style="display: flex; align-items: flex-start; gap:10px">
+    //               <i class="fa-solid fa-heart" id="dislikeIcon" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+    //               </div>
+    //               `;
+    //             }
+    //             else{
+    //               return `
+    //             <div style="display: flex; align-items: flex-start; gap:10px">
+    //               <i class="fa-solid fa-heart" id="dislikeIcon" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
                   
-                  </div>
+    //               </div>
 
-                  `;
+    //               `;
                 
-                }
-            } else {
-              if(point.likes >=3){
-              return `
-      <div style="display: flex; align-items: flex-start;">
-            <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
-      </div>
-    `;
-  }
-  else{
-    return `
-      <div style="display: flex; align-items: flex-start;">
-            <i class="fa-regular fa-heart" id="likeIcone" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
-      </div>
-    `;
-  }
-            }
-          }
-        }
+    //             }
+    //         } else {
+    //           if(point.likes >=3){
+    //           return `
+    //   <div style="display: flex; align-items: flex-start;">
+    //         <i class="fa-regular fa-heart" id="likeIcon" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+    //   </div>
+    // `;
+  // }
+  // else{
+  //   return `
+  //     <div style="display: flex; align-items: flex-start;">
+  //           <i class="fa-regular fa-heart" id="likeIcon" style="cursor:pointer; font-size:15px; color:pink">&nbsp;${point.likes}</i>
+  //     </div>
+  //   `;
+  // }
+          //   }
+          // }
+        // }
 
         function animationEvent() {
           if (point.participation !== null) {
@@ -614,7 +615,7 @@ const customIcon = createCustomIcon(
 
         marker.bindPopup(`
         <div>
-          ${point.likers ? switchLikePoint(userId, point.likers) : ""}
+  
           ${
           point.eventName
           ? ``
@@ -656,7 +657,7 @@ const customIcon = createCustomIcon(
           ? `<p>Créer par : ${point.createdBy}</p>`
           : `<p>Ajouté par : ${point.addedBy}</p>`
         }
-        ${switchLikeUser(userId, point.lovers, point.haters)}
+
         ${RegistrationEvent()}
         <div style="
         display:flex;
@@ -667,7 +668,8 @@ const customIcon = createCustomIcon(
         margin-bottom:1.5rem;
         ">
         <i class="fa-solid fa-route" style="cursor:pointer; font-size:20px"></i>
-        <i class="fa-solid fa-eye" id="see-point" style="cursor:pointer; font-size:20px"></i>
+        ${point.likers.includes(userId) ? `<i class="fa-solid fa-heart dislike-btn" id="dislikeIcon" style="cursor:pointer; font-size:20px; color:pink">&nbsp;${point.likes}</i>` : `<i class="fa-regular fa-heart like-btn" id="likeIcon" style="cursor:pointer; font-size:20px; color:pink;">&nbsp;${point.likes}</i>`}
+        
     
         ${isPointCreator(userMail, userPseudo, userId, userToken)}
         ${isEventCreator(userMail, userPseudo, userId, userToken)}
@@ -790,37 +792,22 @@ const customIcon = createCustomIcon(
             }
           });
 
-          const likeIcon = document.getElementById("likeIcone");
-          if (likeIcon) {
-            likeIcon.addEventListener("click", async () => {
-              await axios
-                .post(`${apiUrl}/api/data/like-point`, {
-                  token: userToken,
-                  idUser: userId,
-                  idPoint: selectedMarker,
-                })
-                .then((data) => {
-                  refreshPoints();
-                  console.log(data);
-                });
-            });
-          }
 
-          const dislikeIcone = document.getElementById("dislikeIcone");
-          if (dislikeIcone) {
-            dislikeIcone.addEventListener("click", async () => {
-              await axios
-                .post(`${apiUrl}/api/data/dislike-point`, {
-                  token: userToken,
-                  idUser: userId,
-                  idPoint: selectedMarker,
-                })
-                .then((data) => {
-                  refreshPoints();
-                  console.log(data);
-                });
-            });
-          }
+          // const dislikeIcone = document.getElementById("dislikeIcone");
+          // if (dislikeIcone) {
+          //   dislikeIcone.addEventListener("click", async () => {
+          //     await axios
+          //       .post(`${apiUrl}/api/data/dislike-point`, {
+          //         token: userToken,
+          //         idUser: userId,
+          //         idPoint: selectedMarker,
+          //       })
+          //       .then((data) => {
+          //         refreshPoints();
+          //         console.log(data);
+          //       });
+          //   });
+          // }
 
           const approuveIcone = document.getElementById("approuveIcone");
           if (approuveIcone) {
@@ -969,6 +956,67 @@ const customIcon = createCustomIcon(
             closePopup();
           });
 
+          
+        
+let likeIcon = document.getElementById("likeIcon");
+let dislikeIcon = document.getElementById("dislikeIcon");
+
+let isLikeBtnActive = true;  // Variable pour suivre l'état du bouton Like
+let isDislikeBtnActive = true;  // Variable pour suivre l'état du bouton Dislike
+
+likeIcon?.addEventListener("click", async () => {
+  if (!isLikeBtnActive) {
+    return; // Ignore le clic si le bouton n'est pas actif
+  }
+
+  isLikeBtnActive = false;  // Désactive le bouton
+
+  try {
+    await axios.post(`${apiUrl}/api/data/like-point`, {
+      token: userToken,
+      idUser: userId,
+      idPoint: selectedMarker,
+    });
+
+    refreshPoints();
+    console.log("Like success");
+  } catch (error) {
+    console.error("Error during like:", error);
+  } finally {
+    setTimeout(() => {
+      isLikeBtnActive = true;  // Réactive le bouton après un court délai, que la requête soit réussie ou non
+    }, 500); // Ajoutez un délai de 500 millisecondes (ajustez si nécessaire)
+  }
+});
+
+dislikeIcon?.addEventListener("click", async () => {
+  if (!isDislikeBtnActive) {
+    return; // Ignore le clic si le bouton n'est pas actif
+  }
+
+  isDislikeBtnActive = false;  // Désactive le bouton
+
+  try {
+    await axios.post(`${apiUrl}/api/data/dislike-point`, {
+      token: userToken,
+      idUser: userId,
+      idPoint: selectedMarker,
+    });
+
+    refreshPoints();
+    console.log("Dislike success");
+  } catch (error) {
+    console.error("Error during dislike:", error);
+  } finally {
+    setTimeout(() => {
+      isDislikeBtnActive = true;  // Réactive le bouton après un court délai, que la requête soit réussie ou non
+    }, 500); // Ajoutez un délai de 500 millisecondes (ajustez si nécessaire)
+  }
+});
+
+
+
+          
           const reportIcon = document.getElementById("reportPoint");
           reportIcon?.addEventListener("click", async () => {
             closePopup();
@@ -1814,7 +1862,6 @@ function checkForUpdate() {
     }
   });
   const confirmEventParticipation = () => {
-    alert("gerg");
   };
 </script>
 
