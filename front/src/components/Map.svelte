@@ -684,8 +684,8 @@ const customIcon = createCustomIcon(
           )}
           </div>
           ${point.needValidate ? `  <p style="font-size:10px;">Point non validé.</p>
-    <p style="font-size:10px;">Il faut un minimum de 5 likes pour valider le point</p>
-    <p style="font-size:10px;">(point vert)</p>` : ``}
+          <p style="font-size:10px;">Un minimum de 5 likes est requis pour la valider le point.</p>
+    <p style="font-size:10px;">(Le point changera de la couleur orange à verte)</p>` : ``}
         
           
           </div>
